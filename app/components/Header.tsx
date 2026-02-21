@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 
 const links = [
@@ -21,6 +22,15 @@ export default function Header() {
         <header className="sticky top-0 z-50 w-full bg-white/90 backdrop-blur-sm border-b border-zinc-200 dark:border-zinc-800 dark:bg-black/90">
             <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex flex-col items-center py-8">
+                    <Link href="/" className="mb-6 hover:opacity-80 transition-opacity">
+                        <Image
+                            src="/ac-logo.png"
+                            alt="Arya & Christa Monogram"
+                            width={64}
+                            height={64}
+                            className="dark:invert object-contain"
+                        />
+                    </Link>
                     <Link href="/" className="text-4xl md:text-5xl font-sans tracking-wide mb-2 hover:text-sage transition-colors duration-300">
                         Arya & Christa
                     </Link>
@@ -36,8 +46,8 @@ export default function Header() {
                             key={link.href}
                             href={link.href}
                             className={`text-sm tracking-widest uppercase transition-colors duration-200 ${pathname === link.href
-                                    ? "text-sage border-b-2 border-sage pb-1"
-                                    : "text-zinc-600 hover:text-black dark:text-zinc-400 dark:hover:text-white"
+                                ? "text-sage border-b-2 border-sage pb-1"
+                                : "text-zinc-600 hover:text-black dark:text-zinc-400 dark:hover:text-white"
                                 }`}
                         >
                             {link.label}
@@ -89,8 +99,8 @@ export default function Header() {
                                 href={link.href}
                                 onClick={() => setIsOpen(false)}
                                 className={`text-base tracking-widest uppercase block py-2 ${pathname === link.href
-                                        ? "text-sage font-medium"
-                                        : "text-zinc-600 hover:text-black dark:text-zinc-400 dark:hover:text-white"
+                                    ? "text-sage font-medium"
+                                    : "text-zinc-600 hover:text-black dark:text-zinc-400 dark:hover:text-white"
                                     }`}
                             >
                                 {link.label}

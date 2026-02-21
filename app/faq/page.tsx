@@ -1,20 +1,60 @@
 export default function FAQ() {
     const faqs = [
         {
-            question: "When is the RSVP deadline?",
-            answer: "Please RSVP by October 1, 2026, so we can have an accurate headcount. A formal RSVP link will be provided closer to the date.",
+            question: "How do we RSVP?",
+            answer: "RSVPs will open once the formal invitation is sent out. If you know for sure you cannot come, please email us at aryaandchrista@gmail.com to let us know.",
+        },
+        {
+            question: "What days should we arrive and depart?",
+            answer: "We suggest arriving on Thursday and departing on Sunday to ensure you have plenty of time to enjoy the festivities!",
         },
         {
             question: "Are children welcome?",
-            answer: "While we love your little ones, our wedding is going to be an adults-only event so that everyone can relax and enjoy the evening. We appreciate you making arrangements ahead of time and leaving the kids at home so you can celebrate with us.",
-        },
-        {
-            question: "What is the dress code?",
-            answer: "The dress code is Cocktail Attire. We suggest that men wear a suit or dress shirt with tie and women wear a midi or knee-length dress or dressy separates. Please note the ceremony will be outdoors.",
+            answer: "Yes! The Cape is a family-friendly hotel, and children are welcome to celebrate with us.",
         },
         {
             question: "Will the wedding be indoors or outdoors?",
-            answer: "Both the ceremony and reception will be held outdoors, offering beautiful views of the Cabo sunset. We recommend bringing a light shawl or jacket for the evening.",
+            answer: "The ceremony will be outdoors. The reception will be at an indoor/outdoor venue until 11pm when the doors will close and it will be indoor only.",
+        },
+        {
+            question: "What is the dress code?",
+            answer: "The dress code is formal, more details to follow.",
+        },
+        {
+            question: "How do we find flights?",
+            answer: (
+                <>
+                    We suggest using <a href="https://www.google.com/travel/flights" target="_blank" rel="noopener noreferrer" className="text-sage hover:underline">Google Flights</a> and putting <strong>SJD</strong> as the destination with the Thursday-Sunday dates.
+                </>
+            ),
+        },
+        {
+            question: "Is there anything you recommend doing in the area?",
+            answer: "If you have an extra day, we highly recommend renting a car or booking transport to Balandra Beach in La Paz. It is the most beautiful beach we have ever been to (they only allow 450 visitors a day, so arrive early!). For shorter activities, we recommend going to Marina Cabo San Lucas and taking a boat tour.",
+        },
+        {
+            question: "Where should we stay?",
+            answer: (
+                <>
+                    Our wedding will be held at <strong>The Cape, a Thompson Hotel</strong> in Cabo San Lucas, Mexico. We have secured a room block for our guests with a minimum stay of 3 days that gives a discount for The Cape. You are welcome to stay at any hotel you want! If you are interested in alternate hotels, we are happy to make suggestions. You can book The Cape using our <a href="https://www.hyatt.com/events/en-US/group-booking/CSLTH/G-CABO" target="_blank" rel="noopener noreferrer" className="text-sage hover:underline">room block link</a>.
+                </>
+            ),
+        },
+        {
+            question: "How do we get from the airport to the hotel?",
+            answer: (
+                <>
+                    You can take an official taxi, Uber, or InDrive from Los Cabos International Airport (SJD). Please see our <a href="/travel" className="text-sage hover:underline">Travel & Accommodations page</a> for complete directions. For taxis, go through immigration, skip the information booths, and find the yellow "authorized taxi" booth outside. For Uber/InDrive, you must go upstairs to the departures level to be picked up.
+                </>
+            ),
+        },
+        {
+            question: "How can we contact you or stay updated?",
+            answer: (
+                <>
+                    You can email us anytime at <a href="mailto:aryaandchrista@gmail.com" className="text-sage hover:underline">aryaandchrista@gmail.com</a>. You can also sign up for our mailing list on the <a href="/contact" className="text-sage hover:underline">Contact page</a> to receive updates on the wedding weekend!
+                </>
+            ),
         },
     ];
 
