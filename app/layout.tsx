@@ -43,6 +43,7 @@ const moontime = localFont({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://www.aryachrista.wedding"),
   title: "The Wedding of Arya & Christa",
   description: "December 12, 2026 at The Cape, a Thompson Hotel, by Hyatt",
   openGraph: {
