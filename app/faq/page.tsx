@@ -36,7 +36,15 @@ export default function FAQ() {
             question: "Where should we stay?",
             answer: (
                 <>
-                    Our wedding will be held at <strong>The Cape, a Thompson Hotel</strong> in Cabo San Lucas, Mexico. We have secured a room block for our guests with a minimum stay of 3 days that gives a discount for The Cape. You are welcome to stay at any hotel you want! If you are interested in alternate hotels, we are happy to make suggestions. You can book The Cape using our <a href="https://www.hyatt.com/events/en-US/group-booking/CSLTH/G-CABO" target="_blank" rel="noopener noreferrer" className="text-sage hover:underline">room block link</a>.
+                    Our wedding will be held at <strong>The Cape, a Thompson Hotel, by Hyatt</strong> in Cabo San Lucas, Mexico. We have secured a room block for our guests with a minimum stay of 3 days that gives a discount for The Cape. You are welcome to stay at any hotel you want! You can book The Cape using our <a href="https://www.hyatt.com/events/en-US/group-booking/CSLTH/G-CABO" target="_blank" rel="noopener noreferrer" className="text-sage hover:underline">room block link</a>.
+                </>
+            ),
+        },
+        {
+            question: "Are there any alternative hotels you recommend?",
+            answer: (
+                <>
+                    Yes! For a more affordable option within walking distance of the wedding venue, we recommend checking out <a href="https://reservas.brisas.com.mx/44/rooms" target="_blank" rel="noopener noreferrer" className="text-sage hover:underline">this hotel</a>. If you are looking for an all-inclusive experience, <strong>Pueblo Bonito Rosé Resort & Spa</strong> is a great option about 20 minutes away.
                 </>
             ),
         },

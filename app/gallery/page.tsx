@@ -18,9 +18,9 @@ export default function Gallery() {
 
     return (
         <div className="w-full max-w-7xl px-4 py-16 md:py-24 animate-fade-in text-center">
-            <h1 className="text-5xl md:text-7xl font-script mb-8">Our Story</h1>
+            <h1 className="text-5xl md:text-7xl font-script mb-8">Engagement Photos</h1>
             <p className="max-w-xl mx-auto text-lg text-zinc-600 dark:text-zinc-400 font-karla mb-16 leading-relaxed">
-                A collection of our favorite moments together.
+                Shinjuku National Park, Tokyo, Japan, March 4th, 2024
             </p>
 
             {images.length > 0 ? (

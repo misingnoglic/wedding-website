@@ -24,7 +24,7 @@ export default function Home() {
         </div>
 
         <div className="flex flex-col gap-4 text-center mb-16">
-          <h2 className="text-2xl md:text-3xl font-sans tracking-wide">The Cape, a Thompson Hotel</h2>
+          <h2 className="text-2xl md:text-3xl font-sans tracking-wide">The Cape, a Thompson Hotel, by Hyatt</h2>
           <p className="text-zinc-500 uppercase tracking-widest font-karla text-sm">
             December 12, 2026
           </p>

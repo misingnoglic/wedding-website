@@ -11,7 +11,7 @@ export default function Travel() {
                         The Hotel
                     </h2>
                     <p className="text-zinc-600 dark:text-zinc-400 font-karla leading-relaxed text-lg mb-4">
-                        Our wedding will be held at <strong>The Cape, a Thompson Hotel</strong> in beautiful Cabo San Lucas, Mexico.
+                        Our wedding will be held at <strong>The Cape, a Thompson Hotel, by Hyatt</strong> in beautiful Cabo San Lucas, Mexico.
                     </p>
                     <p className="text-zinc-600 dark:text-zinc-400 font-karla leading-relaxed text-lg mb-6">
                         We have secured a room block for our guests at a discounted rate. While you are welcome to stay at any hotel in the area, we would love for you to join us at The Cape. Please note that the room block requires a minimum stay of 3 days.
