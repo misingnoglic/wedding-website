@@ -26,12 +26,12 @@ export default function Gallery() {
             {images.length > 0 ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                     {images.map((img, index) => (
-                        <div key={index} className="relative aspect-[4/5] min-h-[300px] w-full overflow-hidden bg-zinc-100 group">
+                        <div key={index} className="relative aspect-[4/5] min-h-[300px] w-full overflow-hidden bg-zinc-100 group cursor-pointer" tabIndex={0}>
                             <Image
                                 src={`/gallery/${img}`}
                                 alt={`Engagement photo ${index + 1}`}
                                 fill
-                                className="object-cover grayscale transition-all duration-700 ease-in-out group-hover:grayscale-0 group-hover:scale-105"
+                                className="object-cover grayscale transition-all duration-700 ease-in-out group-hover:grayscale-0 group-hover:scale-105 active:grayscale-0 active:scale-105"
                                 sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                             />
                         </div>

@@ -20,7 +20,7 @@ export default function Header() {
     const pathname = usePathname();
 
     return (
-        <header className="sticky top-0 z-50 w-full bg-white/90 backdrop-blur-sm border-b border-zinc-200">
+        <header className="w-full bg-white/90 backdrop-blur-sm border-b border-zinc-200 relative">
             <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex flex-col items-center py-8">
                     <Link href="/" className="mb-6 hover:opacity-80 transition-opacity">
@@ -56,15 +56,15 @@ export default function Header() {
                     ))}
                 </nav>
 
-                {/* Mobile Navigation Toggle */}
-                <div className="md:hidden flex justify-center pb-6">
+                {/* Floating Mobile Navigation Toggle */}
+                <div className="md:hidden fixed top-4 right-4 z-[60]">
                     <button
                         onClick={() => setIsOpen(!isOpen)}
-                        className="text-zinc-600 hover:text-black focus:outline-none flex items-center gap-2 text-sm tracking-widest uppercase"
+                        className="bg-white/90 backdrop-blur-md shadow-md p-3 rounded-full border border-zinc-200 text-zinc-600 hover:text-black focus:outline-none flex items-center justify-center transition-transform hover:scale-105"
+                        aria-label="Toggle Menu"
                     >
-                        {isOpen ? "Close Menu" : "Menu"}
                         <svg
-                            className="w-5 h-5"
+                            className="w-6 h-6"
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
@@ -92,14 +92,14 @@ export default function Header() {
 
             {/* Mobile Navigation Menu */}
             {isOpen && (
-                <nav className="md:hidden border-t border-zinc-200 bg-white px-4 pt-2 pb-4 shadow-lg absolute w-full left-0">
-                    <div className="flex flex-col space-y-4 text-center mt-4">
+                <div className="md:hidden fixed top-0 left-0 w-full h-screen bg-white/95 backdrop-blur-lg z-50 flex flex-col items-center justify-center">
+                    <nav className="flex flex-col space-y-8 text-center">
                         {links.map((link) => (
                             <Link
                                 key={link.href}
                                 href={link.href}
                                 onClick={() => setIsOpen(false)}
-                                className={`text-base tracking-widest uppercase block py-2 ${pathname === link.href
+                                className={`text-2xl tracking-widest uppercase block ${pathname === link.href
                                     ? "text-sage font-medium"
                                     : "text-zinc-600 hover:text-black"
                                     }`}
@@ -107,8 +107,8 @@ export default function Header() {
                                 {link.label}
                             </Link>
                         ))}
-                    </div>
-                </nav>
+                    </nav>
+                </div>
             )}
         </header>
     );
