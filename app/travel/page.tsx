@@ -14,7 +14,7 @@ export default function Travel() {
                         Our wedding will be held at <strong>The Cape, a Thompson Hotel, by Hyatt</strong> in beautiful Cabo San Lucas, Mexico.
                     </p>
                     <p className="text-zinc-600 font-karla leading-relaxed text-lg mb-6">
-                        We have secured a room block for our guests at a discounted rate. While you are welcome to stay at any hotel in the area, we would love for you to join us at The Cape. Please note that the room block requires a minimum stay of 3 days.
+                        We have secured a room block for our guests at a discounted rate. While you are welcome to stay at any hotel in the area, we would love for you to join us at The Cape. Please note that the room block requires a minimum stay of 3 days. We recommend you check in on 12/10 and check out on 12/13.
                     </p>
                     <a
                         href="https://www.hyatt.com/events/en-US/group-booking/CSLTH/G-CABO"
