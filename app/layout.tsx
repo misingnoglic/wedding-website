@@ -43,8 +43,20 @@ const moontime = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "Arya & Christa Wedding",
-  description: "Wedding of Arya and Christa in Cabo San Lucas, Mexico.",
+  title: "The Wedding of Arya & Christa",
+  description: "December 12, 2026 at The Cape, a Thompson Hotel, by Hyatt",
+  openGraph: {
+    title: "The Wedding of Arya & Christa",
+    description: "December 12, 2026 at The Cape, a Thompson Hotel, by Hyatt",
+    images: [
+      {
+        url: "/sketch.png",
+        width: 1200,
+        height: 630,
+        alt: "The Cape Hotel Sketch",
+      },
+    ],
+  },
   robots: {
     index: false,
     follow: false,
