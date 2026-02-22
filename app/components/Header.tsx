@@ -20,7 +20,7 @@ export default function Header() {
     const pathname = usePathname();
 
     return (
-        <header className="w-full bg-white/90 backdrop-blur-sm border-b border-zinc-200 relative">
+        <header className="w-full bg-white/90 backdrop-blur-sm border-b border-zinc-200 relative z-50">
             <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex flex-col items-center py-8">
                     <Link href="/" className="mb-6 hover:opacity-80 transition-opacity">
@@ -57,7 +57,7 @@ export default function Header() {
                 </nav>
 
                 {/* Floating Mobile Navigation Toggle */}
-                <div className="md:hidden fixed top-4 right-4 z-[60]">
+                <div className="md:hidden fixed top-4 right-4 z-[110]">
                     <button
                         onClick={() => setIsOpen(!isOpen)}
                         className="bg-white/90 backdrop-blur-md shadow-md p-3 rounded-full border border-zinc-200 text-zinc-600 hover:text-black focus:outline-none flex items-center justify-center transition-transform hover:scale-105"
@@ -92,7 +92,7 @@ export default function Header() {
 
             {/* Mobile Navigation Menu */}
             {isOpen && (
-                <div className="md:hidden fixed top-0 left-0 w-full h-screen bg-white/95 backdrop-blur-lg z-50 flex flex-col items-center justify-center">
+                <div className="md:hidden fixed top-0 left-0 w-full h-screen bg-white/95 backdrop-blur-lg z-[100] flex flex-col items-center justify-center">
                     <nav className="flex flex-col space-y-8 text-center">
                         {links.map((link) => (
                             <Link
