@@ -5,10 +5,10 @@ export default function Home() {
   return (
     <div className="w-full flex flex-col items-center">
       <section className="w-full max-w-5xl px-4 py-16 md:py-24 flex flex-col items-center text-center">
-        <h1 className="text-6xl md:text-8xl font-script mb-8 text-black dark:text-white">
+        <h1 className="text-6xl md:text-8xl font-script mb-8 text-black">
           We're Getting Married!
         </h1>
-        <p className="max-w-xl text-lg text-zinc-600 dark:text-zinc-400 font-karla tracking-widest uppercase mb-16 leading-relaxed">
+        <p className="max-w-xl text-lg text-zinc-600 font-karla tracking-widest uppercase mb-16 leading-relaxed">
           Join us for a celebration of love, tequila, and tacos in beautiful Cabo San Lucas.
         </p>
 
@@ -17,7 +17,7 @@ export default function Home() {
             src="/sketch.png"
             alt="The Cape Hotel Sketch"
             fill
-            className="object-contain dark:invert"
+            className="object-contain"
             sizes="(max-width: 768px) 100vw, 896px"
             priority
           />
@@ -33,13 +33,13 @@ export default function Home() {
         <div className="flex flex-col sm:flex-row gap-6">
           <Link
             href="/travel"
-            className="px-8 py-4 bg-black text-white dark:bg-white dark:text-black font-sans tracking-wide uppercase text-sm hover:bg-sage dark:hover:bg-sage hover:text-white transition-colors duration-300"
+            className="px-8 py-4 bg-black text-white font-sans tracking-wide uppercase text-sm hover:bg-sage hover:text-white transition-colors duration-300"
           >
             Travel & Accommodations
           </Link>
           <Link
             href="/rsvp"
-            className="px-8 py-4 border border-black dark:border-white font-sans tracking-wide uppercase text-sm hover:border-sage hover:text-sage transition-colors duration-300"
+            className="px-8 py-4 border border-black font-sans tracking-wide uppercase text-sm hover:border-sage hover:text-sage transition-colors duration-300"
           >
             RSVP (Coming Soon)
           </Link>

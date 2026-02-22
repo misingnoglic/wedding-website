@@ -18,7 +18,7 @@ export default function Contact() {
         <div className="w-full max-w-3xl px-4 py-16 md:py-24 animate-fade-in text-center flex flex-col items-center">
             <h1 className="text-5xl md:text-7xl font-script mb-8">Get In Touch</h1>
 
-            <p className="text-lg text-zinc-600 dark:text-zinc-400 font-karla mb-16 max-w-xl">
+            <p className="text-lg text-zinc-600 font-karla mb-16 max-w-xl">
                 If you have any questions, feel free to reach out to us directly at{" "}
                 <a
                     href="mailto:aryaandchrista@gmail.com"
@@ -28,7 +28,7 @@ export default function Contact() {
                 </a>
             </p>
 
-            <div className="w-full max-w-md bg-zinc-50 dark:bg-zinc-900/50 p-8 pt-10 rounded-sm border border-zinc-200 dark:border-zinc-800">
+            <div className="w-full max-w-md bg-zinc-50 p-8 pt-10 rounded-sm border border-zinc-200">
                 <h2 className="text-2xl font-sans mb-2">Stay Updated</h2>
                 <p className="text-zinc-500 font-karla mb-6 text-sm">
                     Subscribe to get updates on the wedding weekend.
@@ -36,7 +36,7 @@ export default function Contact() {
 
                 <form onSubmit={handleSubmit} className="flex flex-col gap-4 text-left">
                     <div className="flex flex-col gap-1">
-                        <label htmlFor="name" className="text-sm font-sans tracking-wide uppercase text-zinc-600 dark:text-zinc-400">
+                        <label htmlFor="name" className="text-sm font-sans tracking-wide uppercase text-zinc-600">
                             Name
                         </label>
                         <input
@@ -45,13 +45,13 @@ export default function Contact() {
                             required
                             value={formData.name}
                             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                            className="w-full px-4 py-3 bg-white dark:bg-black border border-zinc-300 dark:border-zinc-700 focus:outline-none focus:border-sage dark:focus:border-sage transition-colors font-karla"
+                            className="w-full px-4 py-3 bg-white border border-zinc-300 focus:outline-none focus:border-sage transition-colors font-karla"
                             placeholder="Your Name"
                         />
                     </div>
 
                     <div className="flex flex-col gap-1">
-                        <label htmlFor="email" className="text-sm font-sans tracking-wide uppercase text-zinc-600 dark:text-zinc-400">
+                        <label htmlFor="email" className="text-sm font-sans tracking-wide uppercase text-zinc-600">
                             Email
                         </label>
                         <input
@@ -60,14 +60,14 @@ export default function Contact() {
                             required
                             value={formData.email}
                             onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                            className="w-full px-4 py-3 bg-white dark:bg-black border border-zinc-300 dark:border-zinc-700 focus:outline-none focus:border-sage dark:focus:border-sage transition-colors font-karla"
+                            className="w-full px-4 py-3 bg-white border border-zinc-300 focus:outline-none focus:border-sage transition-colors font-karla"
                             placeholder="your.email@example.com"
                         />
                     </div>
 
                     <button
                         type="submit"
-                        className="w-full mt-2 px-8 py-4 bg-black text-white dark:bg-white dark:text-black font-sans tracking-wide uppercase text-sm hover:bg-sage dark:hover:bg-sage hover:text-white transition-colors duration-300"
+                        className="w-full mt-2 px-8 py-4 bg-black text-white font-sans tracking-wide uppercase text-sm hover:bg-sage hover:text-white transition-colors duration-300"
                     >
                         Subscribe
                     </button>

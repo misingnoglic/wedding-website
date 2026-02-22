@@ -59,7 +59,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${karla.variable} ${sweetSans.variable} ${moontime.variable} font-sans flex flex-col min-h-screen bg-white dark:bg-zinc-950`}
+        className={`${karla.variable} ${sweetSans.variable} ${moontime.variable} font-sans flex flex-col min-h-screen bg-white text-black`}
       >
         <Header />
         <main className="flex-grow flex flex-col items-center w-full">
