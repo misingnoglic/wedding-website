@@ -18,7 +18,11 @@ export default function FAQ() {
         },
         {
             question: "What is the dress code?",
-            answer: "The dress code is formal, more details to follow.",
+            answer: "The dress code is beach formal. The ceremony and reception are taking place outdoors at the hotel (not on the sand). The weather will be 70–80°F during the day and drop to the 60s after sunset. More details to follow.",
+        },
+        {
+            question: "Is the area safe?",
+            answer: "Yes, the city is very safe and the \"Tourist Corridor\" between Cabo San Lucas and San José del Cabo is heavily patrolled by federal and local security forces to protect the tourism economy. The Cape also has enhanced security and verifies that everyone coming into the hotel is either a registered guest or specifically invited.",
         },
         {
             question: "How do we find flights?",

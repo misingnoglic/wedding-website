@@ -31,14 +31,14 @@ export default function Travel() {
                         Getting There
                     </h2>
                     <p className="text-zinc-600 font-karla leading-relaxed text-lg mb-8">
-                        You will want to fly into <strong>Los Cabos International Airport (SJD)</strong>.
+                        You will want to fly into <strong>Los Cabos International Airport (SJD)</strong>. Once you get to the airport, there are many ways of getting to your hotel.
                     </p>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         <div className="bg-zinc-50 p-6 rounded-sm border border-zinc-100 flex flex-col h-full">
                             <h3 className="text-xl font-sans mb-3 flex-shrink-0">Taxis</h3>
                             <p className="text-zinc-600 font-karla text-base mb-2 flex-grow">
-                                After you go through immigration, skip the "information" booths and go straight through the doors outside to the yellow booth that says "authorized taxi".
+                                After clearing immigration, bypass the "information" booths and head straight outside to the yellow "authorized taxi" stand. Fares are pre-negotiated based on your hotel's zone and group size, and you will pay by card before getting into the taxi.
                             </p>
                             <p className="text-red-600 font-karla text-sm mt-4 shrink-0">
                                 <strong>Important:</strong> Do not accept rides from people walking up to you inside the airport terminal.
@@ -50,7 +50,11 @@ export default function Travel() {
                                 Uber & <a href="https://indrive.com/" target="_blank" rel="noopener noreferrer" className="underline hover:text-sage transition-colors">InDrive</a>
                             </h3>
                             <div className="flex-grow">
-                                <p className="text-zinc-600 font-karla text-base mb-4">
+                                <div className="text-zinc-600 font-karla text-sm space-y-2 mb-4">
+                                    <p><strong>Uber:</strong> The same app used in America, and you pay by card.</p>
+                                    <p><strong>InDrive:</strong> Another app that allows you to negotiate your own rate. It is often cheaper, but you have to pay in mexican pesos.</p>
+                                </div>
+                                <p className="text-zinc-600 font-karla text-base mb-4 border-t border-zinc-200 pt-4">
                                     Rideshare apps cannot pick you up at the terminal doors. You must walk to the designated pickup area.
                                 </p>
 
@@ -73,10 +77,28 @@ export default function Travel() {
                         </div>
 
                         <div className="bg-zinc-50 p-6 rounded-sm border border-zinc-100 flex flex-col h-full">
-                            <h3 className="text-xl font-sans mb-3 flex-shrink-0">Private Transport Service</h3>
-                            <p className="text-zinc-600 font-karla text-base italic flex-grow">
-                                Information coming soon.
-                            </p>
+                            <h3 className="text-xl font-sans mb-3 flex-shrink-0">Private Transport</h3>
+                            <div className="flex-grow">
+                                <p className="text-zinc-600 font-karla text-base mb-4">
+                                    We are partnering with <strong>Eliker Transfer</strong> for advance arrangements with guaranteed pricing.
+                                </p>
+                                <ul className="list-disc list-inside space-y-1 text-zinc-600 font-karla text-sm mb-4 ml-1">
+                                    <li>SUV (up to 5 passengers)</li>
+                                    <li>Van (up to 10 passengers)</li>
+                                    <li>Car & booster seats free of charge</li>
+                                </ul>
+                                <p className="text-sage font-karla text-sm font-semibold mb-4">
+                                    When booking, please add a note that you are coming for Arya & Christa's wedding so our planner can coordinate.
+                                </p>
+                            </div>
+                            <a
+                                href="https://www.elikertransfer.com/"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="w-full bg-black text-white py-3 px-4 rounded-sm text-center font-sans tracking-wide uppercase text-xs hover:bg-sage hover:text-white transition-colors duration-300 mt-auto shrink-0"
+                            >
+                                Book with Eliker
+                            </a>
                         </div>
 
                         <div className="bg-sage/10 p-6 rounded-sm border border-sage/30 flex flex-col h-full">
