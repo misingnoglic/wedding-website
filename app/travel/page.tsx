@@ -1,4 +1,5 @@
 import Link from "next/link";
+import HoverColorImage from "../components/HoverColorImage";
 
 export default function Travel() {
     return (
@@ -7,29 +8,53 @@ export default function Travel() {
 
             <div className="space-y-16">
                 <section>
-                    <h2 className="text-3xl font-sans mb-6 pb-2 border-b border-zinc-200">
-                        The Hotel
-                    </h2>
-                    <p className="text-zinc-600 font-karla leading-relaxed text-lg mb-4">
-                        Our wedding will be held at <strong>The Cape, a Thompson Hotel, by Hyatt</strong> in beautiful Cabo San Lucas, Mexico.
-                    </p>
-                    <p className="text-zinc-600 font-karla leading-relaxed text-lg mb-6">
-                        We have secured a room block for our guests at a discounted rate. While you are welcome to stay at any hotel in the area, we would love for you to join us at The Cape. Please note that the room block requires a minimum stay of 3 days. We recommend you check in on 12/10 and check out on 12/13.
-                    </p>
-                    <a
-                        href="https://www.hyatt.com/events/en-US/group-booking/CSLTH/G-CABO"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-block px-8 py-4 bg-black text-white font-sans tracking-wide uppercase text-sm hover:bg-sage hover:text-white transition-colors duration-300"
-                    >
-                        Book Room Block
-                    </a>
+                    <div className="mb-12">
+                        <h2 className="text-4xl font-sans tracking-tight mb-6 text-center">
+                            The Hotel
+                        </h2>
+                        <div className="w-24 h-px bg-zinc-300 mx-auto"></div>
+                    </div>
+                    <div className="flex flex-col md:flex-row gap-8 lg:gap-12 items-center">
+                        <div className="w-full md:w-1/2 flex flex-col items-start">
+                            <p className="text-zinc-600 font-karla leading-relaxed text-lg mb-4">
+                                Our wedding will be held at <strong>The Cape, a Thompson Hotel, by Hyatt</strong> in beautiful Cabo San Lucas, Mexico.
+                            </p>
+                            <p className="text-zinc-600 font-karla leading-relaxed text-lg mb-4">
+                                While you are welcome to stay at any hotel in the area, we would love for you to join us at The Cape.
+                            </p>
+                            <p className="text-zinc-600 font-karla leading-relaxed text-lg mb-4">
+                                We have secured a room block for our guests at a discounted rate. Please note that the room block requires a minimum stay of 3 days. In accordance with our planned events, we recommend you check in on 12/10 and check out on 12/13.
+                            </p>
+                            <p className="text-zinc-600 font-karla leading-relaxed text-lg mb-4">
+                                This Michelin Key oasis offers breathtaking views of the Sea of Cortez and El Arco from every room. Between the festivities, we hope you’ll enjoy the property’s amenities—whether you’re relaxing at the lively infinity pool or retreating to the secluded saltwater pool. To kick off the weekend, a custom hand-etched bottle of Realeza Mexicana tequila will be waiting in your room upon arrival!
+                            </p>
+                            <a
+                                href="https://www.hyatt.com/events/en-US/group-booking/CSLTH/G-CABO"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-block px-8 py-4 bg-black text-white font-sans tracking-wide uppercase text-sm hover:bg-sage hover:text-white transition-colors duration-300 mt-4"
+                            >
+                                Book Room Block
+                            </a>
+                        </div>
+                        <div className="w-full md:w-1/2">
+                            <HoverColorImage
+                                src="/cape-landscape.jpg"
+                                alt="The Cape Hotel"
+                                containerClassName="w-full aspect-[2/3] rounded-sm"
+                                sizes="(max-width: 768px) 100vw, 896px"
+                            />
+                        </div>
+                    </div>
                 </section>
 
                 <section>
-                    <h2 className="text-3xl font-sans mb-6 pb-2 border-b border-zinc-200">
-                        Getting There
-                    </h2>
+                    <div className="mb-12">
+                        <h2 className="text-4xl font-sans tracking-tight mb-6 text-center">
+                            Getting There
+                        </h2>
+                        <div className="w-24 h-px bg-zinc-300 mx-auto"></div>
+                    </div>
                     <p className="text-zinc-600 font-karla leading-relaxed text-lg mb-8">
                         You will want to fly into <strong>Los Cabos International Airport (SJD)</strong>. Once you get to the airport, there are many ways of getting to your hotel.
                     </p>

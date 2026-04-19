@@ -18,8 +18,8 @@ export default function Home() {
         </div>
         <div className="relative w-full max-w-4xl aspect-[4/3] md:aspect-[16/9] mb-16 flex justify-center items-center">
           <Image
-            src="/sketch.png"
-            alt="The Cape Hotel Sketch"
+            src="/cape-rock2.png"
+            alt="The Cape Hotel"
             fill
             className="object-contain"
             sizes="(max-width: 768px) 100vw, 896px"

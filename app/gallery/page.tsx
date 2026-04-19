@@ -1,6 +1,6 @@
 import fs from "fs";
 import path from "path";
-import Image from "next/image";
+import HoverColorImage from "../components/HoverColorImage";
 
 export default function Gallery() {
     const galleryDir = path.join(process.cwd(), "public", "gallery");
@@ -53,15 +53,13 @@ export default function Gallery() {
                             
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                                 {cityImages[city].map((img, index) => (
-                                    <div key={index} className="relative aspect-[4/5] min-h-[300px] w-full overflow-hidden bg-zinc-100 group cursor-pointer" tabIndex={0}>
-                                        <Image
-                                            src={`/gallery/${city}/${img}`}
-                                            alt={`${city} photo ${index + 1}`}
-                                            fill
-                                            className="object-cover grayscale transition-all duration-700 ease-in-out group-hover:grayscale-0 group-hover:scale-105 active:grayscale-0 active:scale-105"
-                                            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                                        />
-                                    </div>
+                                    <HoverColorImage
+                                        key={index}
+                                        src={`/gallery/${city}/${img}`}
+                                        alt={`${city} photo ${index + 1}`}
+                                        containerClassName="aspect-[4/5] min-h-[300px] w-full bg-zinc-100"
+                                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                                    />
                                 ))}
                             </div>
                         </div>
