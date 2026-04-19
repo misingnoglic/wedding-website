@@ -14,8 +14,8 @@ export default function Travel() {
                         </h2>
                         <div className="w-24 h-px bg-zinc-300 mx-auto"></div>
                     </div>
-                    <div className="flex flex-col md:flex-row gap-8 lg:gap-12 items-center">
-                        <div className="w-full md:w-1/2 flex flex-col items-start">
+                    <div className="flex flex-col md:flex-row gap-8 lg:gap-12 items-stretch">
+                        <div className="w-full md:w-1/2 flex flex-col items-start justify-between py-1">
                             <p className="text-zinc-600 font-karla leading-relaxed text-lg mb-4">
                                 Our wedding will be held at <strong>The Cape, a Thompson Hotel, by Hyatt</strong> in beautiful Cabo San Lucas, Mexico.
                             </p>
@@ -26,7 +26,7 @@ export default function Travel() {
                                 We have secured a room block for our guests at a discounted rate. Please note that the room block requires a minimum stay of 3 days. In accordance with our planned events, we recommend you check in on 12/10 and check out on 12/13.
                             </p>
                             <p className="text-zinc-600 font-karla leading-relaxed text-lg mb-4">
-                                This Michelin Key oasis offers breathtaking views of the Sea of Cortez and El Arco from every room. Between the festivities, we hope you’ll enjoy the property’s amenities—whether you’re relaxing at the lively infinity pool or retreating to the secluded saltwater pool. To kick off the weekend, a custom hand-etched bottle of Realeza Mexicana tequila will be waiting in your room upon arrival!
+                                This Michelin Key oasis offers breathtaking views of the Sea of Cortez and El Arco from every room. Between the festivities, we hope you’ll enjoy the property’s amenities which include the lively infinity pool and the secluded saltwater pool. To kick off the weekend, a custom hand-etched bottle of Realeza Mexicana tequila will be waiting in your room upon arrival.
                             </p>
                             <a
                                 href="https://www.hyatt.com/events/en-US/group-booking/CSLTH/G-CABO"
@@ -105,7 +105,7 @@ export default function Travel() {
                             <div className="flex-grow">
                                 <div className="text-zinc-600 font-karla text-sm space-y-2 mb-4">
                                     <p><strong>Uber:</strong> The same app used in America, and you pay by card.</p>
-                                    <p><strong>InDrive:</strong> Another app that allows you to negotiate your own rate. It is often cheaper, but you have to pay in mexican pesos.</p>
+                                    <p><strong>InDrive:</strong> Another app that allows you to negotiate your own rate. It is often cheaper, but you have to pay in cash.</p>
                                 </div>
                                 <p className="text-zinc-600 font-karla text-base mb-4 border-t border-zinc-200 pt-4">
                                     Rideshare apps cannot pick you up at the terminal doors. You must walk to the designated pickup area.
