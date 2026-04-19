@@ -4,36 +4,66 @@ import Image from "next/image";
 
 export default function Gallery() {
     const galleryDir = path.join(process.cwd(), "public", "gallery");
-    let images: string[] = [];
+    const cityImages: Record<string, string[]> = {};
 
     try {
-        images = fs.readdirSync(galleryDir).filter(file =>
-            file.toLowerCase().endsWith(".jpg") ||
-            file.toLowerCase().endsWith(".png") ||
-            file.toLowerCase().endsWith(".jpeg")
-        );
+        if (fs.existsSync(galleryDir)) {
+            const items = fs.readdirSync(galleryDir, { withFileTypes: true });
+            for (const item of items) {
+                if (item.isDirectory()) {
+                    const cityName = item.name;
+                    const cityPath = path.join(galleryDir, cityName);
+                    const images = fs.readdirSync(cityPath).filter(file =>
+                        file.toLowerCase().endsWith(".jpg") ||
+                        file.toLowerCase().endsWith(".png") ||
+                        file.toLowerCase().endsWith(".jpeg")
+                    );
+                    if (images.length > 0) {
+                        cityImages[cityName] = images;
+                    }
+                }
+            }
+        }
     } catch (error) {
         console.error("Error reading gallery directory:", error);
     }
 
+    const cityOrder = ["Tokyo", "Hong Kong"];
+    const cities = Object.keys(cityImages).sort((a, b) => {
+        const indexA = cityOrder.indexOf(a);
+        const indexB = cityOrder.indexOf(b);
+        if (indexA !== -1 && indexB !== -1) return indexA - indexB;
+        if (indexA !== -1) return -1;
+        if (indexB !== -1) return 1;
+        return a.localeCompare(b);
+    });
+
     return (
         <div className="w-full max-w-7xl px-4 py-16 md:py-24 animate-fade-in text-center">
-            <h1 className="text-5xl md:text-7xl font-script mb-8">Engagement Photos</h1>
-            <p className="max-w-xl mx-auto text-lg text-zinc-600 font-karla mb-16 leading-relaxed">
-                Shinjuku National Park, Tokyo, Japan, March 4th, 2024
-            </p>
+            <h1 className="text-5xl md:text-7xl font-script mb-16">Gallery</h1>
 
-            {images.length > 0 ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {images.map((img, index) => (
-                        <div key={index} className="relative aspect-[4/5] min-h-[300px] w-full overflow-hidden bg-zinc-100 group cursor-pointer" tabIndex={0}>
-                            <Image
-                                src={`/gallery/${img}`}
-                                alt={`Engagement photo ${index + 1}`}
-                                fill
-                                className="object-cover grayscale transition-all duration-700 ease-in-out group-hover:grayscale-0 group-hover:scale-105 active:grayscale-0 active:scale-105"
-                                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                            />
+            {cities.length > 0 ? (
+                <div className="space-y-24">
+                    {cities.map((city) => (
+                        <div key={city}>
+                            <div className="mb-12">
+                                <h2 className="text-4xl font-sans tracking-tight mb-6">{city}</h2>
+                                <div className="w-24 h-px bg-zinc-300 mx-auto"></div>
+                            </div>
+                            
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                                {cityImages[city].map((img, index) => (
+                                    <div key={index} className="relative aspect-[4/5] min-h-[300px] w-full overflow-hidden bg-zinc-100 group cursor-pointer" tabIndex={0}>
+                                        <Image
+                                            src={`/gallery/${city}/${img}`}
+                                            alt={`${city} photo ${index + 1}`}
+                                            fill
+                                            className="object-cover grayscale transition-all duration-700 ease-in-out group-hover:grayscale-0 group-hover:scale-105 active:grayscale-0 active:scale-105"
+                                            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                                        />
+                                    </div>
+                                ))}
+                            </div>
                         </div>
                     ))}
                 </div>

@@ -35,6 +35,34 @@ export default function Travel() {
                     </p>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div className="bg-zinc-50 p-6 rounded-sm border-2 border-sage/40 flex flex-col h-full shadow-sm">
+                            <h3 className="text-xl font-sans mb-3 flex-shrink-0 flex items-center justify-between">
+                                Private Transport
+                                <span className="text-xs font-semibold uppercase tracking-wider text-sage bg-sage/10 px-2 py-1 rounded-sm">Recommended</span>
+                            </h3>
+                            <div className="flex-grow">
+                                <p className="text-zinc-600 font-karla text-base mb-4">
+                                    We are partnering with <strong>Eliker Transfer</strong> for advance arrangements with guaranteed pricing.
+                                </p>
+                                <ul className="list-disc list-inside space-y-1 text-zinc-600 font-karla text-sm mb-4 ml-1">
+                                    <li>SUV (up to 5 passengers) - $155.00</li>
+                                    <li>Van (up to 10 passengers) - $185.00</li>
+                                    <li>Car & booster seats free of charge</li>
+                                </ul>
+                                <p className="text-sage font-karla text-sm font-semibold mb-4">
+                                    When booking, please add a note that you are coming for Arya & Christa's wedding so our planner can coordinate.
+                                </p>
+                            </div>
+                            <a
+                                href="https://www.elikertransfer.com/"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="w-full bg-black text-white py-3 px-4 rounded-sm text-center font-sans tracking-wide uppercase text-xs hover:bg-sage hover:text-white transition-colors duration-300 mt-auto shrink-0"
+                            >
+                                Book with Eliker
+                            </a>
+                        </div>
+
                         <div className="bg-zinc-50 p-6 rounded-sm border border-zinc-100 flex flex-col h-full">
                             <h3 className="text-xl font-sans mb-3 flex-shrink-0">Taxis</h3>
                             <p className="text-zinc-600 font-karla text-base mb-2 flex-grow">
@@ -73,31 +101,6 @@ export default function Travel() {
                                 className="w-full bg-black text-white py-3 px-4 rounded-sm text-center font-sans tracking-wide uppercase text-xs hover:bg-sage hover:text-white transition-colors duration-300 mt-auto shrink-0"
                             >
                                 View Google Maps Pin
-                            </a>
-                        </div>
-
-                        <div className="bg-zinc-50 p-6 rounded-sm border border-zinc-100 flex flex-col h-full">
-                            <h3 className="text-xl font-sans mb-3 flex-shrink-0">Private Transport</h3>
-                            <div className="flex-grow">
-                                <p className="text-zinc-600 font-karla text-base mb-4">
-                                    We are partnering with <strong>Eliker Transfer</strong> for advance arrangements with guaranteed pricing.
-                                </p>
-                                <ul className="list-disc list-inside space-y-1 text-zinc-600 font-karla text-sm mb-4 ml-1">
-                                    <li>SUV (up to 5 passengers)</li>
-                                    <li>Van (up to 10 passengers)</li>
-                                    <li>Car & booster seats free of charge</li>
-                                </ul>
-                                <p className="text-sage font-karla text-sm font-semibold mb-4">
-                                    When booking, please add a note that you are coming for Arya & Christa's wedding so our planner can coordinate.
-                                </p>
-                            </div>
-                            <a
-                                href="https://www.elikertransfer.com/"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="w-full bg-black text-white py-3 px-4 rounded-sm text-center font-sans tracking-wide uppercase text-xs hover:bg-sage hover:text-white transition-colors duration-300 mt-auto shrink-0"
-                            >
-                                Book with Eliker
                             </a>
                         </div>
 

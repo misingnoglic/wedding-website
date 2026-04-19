@@ -8,10 +8,14 @@ export default function Home() {
         <h1 className="text-6xl md:text-8xl font-script mb-8 text-black">
           We're Getting Married!
         </h1>
-        <p className="max-w-xl text-lg text-zinc-600 font-karla tracking-widest uppercase mb-16 leading-relaxed">
-          Join us for a celebration of love, tequila, and tacos in beautiful Cabo San Lucas.
-        </p>
 
+
+        <div className="flex flex-col gap-4 text-center mb-16">
+          <h2 className="text-2xl md:text-3xl font-sans tracking-wide">The Cape, a Thompson Hotel, by Hyatt</h2>
+          <p className="text-zinc-500 uppercase tracking-widest font-karla text-sm">
+            December 12, 2026
+          </p>
+        </div>
         <div className="relative w-full max-w-4xl aspect-[4/3] md:aspect-[16/9] mb-16 flex justify-center items-center">
           <Image
             src="/sketch.png"
@@ -21,13 +25,6 @@ export default function Home() {
             sizes="(max-width: 768px) 100vw, 896px"
             priority
           />
-        </div>
-
-        <div className="flex flex-col gap-4 text-center mb-16">
-          <h2 className="text-2xl md:text-3xl font-sans tracking-wide">The Cape, a Thompson Hotel, by Hyatt</h2>
-          <p className="text-zinc-500 uppercase tracking-widest font-karla text-sm">
-            December 12, 2026
-          </p>
         </div>
 
         <div className="flex flex-col sm:flex-row gap-6">
@@ -44,6 +41,7 @@ export default function Home() {
             RSVP (Coming Soon)
           </Link>
         </div>
+
       </section>
     </div>
   );

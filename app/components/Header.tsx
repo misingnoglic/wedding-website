@@ -23,12 +23,12 @@ export default function Header() {
         <header className="w-full bg-white/90 backdrop-blur-sm border-b border-zinc-200 relative z-50">
             <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex flex-col items-center py-8">
-                    <Link href="/" className="mb-6 hover:opacity-80 transition-opacity">
+                    <Link href="/" className="mb-2 hover:opacity-80 transition-opacity">
                         <Image
                             src="/ac-logo.png"
                             alt="Arya & Christa Monogram"
-                            width={64}
-                            height={64}
+                            width={48}
+                            height={48}
                             className=" object-contain"
                         />
                     </Link>
