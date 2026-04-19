@@ -70,8 +70,8 @@ export default function Travel() {
                                     We are partnering with <strong>Eliker Transfer</strong> for advance arrangements with guaranteed pricing.
                                 </p>
                                 <ul className="list-disc list-inside space-y-1 text-zinc-600 font-karla text-sm mb-4 ml-1">
-                                    <li>SUV (up to 5 passengers) - $155.00</li>
-                                    <li>Van (up to 10 passengers) - $185.00</li>
+                                    <li>SUV (up to 5 passengers) - $155.00 (Round trip)</li>
+                                    <li>Van (up to 10 passengers) - $185.00 (Round trip)</li>
                                     <li>Car & booster seats free of charge</li>
                                 </ul>
                                 <p className="text-sage font-karla text-sm font-semibold mb-4">
