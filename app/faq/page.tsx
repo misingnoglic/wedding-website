@@ -28,7 +28,7 @@ export default function FAQ() {
             question: "How do we find flights?",
             answer: (
                 <>
-                    We suggest using <a href="https://www.google.com/travel/flights" target="_blank" rel="noopener noreferrer" className="text-sage hover:underline">Google Flights</a> and putting <strong>SJD</strong> as the destination with the Thursday-Sunday dates.
+                    We suggest using <a href="https://www.google.com/travel/flights" target="_blank" rel="noopener noreferrer" className="text-sage hover:underline">Google Flights</a> and putting <strong>SJD</strong> as the destination, flying in on Thursday December 10th and departing on Sunday December 13th.
                 </>
             ),
         },

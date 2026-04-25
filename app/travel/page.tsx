@@ -23,7 +23,7 @@ export default function Travel() {
                                 While you are welcome to stay at any hotel in the area, we would love for you to join us at The Cape.
                             </p>
                             <p className="text-zinc-600 font-karla leading-relaxed text-lg mb-4">
-                                We have secured a room block for our guests at a discounted rate. Please note that the room block requires a minimum stay of 3 days. In accordance with our planned events, we recommend you check in on 12/10 and check out on 12/13.
+                                We have secured a room block for our guests at a discounted rate. Please note that the room block requires a minimum stay of 3 days. In accordance with our planned events, we recommend you check in on 12/10 and check out on 12/13. Booking Note: A one-night deposit is required to hold your room within our block.
                             </p>
                             <p className="text-zinc-600 font-karla leading-relaxed text-lg mb-4">
                                 This Michelin Key oasis offers breathtaking views of the Sea of Cortez and El Arco from every room. Between the festivities, we hope you’ll enjoy the property’s amenities which include the lively infinity pool and the secluded saltwater pool. To kick off the weekend, a custom hand-etched bottle of Realeza Mexicana tequila will be waiting in your room upon arrival.

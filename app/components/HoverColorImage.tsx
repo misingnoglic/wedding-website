@@ -1,7 +1,22 @@
 "use client";
 
-import { useState } from "react";
+import { useId, useSyncExternalStore } from "react";
 import Image from "next/image";
+
+let globalActiveId: string | null = null;
+const listeners = new Set<() => void>();
+
+const hoverStore = {
+    setActiveId: (id: string | null) => {
+        globalActiveId = id;
+        listeners.forEach((listener) => listener());
+    },
+    getActiveId: () => globalActiveId,
+    subscribe: (listener: () => void) => {
+        listeners.add(listener);
+        return () => listeners.delete(listener);
+    },
+};
 
 interface HoverColorImageProps {
     src: string;
@@ -20,28 +35,42 @@ export default function HoverColorImage({
     sizes,
     priority = false,
 }: HoverColorImageProps) {
-    const [isHovered, setIsHovered] = useState(false);
-    const [isTapped, setIsTapped] = useState(false);
+    const id = useId();
+    const activeId = useSyncExternalStore(
+        hoverStore.subscribe,
+        hoverStore.getActiveId,
+        () => null
+    );
+
+    const active = activeId === id;
 
     const handlePointerEnter = (e: React.PointerEvent) => {
         if (e.pointerType === "mouse") {
-            setIsHovered(true);
+            hoverStore.setActiveId(id);
         }
     };
 
     const handlePointerLeave = (e: React.PointerEvent) => {
         if (e.pointerType === "mouse") {
-            setIsHovered(false);
+            if (globalActiveId === id) {
+                hoverStore.setActiveId(null);
+            }
         }
     };
 
-    const active = isHovered || isTapped;
+    const handleClick = () => {
+        if (active) {
+            hoverStore.setActiveId(null);
+        } else {
+            hoverStore.setActiveId(id);
+        }
+    };
 
     return (
         <div 
             className={`relative overflow-hidden cursor-pointer ${containerClassName}`} 
             tabIndex={0}
-            onClick={() => setIsTapped(!isTapped)}
+            onClick={handleClick}
             onPointerEnter={handlePointerEnter}
             onPointerLeave={handlePointerLeave}
         >
