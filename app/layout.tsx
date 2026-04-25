@@ -81,7 +81,7 @@ export default function RootLayout({
           {children}
         </main>
         <Footer />
-        <InstallPrompt />
+        {/* <InstallPrompt /> */}
         <GoogleAnalytics gaId="G-84D8ZG5MB3" />
       </body>
     </html>
