@@ -4,6 +4,7 @@ import localFont from "next/font/local";
 import "./globals.css";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
+import InstallPrompt from "./components/InstallPrompt";
 import { GoogleAnalytics } from '@next/third-parties/google';
 
 const karla = Karla({
@@ -80,6 +81,7 @@ export default function RootLayout({
           {children}
         </main>
         <Footer />
+        <InstallPrompt />
         <GoogleAnalytics gaId="G-84D8ZG5MB3" />
       </body>
     </html>
