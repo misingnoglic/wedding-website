@@ -87,12 +87,12 @@ export default function InstallPrompt() {
         <div className="fixed bottom-4 left-4 right-4 bg-white p-5 border border-zinc-200 shadow-2xl z-[9999] rounded-xl animate-in slide-in-from-bottom-5 fade-in duration-300 pointer-events-auto">
             <div className="flex justify-between items-start mb-3">
                 <div>
-                    <h3 className="font-karla font-bold text-lg text-black">A & C Wedding</h3>
-                    <p className="text-sm text-zinc-600 font-karla mt-0.5">Install our app for easy access to the itinerary and more!</p>
+                    <h3 className="font-karla font-bold text-lg text-black">Arya & Christa's Wedding App</h3>
+                    <p className="text-sm text-zinc-600 font-karla mt-0.5">Install our website as an app for easy access to the itinerary and more</p>
                 </div>
-                <button 
-                    onClick={handleDismiss} 
-                    className="text-zinc-400 hover:text-black transition-colors shrink-0 ml-4 pt-1" 
+                <button
+                    onClick={handleDismiss}
+                    className="text-zinc-400 hover:text-black transition-colors shrink-0 ml-4 pt-1"
                     aria-label="Close"
                 >
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -100,15 +100,15 @@ export default function InstallPrompt() {
                     </svg>
                 </button>
             </div>
-            
+
             <div className="mt-4">
                 {isIOS ? (
                     <p className="text-sm text-zinc-600 font-karla flex items-center flex-wrap gap-x-2 gap-y-1">
                         Tap <svg className="h-6 w-6 border rounded-md p-1 bg-zinc-50" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg> below and select <strong className="whitespace-nowrap">Add to Home Screen</strong>.
                     </p>
                 ) : (
-                    <button 
-                        onClick={handleInstall} 
+                    <button
+                        onClick={handleInstall}
                         className="w-full bg-black text-white px-4 py-3 rounded-lg font-karla font-medium hover:bg-zinc-800 transition-colors shadow-sm active:scale-[0.98]"
                     >
                         Install App
