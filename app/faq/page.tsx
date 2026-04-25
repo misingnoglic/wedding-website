@@ -63,7 +63,7 @@ export default function FAQ() {
     ];
 
     return (
-        <div className="w-full max-w-3xl px-4 py-16 md:py-24 animate-fade-in text-left">
+        <div className="w-full max-w-3xl px-4 py-8 md:py-12 animate-fade-in text-left">
             <h1 className="text-5xl md:text-7xl font-script mb-16 text-center">Frequently Asked Questions</h1>
 
             <div className="space-y-8">

@@ -1,6 +1,6 @@
 export default function Contact() {
     return (
-        <div className="w-full max-w-3xl px-4 py-16 md:py-24 animate-fade-in text-center flex flex-col items-center">
+        <div className="w-full max-w-3xl px-4 py-8 md:py-12 animate-fade-in text-center flex flex-col items-center">
             <h1 className="text-5xl md:text-7xl font-script mb-8">Get In Touch</h1>
 
             <p className="text-lg text-zinc-600 font-karla mb-16 max-w-xl">

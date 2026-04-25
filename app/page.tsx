@@ -4,13 +4,13 @@ import Link from "next/link";
 export default function Home() {
   return (
     <div className="w-full flex flex-col items-center">
-      <section className="w-full max-w-5xl px-4 py-16 md:py-24 flex flex-col items-center text-center">
-        <h1 className="text-6xl md:text-8xl font-script mb-8 text-black">
+      <section className="w-full max-w-5xl px-4 py-8 md:py-12 flex flex-col items-center text-center">
+        <h1 className="text-5xl md:text-6xl font-script mb-4 text-black">
           We're Getting Married!
         </h1>
 
 
-        <div className="flex flex-col gap-4 text-center mb-16">
+        <div className="flex flex-col gap-4 text-center mb-8">
           <h2 className="text-2xl md:text-3xl font-sans tracking-wide">The Cape, a Thompson Hotel, by Hyatt</h2>
           <p className="text-zinc-500 uppercase tracking-widest font-karla text-sm">
             December 12, 2026

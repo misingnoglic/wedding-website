@@ -1,6 +1,6 @@
 export default function Itinerary() {
     return (
-        <div className="w-full max-w-4xl px-4 py-16 md:py-24 animate-fade-in text-center flex flex-col items-center">
+        <div className="w-full max-w-4xl px-4 py-8 md:py-12 animate-fade-in text-center flex flex-col items-center">
             <h1 className="text-5xl md:text-7xl font-script mb-16">Itinerary</h1>
 
             <div className="w-full max-w-2xl text-left relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-zinc-300 before:to-transparent">

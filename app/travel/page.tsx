@@ -8,7 +8,7 @@ export default function Travel() {
     const [activeTab, setActiveTab] = useState<'hotel' | 'getting-there'>('hotel');
 
     return (
-        <div className="w-full max-w-4xl px-4 py-16 md:py-24 animate-fade-in text-left mx-auto">
+        <div className="w-full max-w-4xl px-4 py-8 md:py-12 animate-fade-in text-left mx-auto">
             <h1 className="text-5xl md:text-7xl font-script mb-12 text-center">Travel & Accommodations</h1>
 
             {/* Tab Navigation */}

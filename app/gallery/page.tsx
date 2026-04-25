@@ -39,7 +39,7 @@ export default function Gallery() {
     });
 
     return (
-        <div className="w-full max-w-7xl px-4 py-16 md:py-24 animate-fade-in text-center">
+        <div className="w-full max-w-7xl px-4 py-8 md:py-12 animate-fade-in text-center">
             <h1 className="text-5xl md:text-7xl font-script mb-16">Gallery</h1>
 
             {cities.length > 0 ? (
