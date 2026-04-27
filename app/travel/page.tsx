@@ -14,13 +14,13 @@ export default function Travel() {
             {/* Tab Navigation */}
             <div className="flex justify-center mb-16">
                 <div className="inline-flex bg-zinc-100 rounded-full p-1 relative shadow-inner">
-                    <button 
+                    <button
                         onClick={() => setActiveTab('hotel')}
                         className={`relative z-10 px-6 py-2.5 md:px-8 md:py-3 rounded-full font-karla text-sm uppercase tracking-wider font-semibold transition-all duration-300 ${activeTab === 'hotel' ? 'text-white bg-black shadow-md' : 'text-zinc-500 hover:text-black hover:bg-zinc-200/50'}`}
                     >
                         The Hotel
                     </button>
-                    <button 
+                    <button
                         onClick={() => setActiveTab('getting-there')}
                         className={`relative z-10 px-6 py-2.5 md:px-8 md:py-3 rounded-full font-karla text-sm uppercase tracking-wider font-semibold transition-all duration-300 ${activeTab === 'getting-there' ? 'text-white bg-black shadow-md' : 'text-zinc-500 hover:text-black hover:bg-zinc-200/50'}`}
                     >
@@ -47,7 +47,7 @@ export default function Travel() {
                                     While you are welcome to stay at any hotel in the area, we would love for you to join us at The Cape.
                                 </p>
                                 <p className="text-zinc-600 font-karla leading-relaxed text-lg mb-4">
-                                    To help our guests enjoy the best of Cabo during the peak season, we have arranged an <a href="https://www.hyatt.com/events/en-US/group-booking/CSLTH/G-CABO" target="_blank" rel="noopener noreferrer" className="underline font-semibold hover:text-sage transition-colors">exclusive room block</a> at a significant reduction from the hotel’s standard rates. Please note that the room block requires a minimum stay of 3 days. In accordance with our planned events, we recommend you check in on 12/10 and check out on 12/13. A one-night deposit is required to hold your room within our block.
+                                    To help our guests enjoy the best of Cabo during the peak season, we have arranged an <a href="https://www.hyatt.com/events/en-US/group-booking/CSLTH/G-CABO" target="_blank" rel="noopener noreferrer" className="underline font-semibold hover:text-sage transition-colors">exclusive room block</a> at a significant reduction from the hotel’s standard rates. The fixed room block rate is approximately 30% less than the standard rate. Please note that the room block requires a minimum stay of 3 days. In accordance with our planned events, we recommend you check in on 12/10 and check out on 12/13. A one-night deposit is required to hold your room within our block.
                                 </p>
                                 <p className="text-zinc-600 font-karla leading-relaxed text-lg mb-4">
                                     This Michelin Key oasis offers breathtaking views of the Sea of Cortez and El Arco from every room. Between the festivities, we hope you’ll enjoy the property’s amenities which include the lively infinity pool and the secluded saltwater pool. To kick off the weekend, a custom hand-etched bottle of Realeza Mexicana tequila will be waiting in your room upon arrival.
