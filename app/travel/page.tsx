@@ -52,9 +52,6 @@ export default function Travel() {
                                 <p className="text-zinc-600 font-karla leading-relaxed text-lg mb-4">
                                     The room block requires a minimum stay of 3 days. In accordance with our planned events, we recommend you check in on 12/10 and check out on 12/13. A one-night deposit is required to hold your room within our block. All rooms and suites at The Cape are ocean-front and include private balconies.
                                 </p>
-                                {/* <p className="text-zinc-600 font-karla leading-relaxed text-lg mb-4">
-                                    Between the festivities, we hope you’ll enjoy the property’s amenities which include the lively infinity pool and the secluded saltwater pool. To kick off the weekend, a custom hand-etched bottle of Realeza Mexicana tequila will be waiting in your room upon arrival.
-                                </p> */}
                                 <div className="mt-2 md:mt-0 md:absolute md:top-full md:pt-6 w-full">
                                     <a
                                         href="https://www.hyatt.com/events/en-US/group-booking/CSLTH/G-CABO"
