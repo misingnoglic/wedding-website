@@ -11,10 +11,10 @@ export default function Itinerary() {
                     <div className="w-[calc(100%-4rem)] md:w-[calc(50%-3rem)] bg-zinc-50 p-6 rounded-sm border border-zinc-100 transition-transform duration-300 hover:-translate-y-1">
                         <div className="flex flex-col mb-2">
                             <span className="text-sage font-sans tracking-wide uppercase text-sm mb-1">12/11/26</span>
-                            <h3 className="text-xl font-sans">Welcome Party</h3>
+                            <h3 className="text-xl font-sans">Yacht Party</h3>
                         </div>
                         <p className="text-zinc-600 font-karla">
-                            Details to be announced.
+                            We are so grateful to everyone traveling all this way to celebrate with us. Please join us for a welcome yacht party at the Cabo Marina from 4:00 PM to 7:00 PM. Further details will be shared soon.
                         </p>
                     </div>
                 </div>
