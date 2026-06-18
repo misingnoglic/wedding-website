@@ -6,6 +6,7 @@ import Header from "./components/Header";
 import Footer from "./components/Footer";
 import InstallPrompt from "./components/InstallPrompt";
 import { GoogleAnalytics } from '@next/third-parties/google';
+import { Analytics } from '@vercel/analytics/next';
 
 const karla = Karla({
   subsets: ["latin"],
@@ -83,6 +84,7 @@ export default function RootLayout({
         <Footer />
         {/* <InstallPrompt /> */}
         <GoogleAnalytics gaId="G-84D8ZG5MB3" />
+        <Analytics />
       </body>
     </html>
   );
