@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import Countdown from "./components/Countdown";
 
 export default function Home() {
   return (
@@ -12,9 +13,12 @@ export default function Home() {
 
         <div className="flex flex-col gap-4 text-center mb-8">
           <h2 className="text-2xl md:text-3xl font-sans tracking-wide">The Cape, a Thompson Hotel, by Hyatt</h2>
-          <p className="text-zinc-500 uppercase tracking-widest font-karla text-sm">
-            December 12, 2026
-          </p>
+          <div className="flex flex-col gap-1">
+            <p className="text-zinc-500 uppercase tracking-widest font-karla text-sm">
+              December 12, 2026
+            </p>
+            <Countdown />
+          </div>
         </div>
         <div className="relative w-full max-w-4xl aspect-[4/3] md:aspect-[16/9] mb-16 flex justify-center items-center">
           <Image

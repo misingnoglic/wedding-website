@@ -26,6 +26,7 @@ export default function InstallPrompt() {
         // Check if already installed
         const isAppInstalled = window.matchMedia("(display-mode: standalone)").matches || (window.navigator as any).standalone === true;
         if (isAppInstalled) {
+            // eslint-disable-next-line
             setIsStandalone(true);
             return;
         }
