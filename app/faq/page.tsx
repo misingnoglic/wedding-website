@@ -45,6 +45,14 @@ export default function FAQ() {
             ),
         },
         {
+            question: "Are there any alternative hotels you recommend?",
+            answer: (
+                <>
+                    Yes! For a more affordable option within walking distance of the wedding venue, we recommend checking out <a href="https://reservas.brisas.com.mx/44/rooms" target="_blank" rel="noopener noreferrer" className="text-sage hover:underline">The Sunrock Hotel and Suites</a>. If you are looking for an all-inclusive experience, <strong>Pueblo Bonito Rosé Resort & Spa</strong> is a great option about 20 minutes away.
+                </>
+            ),
+        },
+        {
             question: "How do we get from the airport to the hotel?",
             answer: (
                 <>

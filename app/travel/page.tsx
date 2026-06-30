@@ -52,6 +52,9 @@ export default function Travel() {
                                 <p className="text-zinc-600 font-karla leading-relaxed text-lg mb-4">
                                     The room block requires a minimum stay of 3 days. In accordance with our planned events, we recommend you check in on 12/10 and check out on 12/13. A one-night deposit is required to hold your room within our block. Reservations in our room block are fully cancellable up to 45 days prior to the event. All rooms and suites at The Cape are ocean-front and include private balconies.
                                 </p>
+                                <p className="text-zinc-600 font-karla leading-relaxed text-lg mt-8 mb-4 border-t border-zinc-200 pt-6">
+                                    <strong>Alternative Hotels:</strong> For a more affordable option within walking distance of the wedding venue, we recommend checking out <a href="https://reservas.brisas.com.mx/44/rooms" target="_blank" rel="noopener noreferrer" className="underline font-semibold hover:text-sage transition-colors">Sunrock Hotel</a>. If you are looking for an all-inclusive experience, <strong>Pueblo Bonito Rosé Resort & Spa</strong> is a great option about 20 minutes away.
+                                </p>
                                 <div className="mt-2 md:mt-0 md:absolute md:top-full md:pt-6 w-full">
                                     <a
                                         href="https://www.hyatt.com/events/en-US/group-booking/CSLTH/G-CABO"
