@@ -185,6 +185,39 @@ export default function RsvpForm({ family }: { family: Family }) {
     })
   }
 
+  const resetGuest = (guestId: string) => {
+    setGuestState(prev => ({
+      ...prev,
+      [guestId]: {
+        isAttendingWelcome: null,
+        isAttendingWedding: null,
+        arrivalDate: '2026-12-10',
+        departureDate: '2026-12-13',
+        dietaryType: 'None',
+        dietaryText: '',
+        hasBookedTravel: null,
+      }
+    }))
+
+    if (formRef.current) {
+      const form = formRef.current
+      const fields = [
+        `email_${guestId}`,
+        `phoneNumber_${guestId}`,
+        `songRequests_${guestId}`,
+        `arrivalFlightNumber_${guestId}`,
+        `departureFlightNumber_${guestId}`,
+        `hotelName_${guestId}`,
+      ]
+      fields.forEach(name => {
+        const el = form.elements.namedItem(name) as HTMLInputElement | HTMLTextAreaElement | null
+        if (el) el.value = ''
+      })
+    }
+
+    handleAutoSave()
+  }
+
   const copyTravelInfoToAll = (sourceGuestId: string) => {
     if (!formRef.current) return
     const form = formRef.current
@@ -366,21 +399,34 @@ export default function RsvpForm({ family }: { family: Family }) {
                       {guestTitles[guest.id] && guestTitles[guest.id] !== 'None'
                         ? `${guestTitles[guest.id].endsWith('.') ? guestTitles[guest.id] : `${guestTitles[guest.id]}.`} `
                         : guest.title && guest.title !== 'None'
-                        ? `${guest.title.endsWith('.') ? guest.title : `${guest.title}.`} `
-                        : ''}
+                          ? `${guest.title.endsWith('.') ? guest.title : `${guest.title}.`} `
+                          : ''}
                       {guestNames[guest.id] || guest.name}
                     </h3>
-                    <button
-                      type="button"
-                      onClick={() => setEditingNames(prev => ({ ...prev, [guest.id]: true }))}
-                      className="text-xs font-karla text-zinc-400 hover:text-sage flex items-center gap-1 transition-colors px-2 py-0.5 rounded-md hover:bg-zinc-50 border border-transparent hover:border-zinc-200 cursor-pointer"
-                      title="Edit title and name"
-                    >
-                      <svg className="w-3.5 h-3.5 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487zm0 0L19.5 7.125" />
-                      </svg>
-                      <span>Edit</span>
-                    </button>
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => setEditingNames(prev => ({ ...prev, [guest.id]: true }))}
+                        className="text-xs font-karla text-zinc-400 hover:text-sage flex items-center gap-1 transition-colors px-2 py-0.5 rounded-md hover:bg-zinc-50 border border-transparent hover:border-zinc-200 cursor-pointer"
+                        title="Edit title and name"
+                      >
+                        <svg className="w-3.5 h-3.5 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487zm0 0L19.5 7.125" />
+                        </svg>
+                        <span>Edit</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => resetGuest(guest.id)}
+                        className="text-xs font-karla text-zinc-400 hover:text-red-500 flex items-center gap-1 transition-colors px-2 py-0.5 rounded-md hover:bg-red-50/50 border border-transparent hover:border-red-100 cursor-pointer"
+                        title="Reset RSVP and all details for this guest"
+                      >
+                        <svg className="w-3.5 h-3.5 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
+                        </svg>
+                        <span>Reset</span>
+                      </button>
+                    </div>
                     <input type="hidden" name={`title_${guest.id}`} value={guestTitles[guest.id] || guest.title || 'None'} />
                     <input type="hidden" name={`name_${guest.id}`} value={guestNames[guest.id] || guest.name} />
                   </div>

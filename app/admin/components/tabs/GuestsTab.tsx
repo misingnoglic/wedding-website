@@ -52,36 +52,34 @@ export default function GuestsTab({
                 <td className="py-3 px-4 font-medium text-zinc-700">{g.familyName}</td>
                 <td className="py-3 px-4">
                   <span
-                    className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium ${
-                      g.isAttendingWedding === true
-                        ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                        : g.isAttendingWedding === false
+                    className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium ${g.isAttendingWedding === true
+                      ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                      : g.isAttendingWedding === false
                         ? 'bg-rose-50 text-rose-700 border border-rose-200'
                         : 'bg-amber-50 text-amber-700 border border-amber-200'
-                    }`}
+                      }`}
                   >
                     {g.isAttendingWedding === true
                       ? '✓ Attending'
                       : g.isAttendingWedding === false
-                      ? '✕ Declined'
-                      : '? Pending'}
+                        ? '✕ Declined'
+                        : 'Pending'}
                   </span>
                 </td>
                 <td className="py-3 px-4">
                   <span
-                    className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium ${
-                      g.isAttendingWelcome === true
-                        ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                        : g.isAttendingWelcome === false
+                    className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium ${g.isAttendingWelcome === true
+                      ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                      : g.isAttendingWelcome === false
                         ? 'bg-rose-50 text-rose-700 border border-rose-200'
                         : 'bg-amber-50 text-amber-700 border border-amber-200'
-                    }`}
+                      }`}
                   >
                     {g.isAttendingWelcome === true
                       ? '✓ Attending'
                       : g.isAttendingWelcome === false
-                      ? '✕ Declined'
-                      : '? Pending'}
+                        ? '✕ Declined'
+                        : 'Pending'}
                   </span>
                 </td>
                 <td className="py-3 px-4">
