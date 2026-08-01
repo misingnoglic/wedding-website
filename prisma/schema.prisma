@@ -7,9 +7,57 @@ datasource db {
   url       = env("DATABASE_URL")
 }
 
+model Family {
+  id                String        @id @default(cuid())
+  name              String
+  password          String        @unique
+  isAdmin           Boolean       @default(false)
+  passwordUpdatedAt DateTime?
+  guests            Guest[]
+  auditEvents       AuditEvent[]
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+}
+
 model Guest {
-  id        String   @id @default(cuid())
-  name      String
-  email     String   @unique
-  createdAt DateTime @default(now())
+  id                    String   @id @default(cuid())
+  familyId              String
+  family                Family   @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  
+  title                 String?
+  name                  String
+  email                 String?
+  phoneNumber           String?
+  
+  // RSVP Statuses
+  isAttendingWelcome    Boolean?
+  isAttendingWedding    Boolean?
+  
+  // Additional info
+  dietaryRestrictions   String?
+  arrivalFlightNumber   String?
+  arrivalDate           String?
+  departureFlightNumber String?
+  departureDate         String?
+  hotelName             String?
+  songRequests          String?
+
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+}
+
+model AuditEvent {
+  id          String    @id @default(cuid())
+  familyId    String?
+  family      Family?   @relation(fields: [familyId], references: [id], onDelete: SetNull)
+  actorType   String    // 'ADMIN' | 'GUEST' | 'SYSTEM'
+  actorName   String    // e.g. "Arya & Christa (Admin)" or "The Smith Family"
+  eventType   String    // 'WEBSITE_VISIT', 'RSVP_UPDATED', 'FAMILY_CREATED', 'FAMILY_UPDATED', 'FAMILY_DELETED', 'GUEST_ADDED', 'GUEST_UPDATED', 'GUEST_DELETED', 'PASSWORD_RESET', 'ADMIN_IMPERSONATION'
+  description String
+  details     String?
+  createdAt   DateTime  @default(now())
+
+  @@index([createdAt])
+  @@index([familyId])
+  @@index([eventType])
 }

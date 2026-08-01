@@ -13,6 +13,7 @@ const links = [
     { href: "/gallery", label: "Gallery" },
     { href: "/contact", label: "Contact" },
     { href: "/rsvp", label: "RSVP" },
+    { href: "/account", label: "Account" },
 ];
 
 export default function Header() {

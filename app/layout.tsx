@@ -5,6 +5,7 @@ import "./globals.css";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 import InstallPrompt from "./components/InstallPrompt";
+import VisitTracker from "./components/VisitTracker";
 import { GoogleAnalytics } from '@next/third-parties/google';
 import { Analytics } from '@vercel/analytics/next';
 
@@ -75,8 +76,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${karla.variable} ${sweetSans.variable} ${moontime.variable} font-sans flex flex-col min-h-screen bg-white text-black`}
+        className={`${karla.variable} ${sweetSans.variable} ${moontime.variable} font-sans flex flex-col min-h-screen bg-zinc-50 text-black`}
       >
+        <VisitTracker />
         <Header />
         <main className="flex-grow flex flex-col items-center w-full">
           {children}
