@@ -2,6 +2,7 @@
 
 import { useTransition, useRef, useState } from 'react'
 import { updateRsvp, logoutFamily } from '@/app/actions/rsvp'
+import { recordSqlInjectionEasterEgg } from '@/app/actions/easterEgg'
 
 type Guest = {
   id: string
@@ -200,6 +201,7 @@ export default function RsvpForm({ family }: { family: Family }) {
     const formData = new FormData(e.currentTarget)
     for (const [key, value] of formData.entries()) {
       if (typeof value === 'string' && checkSqlInjection(value)) {
+        recordSqlInjectionEasterEgg(value, key).catch(() => {})
         alert("Nice try")
         return
       }
@@ -530,12 +532,16 @@ export default function RsvpForm({ family }: { family: Family }) {
                         defaultValue={guest.email || ''}
                         onChange={(e) => {
                           if (checkSqlInjection(e.target.value)) {
+                            const val = e.target.value
+                            recordSqlInjectionEasterEgg(val, 'email').catch(() => {})
                             alert("Nice try")
                             e.target.value = ''
                           }
                         }}
                         onBlur={(e) => {
                           if (checkSqlInjection(e.target.value)) {
+                            const val = e.target.value
+                            recordSqlInjectionEasterEgg(val, 'email').catch(() => {})
                             alert("Nice try")
                             e.target.value = ''
                             return

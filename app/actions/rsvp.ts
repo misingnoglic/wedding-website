@@ -15,6 +15,38 @@ export async function loginFamily(prevState: unknown, formData: FormData) {
     return { error: 'Please enter a password' }
   }
 
+  const sqlPatterns = [
+    /\bDROP\s+TABLE\b/i,
+    /\bSELECT\b[\s\S]+\bFROM\b/i,
+    /\bUNION\b[\s\S]+\bSELECT\b/i,
+    /\bDELETE\s+FROM\b/i,
+    /\bINSERT\s+INTO\b/i,
+    /\bUPDATE\b[\s\S]+\bSET\b/i,
+    /;\s*DROP\b/i,
+    /'\s*OR\s*['"]?1['"]?\s*=\s*['"]?1/i,
+    /;\s*--/,
+    /'\s*--/,
+    /\bEXEC\s*\(/i,
+    /\bEXECUTE\s*\(/i,
+  ]
+
+  if (sqlPatterns.some((pattern) => pattern.test(password))) {
+    await logAuditEvent({
+      actorType: 'GUEST',
+      actorName: 'Curious Visitor (DevTools)',
+      eventType: 'EASTER_EGG',
+      description: `Curious Visitor triggered SQL injection check on login: "${password.slice(0, 100).trim()}"`,
+      details: {
+        type: 'sql_injection_attempt',
+        field: 'login_password',
+        input: password.slice(0, 100).trim(),
+        timestamp: new Date().toISOString(),
+      },
+    })
+    await new Promise((resolve) => setTimeout(resolve, 2000))
+    return { error: 'Nice try 😉' }
+  }
+
   try {
     const family = await db.family.findFirst({
       where: { 
