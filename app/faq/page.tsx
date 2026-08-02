@@ -2,11 +2,15 @@ export default function FAQ() {
     const faqs = [
         {
             question: "How do we RSVP?",
-            answer: "RSVPs will open once the formal invitation is sent out. If you know for sure you cannot come, please email us at aryaandchrista@gmail.com to let us know.",
+            answer: (
+                <>
+                    You can submit your RSVP on the <a href="/rsvp" className="text-sage hover:underline">RSVP page</a>. Your password is included in your wedding invitation. If you do not have your password, please email us at <a href="mailto:aryaandchrista@gmail.com" className="text-sage hover:underline">aryaandchrista@gmail.com</a>, or send us a text message.
+                </>
+            ),
         },
         {
             question: "What days should we arrive and depart?",
-            answer: "We suggest arriving on Thursday and departing on Sunday to ensure you have plenty of time to enjoy the festivities!",
+            answer: "We suggest arriving on Thursday, December 10th and departing on Sunday, December 13th to ensure you have plenty of time to enjoy the festivities!",
         },
         {
             question: "Are children welcome?",
@@ -18,7 +22,7 @@ export default function FAQ() {
         },
         {
             question: "What is the dress code?",
-            answer: "The dress code is beach formal. The ceremony and reception are taking place outdoors at the hotel (not on the sand). The weather will be 70–80°F during the day and drop to the 60s after sunset. More details to follow.",
+            answer: "The dress code is beach formal. The ceremony and reception are taking place outdoors at the hotel (not on the sand). The weather will be 70–80°F during the day and drop to the 60s after sunset.",
         },
         {
             question: "Is the area safe?",
@@ -34,7 +38,7 @@ export default function FAQ() {
         },
         {
             question: "Is there anything you recommend doing in the area?",
-            answer: "If you have an extra day, we highly recommend renting a car or booking transport to Balandra Beach in La Paz. It is the most beautiful beach we have ever been to (they only allow 450 visitors a day, so arrive early!). For shorter activities, we recommend going to Marina Cabo San Lucas and taking a boat tour.",
+            answer: "If you have an extra day, we highly recommend renting a car or booking transport to Balandra Beach in La Paz. It is the most beautiful beach we have ever been to (they only allow 450 visitors a day, so arrive early!). If you do not have the whole day, we recommend going to Marina Cabo San Lucas and taking a boat tour.",
         },
         {
             question: "Where should we stay?",
@@ -48,7 +52,7 @@ export default function FAQ() {
             question: "Are there any alternative hotels you recommend?",
             answer: (
                 <>
-                    Yes! For a more affordable option within walking distance of the wedding venue, we recommend checking out <a href="https://reservas.brisas.com.mx/44/rooms" target="_blank" rel="noopener noreferrer" className="text-sage hover:underline">The Sunrock Hotel and Suites</a>. If you are looking for an all-inclusive experience, <strong>Pueblo Bonito Rosé Resort & Spa</strong> is a great option about 20 minutes away.
+                    For your convenience, we suggest you book a hotel on the "San Lucas" side of Cabo, and not the "San Jose del Cabo" side. For a more affordable option within walking distance of the wedding venue, we recommend checking out <a href="https://reservas.brisas.com.mx/44/rooms" target="_blank" rel="noopener noreferrer" className="text-sage hover:underline">The Sunrock Hotel and Suites</a>. The <a href="https://www.ihg.com/holidayinnexpress/hotels/us/en/cabo-san-lucas/sjdsl/hoteldetail" target="_blank" rel="noopener noreferrer" className="text-sage hover:underline">Holiday Inn Express Cabo San Lucas</a> is also very close. If you are looking for an all-inclusive experience, <a href="https://www.pueblobonito.com/resorts/rose" target="_blank" rel="noopener noreferrer" className="text-sage hover:underline">Pueblo Bonito Rosé Resort & Spa</a> is a great option about 20 minutes away. Please contact us for more suggestions.
                 </>
             ),
         },

@@ -106,7 +106,7 @@ export default function Travel() {
                                         <li>Car & booster seats free of charge</li>
                                     </ul>
                                     <p className="text-sage font-karla text-sm font-semibold mb-4">
-                                        When booking, please add a note that you are coming for Arya & Christa's wedding so our planner can coordinate.
+                                        When booking, please add a note that you are coming for Arya & Christa's wedding.
                                     </p>
                                 </div>
                                 <a
@@ -122,7 +122,7 @@ export default function Travel() {
                             <div className="bg-zinc-50 p-6 rounded-sm border border-zinc-100 flex flex-col h-full">
                                 <h3 className="text-xl font-sans mb-3 flex-shrink-0">Taxis</h3>
                                 <p className="text-zinc-600 font-karla text-base mb-2 flex-grow">
-                                    After clearing immigration, bypass the "information" booths and head straight outside to the yellow "authorized taxi" stand. Fares are pre-negotiated based on your hotel's zone and group size, and you will pay by card before getting into the taxi.
+                                    After clearing immigration, bypass the "information" booths and head straight outside to the yellow "authorized taxi" stand. Fares are pre-negotiated based on your hotel's zone and group size, and you will pay by card before getting into the taxi. Taxis will be around $95 to The Cape, though prices may vary.
                                 </p>
                                 <p className="text-red-600 font-karla text-sm mt-4 shrink-0">
                                     <strong>Important:</strong> Do not accept rides from people walking up to you inside the airport terminal.

@@ -10,7 +10,7 @@ export default function Itinerary() {
                     <div className="flex items-center justify-center w-10 h-10 rounded-full border-4 border-white bg-sage shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 shadow-sm z-10 ml-0 md:ml-auto md:mr-auto"></div>
                     <div className="w-[calc(100%-4rem)] md:w-[calc(50%-3rem)] bg-zinc-50 p-6 rounded-sm border border-zinc-100 transition-transform duration-300 hover:-translate-y-1">
                         <div className="flex flex-col mb-2">
-                            <span className="text-sage font-sans tracking-wide uppercase text-sm mb-1">12/11/26</span>
+                            <span className="text-sage font-sans tracking-wide uppercase text-sm mb-1">12/11/26 • 4:00 PM – 7:00 PM</span>
                             <h3 className="text-xl font-sans">Yacht Party</h3>
                         </div>
                         <p className="text-zinc-600 font-karla">
@@ -19,30 +19,45 @@ export default function Itinerary() {
                     </div>
                 </div>
 
-                {/* Event 2 */}
+                {/* Event 2 - Ceremony & Cocktail Hour */}
                 <div className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group mb-12">
                     <div className="flex items-center justify-center w-10 h-10 rounded-full border-4 border-white bg-sage shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 shadow-sm z-10 ml-0 md:ml-auto md:mr-auto"></div>
                     <div className="w-[calc(100%-4rem)] md:w-[calc(50%-3rem)] bg-zinc-50 p-6 rounded-sm border border-zinc-100 transition-transform duration-300 hover:-translate-y-1">
                         <div className="flex flex-col mb-2">
-                            <span className="text-sage font-sans tracking-wide uppercase text-sm mb-1">12/12/26</span>
-                            <h3 className="text-xl font-sans">Wedding Ceremony & Reception</h3>
+                            <span className="text-sage font-sans tracking-wide uppercase text-sm mb-1">12/12/26 • 4:00 PM – 6:00 PM</span>
+                            <h3 className="text-xl font-sans">Ceremony & Cocktail Hour</h3>
+                        </div>
+                        <div className="text-zinc-600 font-karla space-y-1">
+                            <p><span className="font-medium text-zinc-800">Wedding Ceremony:</span> 4:00 PM – 5:00 PM</p>
+                            <p><span className="font-medium text-zinc-800">Cocktail Hour:</span> 5:00 PM – 6:00 PM</p>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Event 3 - Reception */}
+                <div className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group mb-12">
+                    <div className="flex items-center justify-center w-10 h-10 rounded-full border-4 border-white bg-sage shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 shadow-sm z-10 ml-0 md:ml-auto md:mr-auto"></div>
+                    <div className="w-[calc(100%-4rem)] md:w-[calc(50%-3rem)] bg-zinc-50 p-6 rounded-sm border border-zinc-100 transition-transform duration-300 hover:-translate-y-1">
+                        <div className="flex flex-col mb-2">
+                            <span className="text-sage font-sans tracking-wide uppercase text-sm mb-1">12/12/26 • 6:00 PM – 11:00 PM</span>
+                            <h3 className="text-xl font-sans">Reception</h3>
                         </div>
                         <p className="text-zinc-600 font-karla">
-                            Details to be announced.
+                            Dinner, toasts, and dancing.
                         </p>
                     </div>
                 </div>
 
-                {/* Event 3 */}
+                {/* Event 4 - After Party */}
                 <div className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group">
                     <div className="flex items-center justify-center w-10 h-10 rounded-full border-4 border-white bg-sage shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 shadow-sm z-10 ml-0 md:ml-auto md:mr-auto"></div>
                     <div className="w-[calc(100%-4rem)] md:w-[calc(50%-3rem)] bg-zinc-50 p-6 rounded-sm border border-zinc-100 transition-transform duration-300 hover:-translate-y-1">
                         <div className="flex flex-col mb-2">
-                            <span className="text-sage font-sans tracking-wide uppercase text-sm mb-1">12/13/26</span>
-                            <h3 className="text-xl font-sans">Post-wedding Brunch</h3>
+                            <span className="text-sage font-sans tracking-wide uppercase text-sm mb-1">12/12/26 • 11:00 PM – 1:00 AM</span>
+                            <h3 className="text-xl font-sans">After Party</h3>
                         </div>
                         <p className="text-zinc-600 font-karla">
-                            Details to be determined.
+                            Late-night celebration and music to continue the festivities.
                         </p>
                     </div>
                 </div>

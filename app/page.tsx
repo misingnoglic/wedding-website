@@ -33,16 +33,16 @@ export default function Home() {
 
         <div className="flex flex-col sm:flex-row gap-6">
           <Link
+            href="/rsvp"
+            className="px-8 py-4 border border-black font-sans tracking-wide uppercase text-sm hover:border-sage hover:text-sage transition-colors duration-300"
+          >
+            RSVP
+          </Link>
+          <Link
             href="/travel"
             className="px-8 py-4 bg-black text-white font-sans tracking-wide uppercase text-sm hover:bg-sage hover:text-white transition-colors duration-300"
           >
             Travel & Accommodations
-          </Link>
-          <Link
-            href="/rsvp"
-            className="px-8 py-4 border border-black font-sans tracking-wide uppercase text-sm hover:border-sage hover:text-sage transition-colors duration-300"
-          >
-            RSVP (Coming Soon)
           </Link>
         </div>
 
