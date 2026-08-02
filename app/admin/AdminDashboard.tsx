@@ -5,6 +5,7 @@ import {
   FamilyWithGuests,
   FlatGuest,
   AuditEventItem,
+  SmsMessageItem,
   TabType,
   RsvpFilter,
   TravelFilter,
@@ -21,6 +22,7 @@ import GuestsTab from './components/tabs/GuestsTab'
 import DietaryTab from './components/tabs/DietaryTab'
 import TravelTab from './components/tabs/TravelTab'
 import SongsTab from './components/tabs/SongsTab'
+import MessagesTab from './components/tabs/MessagesTab'
 import ActivityLogTab from './components/tabs/ActivityLogTab'
 
 import AddFamilyModal from './components/modals/AddFamilyModal'
@@ -33,6 +35,7 @@ import DeleteGuestModal from './components/modals/DeleteGuestModal'
 interface AdminDashboardProps {
   initialFamilies: FamilyWithGuests[]
   initialAuditEvents: AuditEventItem[]
+  initialMessages?: SmsMessageItem[]
   currentAdmin: {
     id: string
     name: string
@@ -43,6 +46,7 @@ interface AdminDashboardProps {
 export default function AdminDashboard({
   initialFamilies,
   initialAuditEvents,
+  initialMessages = [],
   currentAdmin,
 }: AdminDashboardProps) {
   const [activeTab, setActiveTab] = useState<TabType>('families')
@@ -131,10 +135,11 @@ export default function AdminDashboard({
       hasHotelCount,
       dietaryCount,
       songRequestsCount,
+      totalMessagesCount: initialMessages.length,
       websiteVisitsCount,
       totalAuditEvents: initialAuditEvents.length,
     }
-  }, [initialFamilies, allGuests, initialAuditEvents])
+  }, [initialFamilies, allGuests, initialAuditEvents, initialMessages])
 
   // Filter and sort families
   const filteredFamilies = useMemo(() => {
@@ -302,6 +307,7 @@ export default function AdminDashboard({
         {[
           { id: 'families', label: 'Party Overview', count: filteredFamilies.length },
           { id: 'guests', label: 'All Guests (Flat Roster)', count: filteredGuests.length },
+          { id: 'messages', label: 'SMS Messages', count: initialMessages.length },
           { id: 'dietary', label: 'Dietary & Catering', count: stats.dietaryCount },
           { id: 'travel', label: 'Flights & Hotel', count: stats.hasFlightsCount + stats.hasHotelCount },
           { id: 'songs', label: 'DJ Song Requests', count: stats.songRequestsCount },
@@ -372,6 +378,10 @@ export default function AdminDashboard({
           onOpenEditGuest={(g) => setEditGuestTarget(g)}
           onOpenDeleteGuest={(g) => setDeleteGuestTarget(g)}
         />
+      )}
+
+      {activeTab === 'messages' && (
+        <MessagesTab messages={initialMessages} allGuests={allGuests} />
       )}
 
       {activeTab === 'dietary' && (

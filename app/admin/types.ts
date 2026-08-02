@@ -49,11 +49,39 @@ export type AuditEventItem = {
   } | null
 }
 
-export type TabType = 'families' | 'guests' | 'dietary' | 'travel' | 'songs' | 'activity'
+export type SmsMessageItem = {
+  id: string
+  fromPhone: string
+  toPhone: string | null
+  body: string
+  messageSid: string | null
+  guestId: string | null
+  familyId: string | null
+  rawPayload: string | null
+  createdAt: Date | string
+  updatedAt: Date | string
+  guest?: {
+    id: string
+    name: string
+    phoneNumber: string | null
+    family?: {
+      id: string
+      name: string
+      password?: string
+    } | null
+  } | null
+  family?: {
+    id: string
+    name: string
+    password?: string
+  } | null
+}
+
+export type TabType = 'families' | 'guests' | 'dietary' | 'travel' | 'songs' | 'messages' | 'activity'
 export type RsvpFilter = 'all' | 'attending_wedding' | 'declined_wedding' | 'pending_wedding' | 'attending_welcome'
 export type TravelFilter = 'all' | 'has_flights' | 'has_hotel' | 'missing_travel'
 export type SortOption = 'name_asc' | 'name_desc' | 'guests_desc' | 'updated_desc'
-export type ActivityFilter = 'all' | 'visits' | 'rsvps' | 'management' | 'auth'
+export type ActivityFilter = 'all' | 'visits' | 'rsvps' | 'messages' | 'management' | 'auth'
 
 export interface AdminStats {
   totalFamilies: number
@@ -70,6 +98,7 @@ export interface AdminStats {
   hasHotelCount: number
   dietaryCount: number
   songRequestsCount: number
+  totalMessagesCount: number
   websiteVisitsCount: number
   totalAuditEvents: number
 }

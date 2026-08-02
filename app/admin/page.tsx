@@ -40,9 +40,32 @@ export default async function AdminPage() {
     },
   })
 
+  // Fetch incoming SMS messages
+  const smsMessages = await db.smsMessage.findMany({
+    orderBy: { createdAt: 'desc' },
+    take: 200,
+    include: {
+      guest: {
+        include: {
+          family: {
+            select: { id: true, name: true, password: true },
+          },
+        },
+      },
+      family: {
+        select: { id: true, name: true, password: true },
+      },
+    },
+  })
+
   return (
     <div className="w-full max-w-7xl px-4 sm:px-6 lg:px-8 flex-grow py-8 md:py-12 flex flex-col mx-auto animate-fade-in">
-      <AdminDashboard initialFamilies={families} currentAdmin={adminFamily} initialAuditEvents={auditEvents} />
+      <AdminDashboard
+        initialFamilies={families}
+        currentAdmin={adminFamily}
+        initialAuditEvents={auditEvents}
+        initialMessages={smsMessages}
+      />
     </div>
   )
 }

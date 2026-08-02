@@ -14,6 +14,7 @@ export type AuditEventType =
   | 'ADMIN_IMPERSONATION'
   | 'GUEST_LOGIN'
   | 'EASTER_EGG'
+  | 'SMS_RECEIVED'
 
 export interface LogAuditParams {
   familyId?: string | null

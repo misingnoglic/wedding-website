@@ -44,6 +44,7 @@ export default function ActivityLogTab({ auditEvents }: ActivityLogTabProps) {
       if (activityFilter === 'all') return true
       if (activityFilter === 'visits') return ev.eventType === 'WEBSITE_VISIT'
       if (activityFilter === 'rsvps') return ev.eventType === 'RSVP_UPDATED'
+      if (activityFilter === 'messages') return ev.eventType === 'SMS_RECEIVED'
       if (activityFilter === 'management') {
         return [
           'FAMILY_CREATED',
@@ -151,6 +152,13 @@ export default function ActivityLogTab({ auditEvents }: ActivityLogTabProps) {
         </span>
       )
     }
+    if (eventType === 'SMS_RECEIVED') {
+      return (
+        <span className="px-2.5 py-1 rounded-full text-[11px] font-medium bg-emerald-100 text-emerald-800 border border-emerald-200">
+          💬 SMS Received
+        </span>
+      )
+    }
     if (eventType === 'EASTER_EGG') {
       return (
         <span className="px-2.5 py-1 rounded-full text-[11px] font-medium bg-rose-100 text-rose-800 border border-rose-200">
@@ -220,6 +228,17 @@ export default function ActivityLogTab({ auditEvents }: ActivityLogTabProps) {
             }`}
           >
             RSVPs
+          </button>
+          <button
+            type="button"
+            onClick={() => setActivityFilter('messages')}
+            className={`px-3 py-1.5 rounded-lg transition-colors cursor-pointer ${
+              activityFilter === 'messages'
+                ? 'bg-black text-white font-medium shadow-xs'
+                : 'text-zinc-600 hover:text-black'
+            }`}
+          >
+            SMS
           </button>
           <button
             type="button"
