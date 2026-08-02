@@ -35,7 +35,7 @@ export default function LoginForm({
             type="text"
             id="password"
             name="password"
-            placeholder="e.g. SMITH"
+            placeholder="Enter password here"
             className="w-full px-4 py-3 bg-white/50 border border-sage-200 focus:border-sage focus:ring-1 focus:ring-sage rounded-xl font-karla outline-none transition-all text-black"
             required
             autoComplete="off"

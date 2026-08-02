@@ -172,10 +172,10 @@ export default function AccountView({ family }: { family: Family }) {
                   <div className="flex flex-wrap items-center gap-2 mt-1">
                     <span
                       className={`text-xs px-2 py-0.5 rounded-full ${guest.isAttendingWedding === true
-                          ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                          : guest.isAttendingWedding === false
-                            ? 'bg-zinc-100 text-zinc-500 border border-zinc-200'
-                            : 'bg-amber-50 text-amber-700 border border-amber-200'
+                        ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                        : guest.isAttendingWedding === false
+                          ? 'bg-zinc-100 text-zinc-500 border border-zinc-200'
+                          : 'bg-amber-50 text-amber-700 border border-amber-200'
                         }`}
                     >
                       {guest.isAttendingWedding === true
@@ -257,7 +257,7 @@ export default function AccountView({ family }: { family: Family }) {
                     )}
                   </button>
                 </div>
-                <p className="text-xs text-zinc-400 mt-1.5 font-karla">Minimum 3 characters (e.g. SMITH2026 or a memorable phrase).</p>
+                <p className="text-xs text-zinc-400 mt-1.5 font-karla">Create a password you will remember.</p>
               </div>
 
               <div>
