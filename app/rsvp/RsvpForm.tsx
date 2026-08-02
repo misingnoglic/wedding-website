@@ -88,6 +88,25 @@ const normalizePhoneInput = (val: string): string => {
   return trimmed
 }
 
+const checkSqlInjection = (val: string): boolean => {
+  if (!val) return false
+  const sqlPatterns = [
+    /\bDROP\s+TABLE\b/i,
+    /\bSELECT\b[\s\S]+\bFROM\b/i,
+    /\bUNION\b[\s\S]+\bSELECT\b/i,
+    /\bDELETE\s+FROM\b/i,
+    /\bINSERT\s+INTO\b/i,
+    /\bUPDATE\b[\s\S]+\bSET\b/i,
+    /;\s*DROP\b/i,
+    /'\s*OR\s*['"]?1['"]?\s*=\s*['"]?1/i,
+    /;\s*--/,
+    /'\s*--/,
+    /\bEXEC\s*\(/i,
+    /\bEXECUTE\s*\(/i,
+  ]
+  return sqlPatterns.some((pattern) => pattern.test(val))
+}
+
 const normalizeEmailInput = (val: string): string => {
   return val.trim().toLowerCase()
 }
@@ -179,6 +198,12 @@ export default function RsvpForm({ family }: { family: Family }) {
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     const formData = new FormData(e.currentTarget)
+    for (const [key, value] of formData.entries()) {
+      if (typeof value === 'string' && checkSqlInjection(value)) {
+        alert("Nice try")
+        return
+      }
+    }
     startTransition(async () => {
       const result = await updateRsvp(null, formData)
       setState(result as any)
@@ -503,7 +528,18 @@ export default function RsvpForm({ family }: { family: Family }) {
                         type="email"
                         name={`email_${guest.id}`}
                         defaultValue={guest.email || ''}
+                        onChange={(e) => {
+                          if (checkSqlInjection(e.target.value)) {
+                            alert("Nice try")
+                            e.target.value = ''
+                          }
+                        }}
                         onBlur={(e) => {
+                          if (checkSqlInjection(e.target.value)) {
+                            alert("Nice try")
+                            e.target.value = ''
+                            return
+                          }
                           e.target.value = normalizeEmailInput(e.target.value)
                           handleAutoSave()
                         }}
