@@ -54,20 +54,12 @@ export default function AccountView({ family }: { family: Family }) {
   return (
     <div className="w-full max-w-4xl mx-auto p-4 md:p-8 animate-fade-in space-y-8">
       {/* Top Header Card */}
-      <div className="bg-white/80 backdrop-blur-md rounded-2xl p-6 md:p-8 border border-zinc-200/80 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div className="flex-1 w-full md:w-auto">
-          <div className="flex items-center gap-2">
-            <span className="text-xs uppercase tracking-widest text-sage font-medium font-sans">Family Account</span>
-            {family.isAdmin && (
-              <span className="px-2 py-0.5 rounded-full text-[10px] uppercase tracking-wider font-bold bg-purple-100 text-purple-700">
-                Admin
-              </span>
-            )}
-          </div>
-
+      <div className="bg-white/80 backdrop-blur-md rounded-2xl p-6 md:p-8 border border-zinc-200/80 shadow-sm space-y-5">
+        {/* Full-width Party Name & Edit Button */}
+        <div>
           {isEditingFamilyName ? (
-            <form action={updateFamilyNameAction} className="mt-2 mb-2">
-              <div className="flex items-center gap-2 max-w-md">
+            <form action={updateFamilyNameAction} className="w-full">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 max-w-xl">
                 <input
                   type="text"
                   name="familyName"
@@ -77,79 +69,93 @@ export default function AccountView({ family }: { family: Family }) {
                   className="px-3 py-1.5 border border-sage focus:ring-1 focus:ring-sage rounded-md font-sans text-2xl md:text-3xl text-black outline-none w-full bg-white shadow-sm"
                   autoFocus
                 />
-                <button
-                  type="submit"
-                  disabled={isFamilyNamePending}
-                  className="px-4 py-2 bg-black text-white text-xs font-sans uppercase tracking-wider rounded-md hover:bg-sage transition-colors cursor-pointer disabled:opacity-50 whitespace-nowrap"
-                >
-                  {isFamilyNamePending ? 'Saving...' : 'Save'}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setIsEditingFamilyName(false)}
-                  className="px-3 py-2 text-zinc-500 hover:text-black text-xs font-sans uppercase tracking-wider rounded-md hover:bg-zinc-100 transition-colors cursor-pointer"
-                >
-                  Cancel
-                </button>
+                <div className="flex items-center gap-2 shrink-0">
+                  <button
+                    type="submit"
+                    disabled={isFamilyNamePending}
+                    className="px-4 py-2 bg-black text-white text-xs font-sans uppercase tracking-wider rounded-md hover:bg-sage transition-colors cursor-pointer disabled:opacity-50 whitespace-nowrap"
+                  >
+                    {isFamilyNamePending ? 'Saving...' : 'Save'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setIsEditingFamilyName(false)}
+                    className="px-3 py-2 text-zinc-500 hover:text-black text-xs font-sans uppercase tracking-wider rounded-md hover:bg-zinc-100 transition-colors cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                </div>
               </div>
               {familyNameState?.error && (
                 <p className="text-xs text-red-600 font-karla mt-1">{familyNameState.error}</p>
               )}
             </form>
           ) : (
-            <div className="flex items-center gap-3 flex-wrap mt-1">
-              <h2 className="text-3xl md:text-4xl font-sans text-black">{family.name}</h2>
+            <div className="flex items-center gap-3 flex-wrap">
+              <h2 className="text-3xl md:text-4xl font-sans text-black break-words">{family.name}</h2>
               <button
                 type="button"
                 onClick={() => setIsEditingFamilyName(true)}
-                className="text-xs font-karla text-zinc-400 hover:text-sage flex items-center gap-1 transition-colors px-2 py-0.5 rounded-md hover:bg-zinc-100 border border-transparent hover:border-zinc-200 cursor-pointer"
-                title="Edit family name"
+                className="text-xs font-karla text-zinc-400 hover:text-sage flex items-center gap-1 transition-colors px-2 py-1 rounded-md hover:bg-zinc-100 border border-transparent hover:border-zinc-200 cursor-pointer shrink-0"
+                title="Edit party name"
               >
                 <svg className="w-3.5 h-3.5 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487zm0 0L19.5 7.125" />
                 </svg>
-                <span>Edit</span>
+                <span>Edit Party Name</span>
               </button>
             </div>
           )}
 
-          <p className="text-zinc-500 font-karla mt-1">
-            {totalGuests} {totalGuests === 1 ? 'guest' : 'guests'} in party •{' '}
-            <span className="text-zinc-700 font-medium">
-              {attendingCount > 0 ? `${attendingCount} attending wedding` : 'RSVP pending'}
-            </span>
-          </p>
           {familyNameState?.success && !isEditingFamilyName && (
-            <p className="text-xs text-emerald-600 font-karla mt-1">✓ Family name updated successfully</p>
+            <p className="text-xs text-emerald-600 font-karla mt-1">✓ Party name updated successfully</p>
           )}
         </div>
 
-        <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
-          {family.isAdmin && (
+        {/* Badges and Actions underneath */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pt-2 border-t border-zinc-100">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium font-karla bg-zinc-100 text-zinc-700">
+              {totalGuests} {totalGuests === 1 ? 'guest' : 'guests'} in party
+            </span>
+            <span
+              className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium font-karla ${
+                attendingCount > 0
+                  ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                  : 'bg-amber-50 text-amber-700 border border-amber-200'
+              }`}
+            >
+              {attendingCount > 0 ? `${attendingCount} attending wedding` : 'RSVP pending'}
+            </span>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2.5 w-full sm:w-auto">
+            {family.isAdmin && (
+              <Link
+                href="/admin"
+                className="flex-1 sm:flex-none text-center px-4 py-2 bg-purple-950 text-white rounded-xl font-sans tracking-wider uppercase text-xs hover:bg-black transition-all duration-300 shadow-sm flex items-center justify-center gap-1.5"
+              >
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                </svg>
+                Dashboard
+              </Link>
+            )}
             <Link
-              href="/admin"
-              className="flex-1 md:flex-none text-center px-5 py-2.5 bg-purple-950 text-white rounded-xl font-sans tracking-wider uppercase text-xs hover:bg-black transition-all duration-300 shadow-sm flex items-center justify-center gap-1.5"
+              href="/rsvp"
+              className="flex-1 sm:flex-none text-center px-4 py-2 bg-sage text-white rounded-xl font-sans tracking-wider uppercase text-xs hover:bg-black transition-all duration-300 shadow-sm"
             >
-              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-              </svg>
-              Admin Dashboard
+              Go to RSVP
             </Link>
-          )}
-          <Link
-            href="/rsvp"
-            className="flex-1 md:flex-none text-center px-5 py-2.5 bg-sage text-white rounded-xl font-sans tracking-wider uppercase text-xs hover:bg-black transition-all duration-300 shadow-sm"
-          >
-            Go to RSVP
-          </Link>
-          <form action={() => logoutFamily('/login?redirect=/account')}>
-            <button
-              type="submit"
-              className="px-4 py-2.5 bg-zinc-100 text-zinc-600 rounded-xl font-sans tracking-wider uppercase text-xs hover:bg-zinc-200 hover:text-black transition-colors cursor-pointer"
-            >
-              Log Out
-            </button>
-          </form>
+            <form action={() => logoutFamily('/login?redirect=/account')}>
+              <button
+                type="submit"
+                className="px-3.5 py-2 bg-zinc-100 text-zinc-600 rounded-xl font-sans tracking-wider uppercase text-xs hover:bg-zinc-200 hover:text-black transition-colors cursor-pointer"
+              >
+                Log Out
+              </button>
+            </form>
+          </div>
         </div>
       </div>
 
