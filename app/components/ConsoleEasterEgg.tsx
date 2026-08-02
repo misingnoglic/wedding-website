@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect } from 'react'
+import { recordProposalEasterEgg } from '@/app/actions/easterEgg'
 
 export default function ConsoleEasterEgg() {
   useEffect(() => {
@@ -15,10 +16,18 @@ For a fun surprise, type arya.propose(christa)`
 
     // Set up window.christa and window.arya for interactive console easter egg
     if (typeof window !== 'undefined') {
-      ; (window as any).christa = 'Christa'
-        ; (window as any).arya = {
-          propose: (target?: any) => {
-            const isChrista = target === (window as any).christa
+      ;(window as any).christa = 'Christa'
+      ;(window as any).arya = {
+        propose: (target?: any) => {
+          const targetStr =
+            typeof target === 'string'
+              ? target
+              : target && typeof target === 'object'
+                ? (target.name || JSON.stringify(target))
+                : String(target ?? '')
+          recordProposalEasterEgg(targetStr).catch(() => {})
+
+          const isChrista = target === (window as any).christa
             if (isChrista) {
               const promise = Promise.resolve('YES! 💍') as Promise<string> & {
                 '<wedding>'?: string

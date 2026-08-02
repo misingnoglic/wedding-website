@@ -13,6 +13,7 @@ export type AuditEventType =
   | 'PASSWORD_RESET'
   | 'ADMIN_IMPERSONATION'
   | 'GUEST_LOGIN'
+  | 'EASTER_EGG'
 
 export interface LogAuditParams {
   familyId?: string | null

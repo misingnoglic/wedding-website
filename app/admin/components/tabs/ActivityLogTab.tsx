@@ -151,6 +151,13 @@ export default function ActivityLogTab({ auditEvents }: ActivityLogTabProps) {
         </span>
       )
     }
+    if (eventType === 'EASTER_EGG') {
+      return (
+        <span className="px-2.5 py-1 rounded-full text-[11px] font-medium bg-rose-100 text-rose-800 border border-rose-200">
+          💍 Easter Egg
+        </span>
+      )
+    }
     return (
       <span className="px-2.5 py-1 rounded-full text-[11px] font-medium bg-zinc-100 text-zinc-700">
         {eventType}

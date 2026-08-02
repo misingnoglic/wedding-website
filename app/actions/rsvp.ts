@@ -39,6 +39,12 @@ export async function loginFamily(prevState: unknown, formData: FormData) {
       maxAge: 60 * 60 * 24 * 365, // 1 year
       path: '/',
     })
+    cookieStore.set('user-is-nosy', 'true', {
+      httpOnly: false,
+      secure: process.env.NODE_ENV === 'production',
+      maxAge: 60 * 60 * 24 * 365, // 1 year
+      path: '/',
+    })
 
     await logAuditEvent({
       familyId: family.id,
@@ -65,6 +71,7 @@ export async function logoutFamily(redirectUrlOrFormData?: string | FormData) {
 
   const cookieStore = await cookies()
   cookieStore.delete('rsvp_family_id')
+  cookieStore.delete('user-is-nosy')
   revalidatePath('/rsvp')
   revalidatePath('/account')
   redirect(redirectUrl)
