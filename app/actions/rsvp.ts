@@ -68,12 +68,14 @@ export async function loginFamily(prevState: unknown, formData: FormData) {
     cookieStore.set('rsvp_family_id', family.id, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
       maxAge: 60 * 60 * 24 * 365, // 1 year
       path: '/',
     })
     cookieStore.set('user-is-nosy', 'true', {
       httpOnly: false,
       secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
       maxAge: 60 * 60 * 24 * 365, // 1 year
       path: '/',
     })
