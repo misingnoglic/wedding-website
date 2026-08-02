@@ -27,7 +27,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
           {isAccountRedirect ? 'Account Access' : 'Guest Login'}
         </h1>
         <p className="text-zinc-600 font-karla text-lg max-w-xl mx-auto">
-          Please enter the family code provided on your invitation to access your details.
+          Please enter the password provided on your invitation to access your details.
         </p>
       </div>
 

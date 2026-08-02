@@ -64,7 +64,7 @@ export default function AccountView({ family }: { family: Family }) {
               </span>
             )}
           </div>
-          
+
           {isEditingFamilyName ? (
             <form action={updateFamilyNameAction} className="mt-2 mb-2">
               <div className="flex items-center gap-2 max-w-md">
@@ -171,19 +171,18 @@ export default function AccountView({ family }: { family: Family }) {
                   </p>
                   <div className="flex flex-wrap items-center gap-2 mt-1">
                     <span
-                      className={`text-xs px-2 py-0.5 rounded-full ${
-                        guest.isAttendingWedding === true
+                      className={`text-xs px-2 py-0.5 rounded-full ${guest.isAttendingWedding === true
                           ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
                           : guest.isAttendingWedding === false
-                          ? 'bg-zinc-100 text-zinc-500 border border-zinc-200'
-                          : 'bg-amber-50 text-amber-700 border border-amber-200'
-                      }`}
+                            ? 'bg-zinc-100 text-zinc-500 border border-zinc-200'
+                            : 'bg-amber-50 text-amber-700 border border-amber-200'
+                        }`}
                     >
                       {guest.isAttendingWedding === true
                         ? 'Attending Wedding'
                         : guest.isAttendingWedding === false
-                        ? 'Declined'
-                        : 'RSVP Pending'}
+                          ? 'Declined'
+                          : 'RSVP Pending'}
                     </span>
                     {guest.isAttendingWelcome === true && (
                       <span className="text-xs px-2 py-0.5 rounded-full bg-sage/15 text-zinc-700 border border-sage/30">
@@ -221,7 +220,7 @@ export default function AccountView({ family }: { family: Family }) {
               <span className="text-xs uppercase tracking-widest text-sage font-medium font-sans">Security</span>
               <h3 className="text-2xl font-sans text-black mt-1">Reset Password</h3>
               <p className="text-zinc-500 font-karla text-sm mt-1">
-                Choose a new family code to use for future logins.
+                Choose a new password to use for future logins.
               </p>
             </div>
 

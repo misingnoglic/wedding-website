@@ -13,7 +13,7 @@ interface LoginFormProps {
 export default function LoginForm({
   redirectUrl = '/rsvp',
   title = 'Welcome',
-  subtitle = 'Please enter your family code to continue.',
+  subtitle = 'Please enter your password to continue.',
   buttonText = 'Continue',
 }: LoginFormProps) {
   const [state, formAction, isPending] = useActionState(loginFamily, null)
@@ -29,7 +29,7 @@ export default function LoginForm({
         <input type="hidden" name="redirectUrl" value={redirectUrl} />
         <div>
           <label htmlFor="password" className="block text-sm font-medium text-black mb-2">
-            Family Code
+            Password
           </label>
           <input
             type="text"
