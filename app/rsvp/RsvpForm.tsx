@@ -201,7 +201,7 @@ export default function RsvpForm({ family }: { family: Family }) {
     const formData = new FormData(e.currentTarget)
     for (const [key, value] of formData.entries()) {
       if (typeof value === 'string' && checkSqlInjection(value)) {
-        recordSqlInjectionEasterEgg(value, key).catch(() => {})
+        recordSqlInjectionEasterEgg(value, key).catch(() => { })
         alert("Nice try")
         return
       }
@@ -524,46 +524,55 @@ export default function RsvpForm({ family }: { family: Family }) {
                 {!isDecliningBoth && (
                   <>
                     {/* Contact Info */}
-                    <div className="animate-in fade-in slide-in-from-top-2 duration-300">
-                      <label className="block text-sm font-medium text-zinc-700 mb-1">Email Address</label>
-                      <input
-                        type="email"
-                        name={`email_${guest.id}`}
-                        defaultValue={guest.email || ''}
-                        onChange={(e) => {
-                          if (checkSqlInjection(e.target.value)) {
-                            const val = e.target.value
-                            recordSqlInjectionEasterEgg(val, 'email').catch(() => {})
-                            alert("Nice try")
-                            e.target.value = ''
-                          }
-                        }}
-                        onBlur={(e) => {
-                          if (checkSqlInjection(e.target.value)) {
-                            const val = e.target.value
-                            recordSqlInjectionEasterEgg(val, 'email').catch(() => {})
-                            alert("Nice try")
-                            e.target.value = ''
-                            return
-                          }
-                          e.target.value = normalizeEmailInput(e.target.value)
-                          handleAutoSave()
-                        }}
-                        className="w-full px-3 py-2 border border-zinc-200 rounded-md focus:border-sage focus:ring-1 focus:ring-sage font-karla outline-none"
-                      />
-                    </div>
-                    <div className="animate-in fade-in slide-in-from-top-2 duration-300">
-                      <label className="block text-sm font-medium text-zinc-700 mb-1">Phone Number</label>
-                      <input
-                        type="tel"
-                        name={`phoneNumber_${guest.id}`}
-                        defaultValue={guest.phoneNumber || ''}
-                        onBlur={(e) => {
-                          e.target.value = normalizePhoneInput(e.target.value)
-                          handleAutoSave()
-                        }}
-                        className="w-full px-3 py-2 border border-zinc-200 rounded-md focus:border-sage focus:ring-1 focus:ring-sage font-karla outline-none"
-                      />
+                    <div className="col-span-1 md:col-span-2 animate-in fade-in slide-in-from-top-2 duration-300">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-zinc-700 mb-1">Email Address</label>
+                          <input
+                            type="email"
+                            name={`email_${guest.id}`}
+                            defaultValue={guest.email || ''}
+                            onChange={(e) => {
+                              if (checkSqlInjection(e.target.value)) {
+                                const val = e.target.value
+                                recordSqlInjectionEasterEgg(val, 'email').catch(() => { })
+                                alert("Nice try")
+                                e.target.value = ''
+                              }
+                            }}
+                            onBlur={(e) => {
+                              if (checkSqlInjection(e.target.value)) {
+                                const val = e.target.value
+                                recordSqlInjectionEasterEgg(val, 'email').catch(() => { })
+                                alert("Nice try")
+                                e.target.value = ''
+                                return
+                              }
+                              e.target.value = normalizeEmailInput(e.target.value)
+                              handleAutoSave()
+                            }}
+                            className="w-full px-3 py-2 border border-zinc-200 rounded-md focus:border-sage focus:ring-1 focus:ring-sage font-karla outline-none"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-zinc-700 mb-1">Phone Number</label>
+                          <input
+                            type="tel"
+                            name={`phoneNumber_${guest.id}`}
+                            defaultValue={guest.phoneNumber || ''}
+                            onBlur={(e) => {
+                              e.target.value = normalizePhoneInput(e.target.value)
+                              handleAutoSave()
+                            }}
+                            className="w-full px-3 py-2 border border-zinc-200 rounded-md focus:border-sage focus:ring-1 focus:ring-sage font-karla outline-none"
+                          />
+                        </div>
+                      </div>
+                      <div className="mt-3">
+                        <p className="text-xs text-zinc-500 font-karla mt-0.5">
+                          This information will be used to send updates and reminders about the wedding via text and email.
+                        </p>
+                      </div>
                     </div>
 
                     {/* Dietary */}
