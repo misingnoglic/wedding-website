@@ -134,6 +134,18 @@ export default function AddFamilyModal({
             </label>
           </div>
 
+          <div className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              id="isRehearsalDinnerInvitedCheckbox"
+              name="isRehearsalDinnerInvited"
+              className="accent-sage w-4 h-4 rounded cursor-pointer"
+            />
+            <label htmlFor="isRehearsalDinnerInvitedCheckbox" className="text-xs text-zinc-700 cursor-pointer select-none">
+              Invited to Rehearsal Dinner
+            </label>
+          </div>
+
           {/* Party Members Builder */}
           <div className="border-t border-zinc-100 pt-4 space-y-3">
             <div className="flex justify-between items-center">

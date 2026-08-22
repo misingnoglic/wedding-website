@@ -82,14 +82,27 @@ export default function EditFamilyModal({
           <div className="flex items-center gap-2 pt-1">
             <input
               type="checkbox"
-              id="editIsAdminCheckbox"
+              id={`edit-admin-${family.id}`}
               name="isAdmin"
               value="true"
               defaultChecked={family.isAdmin}
               className="accent-sage w-4 h-4 rounded cursor-pointer"
             />
-            <label htmlFor="editIsAdminCheckbox" className="text-xs text-zinc-700 cursor-pointer select-none">
-              Grant Admin Privileges (Admin Dashboard access)
+            <label htmlFor={`edit-admin-${family.id}`} className="text-xs text-zinc-700 cursor-pointer select-none">
+              Admin access
+            </label>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              id={`edit-rehearsal-${family.id}`}
+              name="isRehearsalDinnerInvited"
+              className="accent-sage w-4 h-4 rounded cursor-pointer"
+              defaultChecked={family.isRehearsalDinnerInvited}
+            />
+            <label htmlFor={`edit-rehearsal-${family.id}`} className="text-xs text-zinc-700 cursor-pointer select-none">
+              Invited to Rehearsal Dinner
             </label>
           </div>
 

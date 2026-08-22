@@ -78,6 +78,7 @@ export default function AdminDashboard({
           ...g,
           familyName: f.name,
           familyPassword: f.password,
+          isRehearsalDinnerInvited: f.isRehearsalDinnerInvited,
         })
       })
     })
@@ -95,6 +96,9 @@ export default function AdminDashboard({
     let welcomeAccepted = 0
     let welcomeDeclined = 0
     let welcomePending = 0
+    let rehearsalAccepted = 0
+    let rehearsalDeclined = 0
+    let rehearsalPending = 0
     let hasFlightsCount = 0
     let hasHotelCount = 0
     let dietaryCount = 0
@@ -108,6 +112,10 @@ export default function AdminDashboard({
       if (g.isAttendingWelcome === true) welcomeAccepted++
       else if (g.isAttendingWelcome === false) welcomeDeclined++
       else welcomePending++
+
+      if (g.isAttendingRehearsalDinner === true) rehearsalAccepted++
+      else if (g.isAttendingRehearsalDinner === false) rehearsalDeclined++
+      else rehearsalPending++
 
       if (g.arrivalFlightNumber || g.departureFlightNumber) hasFlightsCount++
       if (g.hotelName && g.hotelName.trim().length > 0) hasHotelCount++
@@ -129,6 +137,9 @@ export default function AdminDashboard({
       welcomeAccepted,
       welcomeDeclined,
       welcomePending,
+      rehearsalAccepted,
+      rehearsalDeclined,
+      rehearsalPending,
       responseRate,
       acceptanceRate,
       hasFlightsCount,
@@ -178,6 +189,8 @@ export default function AdminDashboard({
             if (!family.guests.some((g) => g.isAttendingWedding === null)) return false
           } else if (rsvpFilter === 'attending_welcome') {
             if (!family.guests.some((g) => g.isAttendingWelcome === true)) return false
+          } else if (rsvpFilter === 'attending_rehearsal') {
+            if (!family.guests.some((g) => g.isAttendingRehearsalDinner === true)) return false
           }
         }
 
@@ -234,6 +247,7 @@ export default function AdminDashboard({
         if (rsvpFilter === 'declined_wedding' && g.isAttendingWedding !== false) return false
         if (rsvpFilter === 'pending_wedding' && g.isAttendingWedding !== null) return false
         if (rsvpFilter === 'attending_welcome' && g.isAttendingWelcome !== true) return false
+        if (rsvpFilter === 'attending_rehearsal' && g.isAttendingRehearsalDinner !== true) return false
       }
 
       if (travelFilter !== 'all') {

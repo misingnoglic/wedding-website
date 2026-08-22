@@ -1,9 +1,32 @@
-export default function Itinerary() {
+import { getOptionalAuthenticatedFamily } from '@/lib/auth'
+
+export default async function Itinerary() {
+    const family = await getOptionalAuthenticatedFamily();
+    
     return (
         <div className="w-full max-w-4xl px-4 py-8 md:py-12 animate-fade-in text-center flex flex-col items-center">
             <h1 className="text-5xl md:text-7xl font-script mb-16">Itinerary</h1>
 
             <div className="w-full max-w-2xl text-left relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-zinc-300 before:to-transparent">
+
+                {/* Rehearsal Dinner (Conditional) */}
+                {family?.isRehearsalDinnerInvited && (
+                    <div className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group mb-12">
+                        <div className="flex items-center justify-center w-10 h-10 rounded-full border-4 border-white bg-sage shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 shadow-sm z-10 ml-0 md:ml-auto md:mr-auto"></div>
+                        <div className="w-[calc(100%-4rem)] md:w-[calc(50%-3rem)] bg-zinc-50 p-6 rounded-sm border border-zinc-100 transition-transform duration-300 hover:-translate-y-1">
+                            <div className="flex flex-col mb-2">
+                                <span className="text-sage font-sans tracking-wide uppercase text-sm mb-1">12/10/26 • 6:00 PM – 9:00 PM</span>
+                                <h3 className="text-xl font-sans">Rehearsal Dinner</h3>
+                            </div>
+                            <p className="text-zinc-600 font-karla mb-3">
+                                Please join us for a rehearsal dinner.
+                            </p>
+                            <a href="https://www.funkygeisha.com.mx/en/asian-thai-cabo-restaurant" target="_blank" rel="noreferrer" className="inline-block text-sm font-sans tracking-wide uppercase text-black hover:text-sage underline underline-offset-4 transition-colors">
+                                Funky Geisha Cabo
+                            </a>
+                        </div>
+                    </div>
+                )}
 
                 {/* Event 1 */}
                 <div className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group mb-12">

@@ -16,6 +16,7 @@ export async function createFamilyAdmin(prevState: unknown, formData: FormData) 
   const rawPassword = formData.get('password') as string || ''
   const password = rawPassword.trim()
   const isAdmin = formData.get('isAdmin') === 'true' || formData.get('isAdmin') === 'on'
+  const isRehearsalDinnerInvited = formData.get('isRehearsalDinnerInvited') === 'true' || formData.get('isRehearsalDinnerInvited') === 'on'
 
   if (!name || name.length < 2) {
     return { error: 'Family name must be at least 2 characters long.' }
@@ -72,6 +73,7 @@ export async function createFamilyAdmin(prevState: unknown, formData: FormData) 
         name,
         password,
         isAdmin,
+        isRehearsalDinnerInvited,
         guests: {
           create: guestsToCreate,
         },
@@ -111,6 +113,7 @@ export async function updateFamilyAdmin(prevState: unknown, formData: FormData) 
   const rawPassword = formData.get('password') as string || ''
   const password = rawPassword.trim()
   const isAdmin = formData.get('isAdmin') === 'true' || formData.get('isAdmin') === 'on'
+  const isRehearsalDinnerInvited = formData.get('isRehearsalDinnerInvited') === 'true' || formData.get('isRehearsalDinnerInvited') === 'on'
 
   if (!familyId) {
     return { error: 'Missing family ID.' }
@@ -148,6 +151,7 @@ export async function updateFamilyAdmin(prevState: unknown, formData: FormData) 
         name,
         password,
         isAdmin,
+        isRehearsalDinnerInvited,
       },
     })
 
@@ -299,6 +303,9 @@ export async function updateGuestAdmin(prevState: unknown, formData: FormData) {
   const attendingWelcomeStr = formData.get('isAttendingWelcome') as string
   const isAttendingWelcome = attendingWelcomeStr === 'true' ? true : attendingWelcomeStr === 'false' ? false : null
 
+  const attendingRehearsalStr = formData.get('isAttendingRehearsalDinner') as string
+  const isAttendingRehearsalDinner = attendingRehearsalStr === 'true' ? true : attendingRehearsalStr === 'false' ? false : null
+
   const arrivalFlightNumber = formatFlightNumber(formData.get('arrivalFlightNumber') as string)
   const arrivalDate = arrivalFlightNumber ? ((formData.get('arrivalDate') as string || '').trim() || null) : null
 
@@ -331,6 +338,7 @@ export async function updateGuestAdmin(prevState: unknown, formData: FormData) {
         phoneNumber,
         isAttendingWedding,
         isAttendingWelcome,
+        isAttendingRehearsalDinner,
         dietaryRestrictions,
         arrivalFlightNumber,
         arrivalDate,
@@ -343,16 +351,18 @@ export async function updateGuestAdmin(prevState: unknown, formData: FormData) {
 
     const weddingStatusText = isAttendingWedding === true ? 'Attending' : isAttendingWedding === false ? 'Declined' : 'Pending'
     const welcomeStatusText = isAttendingWelcome === true ? 'Attending' : isAttendingWelcome === false ? 'Declined' : 'Pending'
+    const rehearsalStatusText = isAttendingRehearsalDinner === true ? 'Attending' : isAttendingRehearsalDinner === false ? 'Declined' : 'Pending'
 
     await logAuditEvent({
       familyId: existing.familyId,
       actorType: 'ADMIN',
       actorName: `${admin.name} (Admin)`,
       eventType: 'RSVP_UPDATED',
-      description: `Admin updated RSVP for "${updated.name}" (${existing.family.name}): Wedding: ${weddingStatusText}, Welcome: ${welcomeStatusText}.`,
+      description: `Admin updated RSVP for "${updated.name}" (${existing.family.name}): Wedding: ${weddingStatusText}, Welcome: ${welcomeStatusText}, Rehearsal: ${rehearsalStatusText}.`,
       details: JSON.stringify({
         isAttendingWedding,
         isAttendingWelcome,
+        isAttendingRehearsalDinner,
         dietaryRestrictions,
         hotelName,
         arrivalFlightNumber,

@@ -11,6 +11,7 @@ type Guest = {
   email: string | null
   phoneNumber: string | null
   isAttendingWelcome: boolean | null
+  isAttendingRehearsalDinner: boolean | null
   isAttendingWedding: boolean | null
   dietaryRestrictions: string | null
   arrivalFlightNumber: string | null
@@ -24,6 +25,7 @@ type Guest = {
 type Family = {
   id: string
   name: string
+  isRehearsalDinnerInvited: boolean
   guests: Guest[]
 }
 
@@ -152,6 +154,7 @@ export default function RsvpForm({ family }: { family: Family }) {
   const [guestState, setGuestState] = useState(() => {
     const initialState: Record<string, {
       isAttendingWelcome: boolean | null,
+      isAttendingRehearsalDinner: boolean | null,
       isAttendingWedding: boolean | null,
       arrivalDate: string,
       departureDate: string,
@@ -176,6 +179,7 @@ export default function RsvpForm({ family }: { family: Family }) {
 
       initialState[g.id] = {
         isAttendingWelcome: g.isAttendingWelcome,
+        isAttendingRehearsalDinner: g.isAttendingRehearsalDinner,
         isAttendingWedding: g.isAttendingWedding,
         arrivalDate: g.arrivalDate || '2026-12-10',
         departureDate: g.departureDate || '2026-12-13',
@@ -217,6 +221,7 @@ export default function RsvpForm({ family }: { family: Family }) {
       ...prev,
       [guestId]: {
         isAttendingWelcome: null,
+        isAttendingRehearsalDinner: null,
         isAttendingWedding: null,
         arrivalDate: '2026-12-10',
         departureDate: '2026-12-13',
@@ -464,6 +469,36 @@ export default function RsvpForm({ family }: { family: Family }) {
 
                 {/* RSVP Statuses */}
                 <div className="col-span-1 md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6 bg-zinc-50 p-4 rounded-lg">
+                  {family.isRehearsalDinnerInvited && (
+                    <div>
+                      <label className="block text-sm font-medium text-black mb-3">Rehearsal Dinner (Dec 10)</label>
+                      <div className="flex gap-4">
+                        <label className="flex items-center gap-2 cursor-pointer font-karla text-zinc-700">
+                          <input
+                            type="radio"
+                            name={`isAttendingRehearsalDinner_${guest.id}`}
+                            value="true"
+                            checked={guestState[guest.id].isAttendingRehearsalDinner === true}
+                            onChange={() => setGuestState(prev => ({ ...prev, [guest.id]: { ...prev[guest.id], isAttendingRehearsalDinner: true } }))}
+                            className="accent-sage w-4 h-4"
+                          />
+                          Joyfully Accepts
+                        </label>
+                        <label className="flex items-center gap-2 cursor-pointer font-karla text-zinc-700">
+                          <input
+                            type="radio"
+                            name={`isAttendingRehearsalDinner_${guest.id}`}
+                            value="false"
+                            checked={guestState[guest.id].isAttendingRehearsalDinner === false}
+                            onChange={() => setGuestState(prev => ({ ...prev, [guest.id]: { ...prev[guest.id], isAttendingRehearsalDinner: false } }))}
+                            className="accent-sage w-4 h-4"
+                          />
+                          Regretfully Declines
+                        </label>
+                      </div>
+                    </div>
+                  )}
+
                   <div>
                     <label className="block text-sm font-medium text-black mb-3">Welcome Party (Dec 11)</label>
                     <div className="flex gap-4">

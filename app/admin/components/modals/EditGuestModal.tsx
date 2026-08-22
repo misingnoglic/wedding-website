@@ -159,6 +159,23 @@ export default function EditGuestModal({
                   <option value="false">✕ Declines</option>
                 </select>
               </div>
+
+              {guest.isRehearsalDinnerInvited && (
+                <div>
+                  <label className="block text-xs text-zinc-600 mb-1">Rehearsal Dinner (Dec 10)</label>
+                  <select
+                    name="isAttendingRehearsalDinner"
+                    defaultValue={
+                      guest.isAttendingRehearsalDinner === true ? 'true' : guest.isAttendingRehearsalDinner === false ? 'false' : ''
+                    }
+                    className="w-full px-3 py-2 bg-white border border-zinc-200 rounded-lg text-xs outline-none focus:border-sage font-medium"
+                  >
+                    <option value="">Pending / Not Answered</option>
+                    <option value="true">✓ Attending</option>
+                    <option value="false">✕ Declines</option>
+                  </select>
+                </div>
+              )}
             </div>
           </div>
 

@@ -6,6 +6,7 @@ export type Guest = {
   email: string | null
   phoneNumber: string | null
   isAttendingWelcome: boolean | null
+  isAttendingRehearsalDinner: boolean | null
   isAttendingWedding: boolean | null
   dietaryRestrictions: string | null
   arrivalFlightNumber: string | null
@@ -21,6 +22,7 @@ export type Guest = {
 export type FlatGuest = Guest & {
   familyName: string
   familyPassword?: string
+  isRehearsalDinnerInvited: boolean
 }
 
 export type FamilyWithGuests = {
@@ -28,6 +30,7 @@ export type FamilyWithGuests = {
   name: string
   password: string
   isAdmin: boolean
+  isRehearsalDinnerInvited: boolean
   passwordUpdatedAt: Date | string | null
   createdAt: Date | string
   updatedAt: Date | string
@@ -78,7 +81,7 @@ export type SmsMessageItem = {
 }
 
 export type TabType = 'families' | 'guests' | 'dietary' | 'travel' | 'songs' | 'messages' | 'activity'
-export type RsvpFilter = 'all' | 'attending_wedding' | 'declined_wedding' | 'pending_wedding' | 'attending_welcome'
+export type RsvpFilter = 'all' | 'attending_wedding' | 'declined_wedding' | 'pending_wedding' | 'attending_welcome' | 'attending_rehearsal'
 export type TravelFilter = 'all' | 'has_flights' | 'has_hotel' | 'missing_travel'
 export type SortOption = 'name_asc' | 'name_desc' | 'guests_desc' | 'updated_desc'
 export type ActivityFilter = 'all' | 'visits' | 'rsvps' | 'messages' | 'management' | 'auth'
@@ -89,6 +92,9 @@ export interface AdminStats {
   weddingAccepted: number
   weddingDeclined: number
   weddingPending: number
+  rehearsalAccepted: number
+  rehearsalDeclined: number
+  rehearsalPending: number
   welcomeAccepted: number
   welcomeDeclined: number
   welcomePending: number

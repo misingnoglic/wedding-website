@@ -94,6 +94,11 @@ export default function FamiliesTab({
                         Admin
                       </span>
                     )}
+                    {family.isRehearsalDinnerInvited && (
+                      <span className="px-2 py-0.5 rounded-full text-[10px] uppercase tracking-wider font-sans font-semibold bg-blue-100 text-blue-800">
+                        Rehearsal
+                      </span>
+                    )}
                     {hasDiets && (
                       <span className="px-2 py-0.5 rounded-full text-[10px] uppercase tracking-wider font-sans font-semibold bg-amber-100 text-amber-800">
                         Dietary
@@ -256,6 +261,7 @@ export default function FamiliesTab({
                       ...guest,
                       familyName: family.name,
                       familyPassword: family.password,
+                      isRehearsalDinnerInvited: family.isRehearsalDinnerInvited,
                     }
 
                     return (

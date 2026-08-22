@@ -457,6 +457,10 @@ export async function updateRsvp(prevState: unknown, formData: FormData) {
         const isAttendingWelcome =
           attendingWelcomeStr === 'true' ? true : attendingWelcomeStr === 'false' ? false : null
 
+        const attendingRehearsalStr = formData.get(`isAttendingRehearsalDinner_${guestId}`) as string
+        const isAttendingRehearsalDinner =
+          attendingRehearsalStr === 'true' ? true : attendingRehearsalStr === 'false' ? false : null
+
         const attendingWeddingStr = formData.get(`isAttendingWedding_${guestId}`) as string
         const isAttendingWedding =
           attendingWeddingStr === 'true' ? true : attendingWeddingStr === 'false' ? false : null
@@ -502,6 +506,13 @@ export async function updateRsvp(prevState: unknown, formData: FormData) {
           if (isAttendingWelcome === true) diffs.push('attending Welcome Party')
           else if (isAttendingWelcome === false) diffs.push('declined Welcome Party')
           else diffs.push('set Welcome Party to pending')
+        }
+
+        // Rehearsal Dinner attendance
+        if (prev.isAttendingRehearsalDinner !== isAttendingRehearsalDinner) {
+          if (isAttendingRehearsalDinner === true) diffs.push('attending Rehearsal Dinner')
+          else if (isAttendingRehearsalDinner === false) diffs.push('declined Rehearsal Dinner')
+          else diffs.push('set Rehearsal Dinner to pending')
         }
 
         // 3. Dietary
@@ -551,6 +562,7 @@ export async function updateRsvp(prevState: unknown, formData: FormData) {
             email,
             phoneNumber,
             isAttendingWelcome,
+            isAttendingRehearsalDinner,
             isAttendingWedding,
             dietaryRestrictions,
             arrivalFlightNumber,

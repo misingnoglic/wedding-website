@@ -31,6 +31,7 @@ export default function GuestsTab({
               <th className="py-3.5 px-4 font-semibold">Party</th>
               <th className="py-3.5 px-4 font-semibold">Wedding (Dec 12)</th>
               <th className="py-3.5 px-4 font-semibold">Welcome (Dec 11)</th>
+              <th className="py-3.5 px-4 font-semibold">Rehearsal (Dec 10)</th>
               <th className="py-3.5 px-4 font-semibold">Dietary</th>
               <th className="py-3.5 px-4 font-semibold">Hotel & Flights</th>
               <th className="py-3.5 px-4 font-semibold text-right">Actions</th>
@@ -81,6 +82,26 @@ export default function GuestsTab({
                         ? '✕ Declined'
                         : 'Pending'}
                   </span>
+                </td>
+                <td className="py-3 px-4">
+                  {g.isRehearsalDinnerInvited ? (
+                    <span
+                      className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium ${g.isAttendingRehearsalDinner === true
+                        ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                        : g.isAttendingRehearsalDinner === false
+                          ? 'bg-rose-50 text-rose-700 border border-rose-200'
+                          : 'bg-amber-50 text-amber-700 border border-amber-200'
+                        }`}
+                    >
+                      {g.isAttendingRehearsalDinner === true
+                        ? '✓ Attending'
+                        : g.isAttendingRehearsalDinner === false
+                          ? '✕ Declined'
+                          : 'Pending'}
+                    </span>
+                  ) : (
+                    <span className="text-zinc-300">—</span>
+                  )}
                 </td>
                 <td className="py-3 px-4">
                   {g.dietaryRestrictions ? (

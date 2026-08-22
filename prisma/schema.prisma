@@ -3,37 +3,39 @@ generator client {
 }
 
 datasource db {
-  provider  = "postgresql"
-  url       = env("DATABASE_URL")
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 model Family {
-  id                String        @id @default(cuid())
-  name              String
-  password          String        @unique
-  isAdmin           Boolean       @default(false)
-  passwordUpdatedAt DateTime?
-  guests            Guest[]
-  smsMessages       SmsMessage[]
-  auditEvents       AuditEvent[]
-  createdAt         DateTime      @default(now())
-  updatedAt         DateTime      @updatedAt
+  id                       String       @id @default(cuid())
+  name                     String
+  password                 String       @unique
+  isAdmin                  Boolean      @default(false)
+  isRehearsalDinnerInvited Boolean      @default(false)
+  passwordUpdatedAt        DateTime?
+  guests                   Guest[]
+  smsMessages              SmsMessage[]
+  auditEvents              AuditEvent[]
+  createdAt                DateTime     @default(now())
+  updatedAt                DateTime     @updatedAt
 }
 
 model Guest {
-  id                    String       @id @default(cuid())
-  familyId              String
-  family                Family       @relation(fields: [familyId], references: [id], onDelete: Cascade)
-  
-  title                 String?
-  name                  String
-  email                 String?
-  phoneNumber           String?
-  
+  id       String @id @default(cuid())
+  familyId String
+  family   Family @relation(fields: [familyId], references: [id], onDelete: Cascade)
+
+  title       String?
+  name        String
+  email       String?
+  phoneNumber String?
+
   // RSVP Statuses
-  isAttendingWelcome    Boolean?
-  isAttendingWedding    Boolean?
-  
+  isAttendingWelcome         Boolean?
+  isAttendingRehearsalDinner Boolean?
+  isAttendingWedding         Boolean?
+
   // Additional info
   dietaryRestrictions   String?
   arrivalFlightNumber   String?
@@ -43,29 +45,29 @@ model Guest {
   hotelName             String?
   songRequests          String?
 
-  smsMessages           SmsMessage[]
+  smsMessages SmsMessage[]
 
-  createdAt             DateTime     @default(now())
-  updatedAt             DateTime     @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model SmsMessage {
-  id          String   @id @default(cuid())
-  fromPhone   String   // Sender phone number e.g. +14155552671
-  toPhone     String?  // Twilio phone number
-  body        String   // SMS text message content
-  messageSid  String?  @unique // Twilio MessageSid or SmsSid
-  
-  guestId     String?
-  guest       Guest?   @relation(fields: [guestId], references: [id], onDelete: SetNull)
-  
-  familyId    String?
-  family      Family?  @relation(fields: [familyId], references: [id], onDelete: SetNull)
-  
-  rawPayload  String?  // JSON stringified webhook payload for diagnostics
-  
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id         String  @id @default(cuid())
+  fromPhone  String // Sender phone number e.g. +14155552671
+  toPhone    String? // Twilio phone number
+  body       String // SMS text message content
+  messageSid String? @unique // Twilio MessageSid or SmsSid
+
+  guestId String?
+  guest   Guest?  @relation(fields: [guestId], references: [id], onDelete: SetNull)
+
+  familyId String?
+  family   Family? @relation(fields: [familyId], references: [id], onDelete: SetNull)
+
+  rawPayload String? // JSON stringified webhook payload for diagnostics
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([fromPhone])
   @@index([createdAt])
@@ -74,15 +76,15 @@ model SmsMessage {
 }
 
 model AuditEvent {
-  id          String    @id @default(cuid())
+  id          String   @id @default(cuid())
   familyId    String?
-  family      Family?   @relation(fields: [familyId], references: [id], onDelete: SetNull)
-  actorType   String    // 'ADMIN' | 'GUEST' | 'SYSTEM'
-  actorName   String    // e.g. "Arya & Christa (Admin)" or "The Smith Family"
-  eventType   String    // 'WEBSITE_VISIT', 'RSVP_UPDATED', 'FAMILY_CREATED', 'FAMILY_UPDATED', 'FAMILY_DELETED', 'GUEST_ADDED', 'GUEST_UPDATED', 'GUEST_DELETED', 'PASSWORD_RESET', 'ADMIN_IMPERSONATION', 'SMS_RECEIVED'
+  family      Family?  @relation(fields: [familyId], references: [id], onDelete: SetNull)
+  actorType   String // 'ADMIN' | 'GUEST' | 'SYSTEM'
+  actorName   String // e.g. "Arya & Christa (Admin)" or "The Smith Family"
+  eventType   String // 'WEBSITE_VISIT', 'RSVP_UPDATED', 'FAMILY_CREATED', 'FAMILY_UPDATED', 'FAMILY_DELETED', 'GUEST_ADDED', 'GUEST_UPDATED', 'GUEST_DELETED', 'PASSWORD_RESET', 'ADMIN_IMPERSONATION', 'SMS_RECEIVED'
   description String
   details     String?
-  createdAt   DateTime  @default(now())
+  createdAt   DateTime @default(now())
 
   @@index([createdAt])
   @@index([familyId])

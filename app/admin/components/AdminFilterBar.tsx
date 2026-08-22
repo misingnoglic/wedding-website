@@ -103,11 +103,12 @@ export default function AdminFilterBar({
             aria-label="RSVP Status Filter"
             className="px-2.5 py-1.5 bg-zinc-50 border border-zinc-200 rounded-lg text-zinc-700 outline-none focus:border-sage"
           >
-            <option value="all">All Statuses</option>
+            <option value="all">All RSVP Statuses</option>
             <option value="attending_wedding">Attending Wedding</option>
             <option value="declined_wedding">Declined Wedding</option>
-            <option value="pending_wedding">Pending Responses</option>
-            <option value="attending_welcome">Attending Welcome Party</option>
+            <option value="pending_wedding">Pending Wedding</option>
+            <option value="attending_welcome">Attending Welcome</option>
+            <option value="attending_rehearsal">Attending Rehearsal</option>
           </select>
         </div>
 

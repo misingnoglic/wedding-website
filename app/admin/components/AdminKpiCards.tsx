@@ -8,7 +8,7 @@ interface AdminKpiCardsProps {
 
 export default function AdminKpiCards({ stats }: AdminKpiCardsProps) {
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-4 md:gap-6">
       {/* Headcount Card */}
       <div className="bg-white rounded-2xl p-6 border border-zinc-200/80 shadow-sm relative overflow-hidden">
         <div className="absolute top-0 left-0 w-1.5 h-full bg-sage" />
@@ -63,6 +63,24 @@ export default function AdminKpiCards({ stats }: AdminKpiCardsProps) {
           </span>
           <span className="text-amber-600 font-medium">
             Pending: <strong>{stats.welcomePending}</strong>
+          </span>
+        </div>
+      </div>
+
+      {/* Rehearsal Dinner Card */}
+      <div className="bg-white rounded-2xl p-6 border border-zinc-200/80 shadow-sm relative overflow-hidden">
+        <div className="absolute top-0 left-0 w-1.5 h-full bg-blue-500" />
+        <span className="text-xs uppercase tracking-wider text-zinc-500 font-sans">Rehearsal (Dec 10)</span>
+        <div className="flex items-baseline justify-between mt-2">
+          <span className="text-3xl md:text-4xl font-bold font-sans text-blue-700">{stats.rehearsalAccepted}</span>
+          <span className="text-xs font-karla text-blue-700 font-medium">Attending</span>
+        </div>
+        <div className="mt-4 pt-3 border-t border-zinc-100 flex items-center justify-between text-xs font-karla">
+          <span className="text-zinc-500">
+            Declined: <strong className="text-zinc-800">{stats.rehearsalDeclined}</strong>
+          </span>
+          <span className="text-amber-600 font-medium">
+            Pending: <strong>{stats.rehearsalPending}</strong>
           </span>
         </div>
       </div>
