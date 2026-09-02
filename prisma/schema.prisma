@@ -17,6 +17,7 @@ model Family {
   guests                   Guest[]
   smsMessages              SmsMessage[]
   auditEvents              AuditEvent[]
+  pushSubscriptions        PushSubscription[]
   createdAt                DateTime     @default(now())
   updatedAt                DateTime     @updatedAt
 }
@@ -89,4 +90,18 @@ model AuditEvent {
   @@index([createdAt])
   @@index([familyId])
   @@index([eventType])
+}
+
+model PushSubscription {
+  id        String   @id @default(cuid())
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  
+  familyId  String
+  family    Family   @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  
+  createdAt DateTime @default(now())
+
+  @@index([familyId])
 }

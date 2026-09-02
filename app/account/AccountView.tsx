@@ -3,6 +3,7 @@
 import { useState, useActionState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { resetPassword, logoutFamily, updateFamilyName } from '@/app/actions/rsvp'
+import PushNotificationManager from '@/app/admin/components/PushNotificationManager'
 
 type Guest = {
   id: string
@@ -119,11 +120,10 @@ export default function AccountView({ family }: { family: Family }) {
               {totalGuests} {totalGuests === 1 ? 'guest' : 'guests'} in party
             </span>
             <span
-              className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium font-karla ${
-                attendingCount > 0
+              className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium font-karla ${attendingCount > 0
                   ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
                   : 'bg-amber-50 text-amber-700 border border-amber-200'
-              }`}
+                }`}
             >
               {attendingCount > 0 ? `${attendingCount} attending wedding` : 'RSVP pending'}
             </span>
@@ -147,6 +147,9 @@ export default function AccountView({ family }: { family: Family }) {
             >
               Go to RSVP
             </Link>
+            <div className="flex-1 sm:flex-none text-center flex items-center justify-center">
+              <PushNotificationManager />
+            </div>
             <form action={() => logoutFamily('/login?redirect=/account')}>
               <button
                 type="submit"

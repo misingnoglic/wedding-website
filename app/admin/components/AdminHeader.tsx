@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { AdminStats, FlatGuest, FamilyWithGuests } from '../types'
+import PushNotificationManager from './PushNotificationManager'
 
 interface AdminHeaderProps {
   currentAdmin: {
@@ -143,6 +144,7 @@ export default function AdminHeader({
         >
           My Account
         </Link>
+        <PushNotificationManager />
       </div>
     </div>
   )

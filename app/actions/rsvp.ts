@@ -5,6 +5,7 @@ import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { db } from '@/lib/db'
 import { logAuditEvent } from '@/lib/audit'
+import { sendAdminPushNotification } from '@/lib/push'
 
 export async function loginFamily(prevState: unknown, formData: FormData) {
   const password = formData.get('password') as string
@@ -49,7 +50,7 @@ export async function loginFamily(prevState: unknown, formData: FormData) {
 
   try {
     const family = await db.family.findFirst({
-      where: { 
+      where: {
         password: {
           equals: password.trim(),
           mode: 'insensitive'
@@ -94,7 +95,7 @@ export async function loginFamily(prevState: unknown, formData: FormData) {
     console.error('Login error:', error)
     return { error: 'Something went wrong. Please try again.' }
   }
-  
+
   redirect(redirectUrl)
 }
 
@@ -622,6 +623,12 @@ export async function updateRsvp(prevState: unknown, formData: FormData) {
           }),
         })
       }
+
+      // Send push notification to admins
+      // Make sure we aren't waiting on it so it doesn't block the response
+      const title = `RSVP Update from ${familyDisplayName}: ${guestChanges}`
+      const body = guestChanges.join('\n')
+      sendAdminPushNotification(title, body, '/admin').catch(console.error)
     }
 
     revalidatePath('/rsvp')

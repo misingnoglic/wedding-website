@@ -35,7 +35,7 @@ interface MessageThread {
 
 const QUICK_REPLIES = [
   'We can’t wait to celebrate with you in Cabo! 🥂',
-  'Thanks for letting us know! Check out aryachristawedding.com/travel for hotel block info.',
+  'Thanks for letting us know! Check out aryachrista.wedding/travel for hotel block info.',
   'Got your RSVP, thank you so much! 🎉',
   'Let us know if you have any dietary restrictions or travel questions!',
 ]
@@ -55,7 +55,7 @@ export default function MessagesTab({ messages, allGuests }: MessagesTabProps) {
   // Webhook URL helper
   const webhookUrl = typeof window !== 'undefined'
     ? `${window.location.origin}/api/webhooks/twilio`
-    : 'https://aryachristawedding.com/api/webhooks/twilio'
+    : 'https://aryachrista.wedding/api/webhooks/twilio'
 
   const handleCopyWebhook = () => {
     navigator.clipboard.writeText(webhookUrl)
@@ -123,7 +123,7 @@ export default function MessagesTab({ messages, allGuests }: MessagesTabProps) {
     // 1. Process DB incoming messages
     for (const msg of messages) {
       const phoneKey = getComparablePhone(msg.fromPhone) || msg.fromPhone.trim().toLowerCase()
-      
+
       // Match guest from allGuests flat roster or relation
       const matchedGuest = allGuests.find((g) => doPhoneNumbersMatch(g.phoneNumber, msg.fromPhone)) || null
       const familyName = matchedGuest?.familyName || msg.guest?.family?.name || msg.family?.name || null
@@ -349,11 +349,10 @@ export default function MessagesTab({ messages, allGuests }: MessagesTabProps) {
       ) : (
         /* Threaded Two-Column Layout */
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 h-[650px] sm:h-[720px] rounded-2xl border border-zinc-200/80 overflow-hidden bg-zinc-50/40">
-          
+
           {/* Left Column: Conversation Thread Roster (4 cols on lg) */}
-          <div className={`lg:col-span-4 flex flex-col border-r border-zinc-200/80 bg-white h-full ${
-            activeThread ? 'hidden lg:flex' : 'flex'
-          }`}>
+          <div className={`lg:col-span-4 flex flex-col border-r border-zinc-200/80 bg-white h-full ${activeThread ? 'hidden lg:flex' : 'flex'
+            }`}>
             {/* Search and Filters */}
             <div className="p-3.5 border-b border-zinc-100 space-y-2.5 bg-white">
               {/* Search */}
@@ -389,33 +388,30 @@ export default function MessagesTab({ messages, allGuests }: MessagesTabProps) {
                 <button
                   type="button"
                   onClick={() => setFilter('all')}
-                  className={`flex-1 py-1 rounded-lg transition-colors cursor-pointer text-center ${
-                    filter === 'all'
-                      ? 'bg-black text-white font-medium shadow-xs'
-                      : 'text-zinc-600 hover:text-black'
-                  }`}
+                  className={`flex-1 py-1 rounded-lg transition-colors cursor-pointer text-center ${filter === 'all'
+                    ? 'bg-black text-white font-medium shadow-xs'
+                    : 'text-zinc-600 hover:text-black'
+                    }`}
                 >
                   All ({threads.length})
                 </button>
                 <button
                   type="button"
                   onClick={() => setFilter('matched')}
-                  className={`flex-1 py-1 rounded-lg transition-colors cursor-pointer text-center ${
-                    filter === 'matched'
-                      ? 'bg-black text-white font-medium shadow-xs'
-                      : 'text-zinc-600 hover:text-black'
-                  }`}
+                  className={`flex-1 py-1 rounded-lg transition-colors cursor-pointer text-center ${filter === 'matched'
+                    ? 'bg-black text-white font-medium shadow-xs'
+                    : 'text-zinc-600 hover:text-black'
+                    }`}
                 >
                   Guests ({matchedThreadCount})
                 </button>
                 <button
                   type="button"
                   onClick={() => setFilter('unknown')}
-                  className={`flex-1 py-1 rounded-lg transition-colors cursor-pointer text-center ${
-                    filter === 'unknown'
-                      ? 'bg-black text-white font-medium shadow-xs'
-                      : 'text-zinc-600 hover:text-black'
-                  }`}
+                  className={`flex-1 py-1 rounded-lg transition-colors cursor-pointer text-center ${filter === 'unknown'
+                    ? 'bg-black text-white font-medium shadow-xs'
+                    : 'text-zinc-600 hover:text-black'
+                    }`}
                 >
                   Unknown ({unknownThreadCount})
                 </button>
@@ -435,11 +431,11 @@ export default function MessagesTab({ messages, allGuests }: MessagesTabProps) {
                   const guestName = thread.guest?.name || 'Unknown Sender'
                   const initials = thread.guest
                     ? thread.guest.name
-                        .split(' ')
-                        .map((n) => n[0])
-                        .join('')
-                        .slice(0, 2)
-                        .toUpperCase()
+                      .split(' ')
+                      .map((n) => n[0])
+                      .join('')
+                      .slice(0, 2)
+                      .toUpperCase()
                     : '📱'
 
                   return (
@@ -447,19 +443,17 @@ export default function MessagesTab({ messages, allGuests }: MessagesTabProps) {
                       key={thread.phoneKey}
                       type="button"
                       onClick={() => setSelectedPhoneKey(thread.phoneKey)}
-                      className={`w-full text-left p-3.5 transition-all flex items-start gap-3 cursor-pointer border-l-3 ${
-                        isSelected
-                          ? 'bg-sage/10 border-sage shadow-xs'
-                          : 'hover:bg-zinc-50/80 border-transparent'
-                      }`}
+                      className={`w-full text-left p-3.5 transition-all flex items-start gap-3 cursor-pointer border-l-3 ${isSelected
+                        ? 'bg-sage/10 border-sage shadow-xs'
+                        : 'hover:bg-zinc-50/80 border-transparent'
+                        }`}
                     >
                       {/* Avatar */}
                       <div
-                        className={`w-10 h-10 rounded-full flex items-center justify-center font-sans font-semibold text-xs shrink-0 ${
-                          isMatched
-                            ? 'bg-sage text-white shadow-xs'
-                            : 'bg-zinc-200 text-zinc-600'
-                        }`}
+                        className={`w-10 h-10 rounded-full flex items-center justify-center font-sans font-semibold text-xs shrink-0 ${isMatched
+                          ? 'bg-sage text-white shadow-xs'
+                          : 'bg-zinc-200 text-zinc-600'
+                          }`}
                       >
                         {initials}
                       </div>
@@ -506,9 +500,8 @@ export default function MessagesTab({ messages, allGuests }: MessagesTabProps) {
           </div>
 
           {/* Right Column: Active Thread & Mock Message Composer (8 cols on lg) */}
-          <div className={`lg:col-span-8 flex flex-col h-full bg-stone-50/50 ${
-            !activeThread ? 'hidden lg:flex items-center justify-center text-center p-8' : 'flex'
-          }`}>
+          <div className={`lg:col-span-8 flex flex-col h-full bg-stone-50/50 ${!activeThread ? 'hidden lg:flex items-center justify-center text-center p-8' : 'flex'
+            }`}>
             {activeThread ? (
               <>
                 {/* Active Thread Header */}
@@ -528,17 +521,16 @@ export default function MessagesTab({ messages, allGuests }: MessagesTabProps) {
 
                     {/* Avatar */}
                     <div
-                      className={`w-9 h-9 rounded-full flex items-center justify-center font-sans font-semibold text-xs shrink-0 ${
-                        activeThread.guest ? 'bg-sage text-white' : 'bg-zinc-200 text-zinc-600'
-                      }`}
+                      className={`w-9 h-9 rounded-full flex items-center justify-center font-sans font-semibold text-xs shrink-0 ${activeThread.guest ? 'bg-sage text-white' : 'bg-zinc-200 text-zinc-600'
+                        }`}
                     >
                       {activeThread.guest
                         ? activeThread.guest.name
-                            .split(' ')
-                            .map((n) => n[0])
-                            .join('')
-                            .slice(0, 2)
-                            .toUpperCase()
+                          .split(' ')
+                          .map((n) => n[0])
+                          .join('')
+                          .slice(0, 2)
+                          .toUpperCase()
                         : '📱'}
                     </div>
 
@@ -631,9 +623,8 @@ export default function MessagesTab({ messages, allGuests }: MessagesTabProps) {
 
                           {/* Message Bubble */}
                           <div
-                            className={`flex flex-col ${
-                              msg.isOutgoing ? 'items-end' : 'items-start'
-                            }`}
+                            className={`flex flex-col ${msg.isOutgoing ? 'items-end' : 'items-start'
+                              }`}
                           >
                             <div className="flex items-end gap-2 max-w-[85%] sm:max-w-[75%]">
                               {/* Left Avatar for incoming */}
@@ -645,11 +636,10 @@ export default function MessagesTab({ messages, allGuests }: MessagesTabProps) {
 
                               {/* Bubble */}
                               <div
-                                className={`rounded-2xl px-4 py-2.5 shadow-2xs text-xs sm:text-sm font-karla leading-relaxed whitespace-pre-wrap ${
-                                  msg.isOutgoing
-                                    ? 'bg-sage text-white rounded-br-xs'
-                                    : 'bg-white text-zinc-900 border border-zinc-200/80 rounded-bl-xs'
-                                }`}
+                                className={`rounded-2xl px-4 py-2.5 shadow-2xs text-xs sm:text-sm font-karla leading-relaxed whitespace-pre-wrap ${msg.isOutgoing
+                                  ? 'bg-sage text-white rounded-br-xs'
+                                  : 'bg-white text-zinc-900 border border-zinc-200/80 rounded-bl-xs'
+                                  }`}
                               >
                                 <p>{msg.body}</p>
                               </div>
@@ -657,9 +647,8 @@ export default function MessagesTab({ messages, allGuests }: MessagesTabProps) {
 
                             {/* Timestamp & Status Subtitle */}
                             <div
-                              className={`flex items-center gap-1.5 mt-1 text-[10px] font-karla text-zinc-400 ${
-                                msg.isOutgoing ? 'mr-1' : 'ml-8'
-                              }`}
+                              className={`flex items-center gap-1.5 mt-1 text-[10px] font-karla text-zinc-400 ${msg.isOutgoing ? 'mr-1' : 'ml-8'
+                                }`}
                             >
                               <span>{formatMessageTime(msg.createdAt)}</span>
                               {msg.isOutgoing ? (
@@ -721,11 +710,10 @@ export default function MessagesTab({ messages, allGuests }: MessagesTabProps) {
                         <button
                           type="submit"
                           disabled={!replyText.trim()}
-                          className={`px-4 py-2 rounded-xl text-xs font-sans uppercase tracking-wider font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
-                            replyText.trim()
-                              ? 'bg-sage text-white hover:bg-sage-dark shadow-xs'
-                              : 'bg-zinc-200 text-zinc-400 cursor-not-allowed'
-                          }`}
+                          className={`px-4 py-2 rounded-xl text-xs font-sans uppercase tracking-wider font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${replyText.trim()
+                            ? 'bg-sage text-white hover:bg-sage-dark shadow-xs'
+                            : 'bg-zinc-200 text-zinc-400 cursor-not-allowed'
+                            }`}
                         >
                           <span>Send SMS</span>
                           <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

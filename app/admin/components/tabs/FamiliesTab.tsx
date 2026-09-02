@@ -34,7 +34,7 @@ export default function FamiliesTab({
   const [copiedFamilyId, setCopiedFamilyId] = useState<string | null>(null)
 
   const copySmsInvite = (family: FamilyWithGuests) => {
-    const text = `Hi ${family.name}! You're invited to celebrate Arya & Christa's wedding in Cabo! Please RSVP on our website: https://aryachristawedding.com/rsvp — Your Access Code: ${family.password}`
+    const text = `Hi ${family.name}! You're invited to celebrate Arya & Christa's wedding in Cabo! Please RSVP on our website: https://aryachrista.wedding/rsvp — Your Access Code: ${family.password}`
     navigator.clipboard.writeText(text)
     setCopiedFamilyId(family.id)
     setTimeout(() => setCopiedFamilyId(null), 2500)
@@ -309,38 +309,36 @@ export default function FamiliesTab({
                           <div>
                             <span className="text-zinc-400 block text-[11px]">Wedding (Dec 12)</span>
                             <span
-                              className={`font-medium ${
-                                guest.isAttendingWedding === true
+                              className={`font-medium ${guest.isAttendingWedding === true
                                   ? 'text-emerald-700'
                                   : guest.isAttendingWedding === false
-                                  ? 'text-rose-700'
-                                  : 'text-amber-600'
-                              }`}
+                                    ? 'text-rose-700'
+                                    : 'text-amber-600'
+                                }`}
                             >
                               {guest.isAttendingWedding === true
                                 ? '✓ Joyfully Accepts'
                                 : guest.isAttendingWedding === false
-                                ? '✕ Declines'
-                                : 'Pending'}
+                                  ? '✕ Declines'
+                                  : 'Pending'}
                             </span>
                           </div>
 
                           <div>
                             <span className="text-zinc-400 block text-[11px]">Welcome (Dec 11)</span>
                             <span
-                              className={`font-medium ${
-                                guest.isAttendingWelcome === true
+                              className={`font-medium ${guest.isAttendingWelcome === true
                                   ? 'text-emerald-700'
                                   : guest.isAttendingWelcome === false
-                                  ? 'text-rose-700'
-                                  : 'text-amber-600'
-                              }`}
+                                    ? 'text-rose-700'
+                                    : 'text-amber-600'
+                                }`}
                             >
                               {guest.isAttendingWelcome === true
                                 ? '✓ Attending'
                                 : guest.isAttendingWelcome === false
-                                ? '✕ Declines'
-                                : 'Pending'}
+                                  ? '✕ Declines'
+                                  : 'Pending'}
                             </span>
                           </div>
 

@@ -3,6 +3,7 @@
 import { useTransition, useRef, useState } from 'react'
 import { updateRsvp, logoutFamily } from '@/app/actions/rsvp'
 import { recordSqlInjectionEasterEgg } from '@/app/actions/easterEgg'
+import { subscribeToPush } from '@/lib/pushClient'
 
 type Guest = {
   id: string
@@ -210,6 +211,10 @@ export default function RsvpForm({ family }: { family: Family }) {
         return
       }
     }
+    
+    // Auto-prompt for push permissions on a user gesture (form submit)
+    subscribeToPush().catch(console.error)
+
     startTransition(async () => {
       const result = await updateRsvp(null, formData)
       setState(result as any)
