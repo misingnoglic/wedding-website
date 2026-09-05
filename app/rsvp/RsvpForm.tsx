@@ -3,7 +3,7 @@
 import { useTransition, useRef, useState } from 'react'
 import { updateRsvp, logoutFamily } from '@/app/actions/rsvp'
 import { recordSqlInjectionEasterEgg } from '@/app/actions/easterEgg'
-import { subscribeToPush } from '@/lib/pushClient'
+import PushNotificationManager from '@/app/admin/components/PushNotificationManager'
 
 type Guest = {
   id: string
@@ -211,9 +211,6 @@ export default function RsvpForm({ family }: { family: Family }) {
         return
       }
     }
-    
-    // Auto-prompt for push permissions on a user gesture (form submit)
-    subscribeToPush().catch(console.error)
 
     startTransition(async () => {
       const result = await updateRsvp(null, formData)
@@ -829,6 +826,13 @@ export default function RsvpForm({ family }: { family: Family }) {
           >
             {isPending ? 'Saving...' : 'Save RSVP Details'}
           </button>
+        </div>
+
+        <div className="pt-8 mt-8 border-t border-zinc-200 flex flex-col items-center justify-center text-center space-y-3">
+          <p className="text-sm font-karla text-zinc-600">
+            Want to stay in the loop? Enable event reminders for your device.
+          </p>
+          <PushNotificationManager />
         </div>
       </form>
     </div>
