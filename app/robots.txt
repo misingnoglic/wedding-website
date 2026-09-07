@@ -1,0 +1,7 @@
+# Welcome to our wedding website!
+User-Agent: Wedding-Guest
+Allow: /
+
+# No robots allowed
+User-Agent: *
+Disallow: /
