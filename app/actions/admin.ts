@@ -6,6 +6,29 @@ import { redirect } from 'next/navigation'
 import { db } from '@/lib/db'
 import { getAuthenticatedAdmin } from '@/lib/auth'
 import { logAuditEvent } from '@/lib/audit'
+import { Redis } from '@upstash/redis'
+
+export async function clearRedisCache() {
+  const admin = await getAuthenticatedAdmin()
+  const redisUrl = process.env.UPSTASH_REDIS_REST_URL
+  const redisToken = process.env.UPSTASH_REDIS_REST_TOKEN
+
+  if (redisUrl && redisToken) {
+    const redis = new Redis({ url: redisUrl, token: redisToken })
+    await redis.flushdb()
+    
+    await logAuditEvent({
+      actorType: 'ADMIN',
+      actorName: `${admin.name} (Admin)`,
+      eventType: 'SYSTEM',
+      description: 'Admin cleared the Redis cache (Reset all rate limits).',
+    })
+    
+    return { success: true, message: 'Redis cache cleared successfully.' }
+  }
+  
+  return { error: 'Redis is not configured.' }
+}
 
 // 1. Create a New Family
 export async function createFamilyAdmin(prevState: unknown, formData: FormData) {

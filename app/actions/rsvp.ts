@@ -1,11 +1,35 @@
 'use server'
 
-import { cookies } from 'next/headers'
+import { cookies, headers } from 'next/headers'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { db } from '@/lib/db'
 import { logAuditEvent } from '@/lib/audit'
 import { sendAdminPushNotification } from '@/lib/push'
+import { Redis } from '@upstash/redis'
+import { Ratelimit } from '@upstash/ratelimit'
+
+const redisUrl = process.env.UPSTASH_REDIS_REST_URL
+const redisToken = process.env.UPSTASH_REDIS_REST_TOKEN
+
+let ratelimit15m: Ratelimit | null = null
+let ratelimit1h: Ratelimit | null = null
+
+if (redisUrl && redisToken) {
+  const redis = new Redis({ url: redisUrl, token: redisToken })
+  ratelimit15m = new Ratelimit({
+    redis,
+    limiter: Ratelimit.slidingWindow(5, '15 m'),
+    analytics: true,
+    prefix: '@upstash/ratelimit/15m',
+  })
+  ratelimit1h = new Ratelimit({
+    redis,
+    limiter: Ratelimit.slidingWindow(10, '1 h'),
+    analytics: true,
+    prefix: '@upstash/ratelimit/1h',
+  })
+}
 
 export async function loginFamily(prevState: unknown, formData: FormData) {
   const password = formData.get('password') as string
@@ -14,6 +38,29 @@ export async function loginFamily(prevState: unknown, formData: FormData) {
 
   if (!password) {
     return { error: 'Please enter a password' }
+  }
+
+  if (ratelimit15m && ratelimit1h) {
+    const headersList = await headers()
+    const ip = headersList.get('x-forwarded-for') || headersList.get('x-real-ip') || '127.0.0.1'
+    
+    // Check 1h limit
+    const res1h = await ratelimit1h.limit(`login_attempt_${ip}`)
+    if (!res1h.success) {
+      const resetDate = new Date(res1h.reset)
+      const diffMinutes = Math.ceil((resetDate.getTime() - Date.now()) / (1000 * 60))
+      const hours = Math.floor(diffMinutes / 60)
+      const mins = diffMinutes % 60
+      return { error: `Too many login attempts. Please try again in ${hours > 0 ? `${hours} hr ` : ''}${mins} min.` }
+    }
+
+    // Check 15m limit
+    const res15m = await ratelimit15m.limit(`login_attempt_${ip}`)
+    if (!res15m.success) {
+      const resetDate = new Date(res15m.reset)
+      const diffMinutes = Math.ceil((resetDate.getTime() - Date.now()) / (1000 * 60))
+      return { error: `Too many login attempts. Please try again in ${diffMinutes} minute${diffMinutes > 1 ? 's' : ''}.` }
+    }
   }
 
   const sqlPatterns = [
