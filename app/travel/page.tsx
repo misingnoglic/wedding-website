@@ -47,10 +47,13 @@ export default function Travel() {
                                     While you are welcome to stay at any hotel in the area, we would love for you to join us at The Cape.
                                 </p>
                                 <p className="text-zinc-600 font-karla leading-relaxed text-lg mb-4">
-                                    To help our guests enjoy the best of Cabo during the peak season, we have arranged an <a href="https://www.hyatt.com/events/en-US/group-booking/CSLTH/G-CABO" target="_blank" rel="noopener noreferrer" className="underline font-semibold hover:text-sage transition-colors">exclusive room block</a> at a significant reduction from the hotel’s standard rates. The fixed room block rate is approximately 30% less than the standard rate.
+                                    To help our guests enjoy the best of Cabo during the peak season, we have arranged an <a href="https://www.hyatt.com/events/en-US/group-booking/CSLTH/G-CABO" target="_blank" rel="noopener noreferrer" className="underline font-semibold hover:text-sage transition-colors">exclusive room block</a> at a reduction from the hotel’s standard rates.
                                 </p>
                                 <p className="text-zinc-600 font-karla leading-relaxed text-lg mb-4">
                                     The room block requires a minimum stay of 3 days. In accordance with our planned events, we recommend you check in on 12/10 and check out on 12/13. A one-night deposit is required to hold your room within our block. Reservations in our room block are fully cancellable up to 45 days prior to the event. All rooms and suites at The Cape are ocean-front and include private balconies.
+                                </p>
+                                <p className="text-zinc-600 font-karla leading-relaxed text-lg mb-4">
+                                    If you are interested in booking through the room block and no rooms are available or your preferred room type is not showing up, please contact us so we can see if we can add more rooms to the room block.
                                 </p>
                                 <p className="text-zinc-600 font-karla leading-relaxed text-lg mt-8 mb-4 border-t border-zinc-200 pt-6">
                                     <strong>Alternative Hotels:</strong> For a more affordable option within walking distance of the wedding venue, we recommend checking out <a href="https://reservas.brisas.com.mx/44/rooms" target="_blank" rel="noopener noreferrer" className="underline font-semibold hover:text-sage transition-colors">Sunrock Hotel</a>. If you are looking for an all-inclusive experience, <strong>Pueblo Bonito Rosé Resort & Spa</strong> is a great option about 20 minutes away.
