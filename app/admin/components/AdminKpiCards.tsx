@@ -8,10 +8,10 @@ interface AdminKpiCardsProps {
 
 export default function AdminKpiCards({ stats }: AdminKpiCardsProps) {
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-4 md:gap-6">
+    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-6">
       {/* Headcount Card */}
-      <div className="bg-white rounded-2xl p-6 border border-zinc-200/80 shadow-sm relative overflow-hidden">
-        <div className="absolute top-0 left-0 w-1.5 h-full bg-sage" />
+      <div className="bg-white/60 backdrop-blur-xl rounded-3xl p-6 border border-white shadow-lg shadow-zinc-200/40 relative overflow-hidden group hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+        <div className="absolute top-0 left-0 w-1.5 h-full bg-sage opacity-80" />
         <span className="text-xs uppercase tracking-wider text-zinc-500 font-sans">Total Guest List</span>
         <div className="flex items-baseline justify-between mt-2">
           <span className="text-3xl md:text-4xl font-bold font-sans text-black">{stats.totalGuests}</span>
@@ -32,8 +32,8 @@ export default function AdminKpiCards({ stats }: AdminKpiCardsProps) {
       </div>
 
       {/* Wedding Day Card */}
-      <div className="bg-white rounded-2xl p-6 border border-zinc-200/80 shadow-sm relative overflow-hidden">
-        <div className="absolute top-0 left-0 w-1.5 h-full bg-emerald-500" />
+      <div className="bg-white/60 backdrop-blur-xl rounded-3xl p-6 border border-white shadow-lg shadow-zinc-200/40 relative overflow-hidden group hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+        <div className="absolute top-0 left-0 w-1.5 h-full bg-emerald-500 opacity-80" />
         <span className="text-xs uppercase tracking-wider text-zinc-500 font-sans">Wedding Day (Dec 12)</span>
         <div className="flex items-baseline justify-between mt-2">
           <span className="text-3xl md:text-4xl font-bold font-sans text-emerald-700">{stats.weddingAccepted}</span>
@@ -50,8 +50,8 @@ export default function AdminKpiCards({ stats }: AdminKpiCardsProps) {
       </div>
 
       {/* Welcome Party Card */}
-      <div className="bg-white rounded-2xl p-6 border border-zinc-200/80 shadow-sm relative overflow-hidden">
-        <div className="absolute top-0 left-0 w-1.5 h-full bg-amber-500" />
+      <div className="bg-white/60 backdrop-blur-xl rounded-3xl p-6 border border-white shadow-lg shadow-zinc-200/40 relative overflow-hidden group hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+        <div className="absolute top-0 left-0 w-1.5 h-full bg-amber-500 opacity-80" />
         <span className="text-xs uppercase tracking-wider text-zinc-500 font-sans">Welcome Party (Dec 11)</span>
         <div className="flex items-baseline justify-between mt-2">
           <span className="text-3xl md:text-4xl font-bold font-sans text-zinc-900">{stats.welcomeAccepted}</span>
@@ -68,8 +68,8 @@ export default function AdminKpiCards({ stats }: AdminKpiCardsProps) {
       </div>
 
       {/* Rehearsal Dinner Card */}
-      <div className="bg-white rounded-2xl p-6 border border-zinc-200/80 shadow-sm relative overflow-hidden">
-        <div className="absolute top-0 left-0 w-1.5 h-full bg-blue-500" />
+      <div className="bg-white/60 backdrop-blur-xl rounded-3xl p-6 border border-white shadow-lg shadow-zinc-200/40 relative overflow-hidden group hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+        <div className="absolute top-0 left-0 w-1.5 h-full bg-blue-500 opacity-80" />
         <span className="text-xs uppercase tracking-wider text-zinc-500 font-sans">Rehearsal (Dec 10)</span>
         <div className="flex items-baseline justify-between mt-2">
           <span className="text-3xl md:text-4xl font-bold font-sans text-blue-700">{stats.rehearsalAccepted}</span>
@@ -86,8 +86,8 @@ export default function AdminKpiCards({ stats }: AdminKpiCardsProps) {
       </div>
 
       {/* Logistics & Needs Card */}
-      <div className="bg-white rounded-2xl p-6 border border-zinc-200/80 shadow-sm relative overflow-hidden">
-        <div className="absolute top-0 left-0 w-1.5 h-full bg-sky-500" />
+      <div className="bg-white/60 backdrop-blur-xl rounded-3xl p-6 border border-white shadow-lg shadow-zinc-200/40 relative overflow-hidden group hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+        <div className="absolute top-0 left-0 w-1.5 h-full bg-sky-500 opacity-80" />
         <span className="text-xs uppercase tracking-wider text-zinc-500 font-sans">Logistics & Activity</span>
         <div className="mt-2 grid grid-cols-2 gap-2 text-xs font-karla">
           <div className="p-2 bg-zinc-50 rounded-lg">

@@ -59,7 +59,7 @@ export default async function AdminPage() {
   })
 
   return (
-    <div className="w-full max-w-7xl px-4 sm:px-6 lg:px-8 flex-grow py-8 md:py-12 flex flex-col mx-auto animate-fade-in">
+    <div className="w-full flex-grow flex flex-col animate-fade-in">
       <AdminDashboard
         initialFamilies={families}
         currentAdmin={adminFamily}

@@ -25,6 +25,7 @@ export default function AdminHeader({
   allGuests,
   onOpenAddFamily,
 }: AdminHeaderProps) {
+  const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isClearing, setIsClearing] = useState(false)
 
   const handleClearCache = async () => {
@@ -40,6 +41,7 @@ export default function AdminHeader({
       alert('Failed to clear cache')
     } finally {
       setIsClearing(false)
+      setIsMenuOpen(false)
     }
   }
 
@@ -107,40 +109,29 @@ export default function AdminHeader({
   }
 
   return (
-    <div className="bg-white/90 backdrop-blur-md rounded-2xl p-6 md:p-8 border border-zinc-200/80 shadow-sm flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
+    <div className="bg-white/60 backdrop-blur-xl rounded-3xl p-6 lg:p-8 border border-white shadow-xl shadow-zinc-200/50 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 relative z-30">
       <div>
-        <div className="flex items-center gap-2 mb-1">
-          <span className="text-xs uppercase tracking-widest text-sage font-medium font-sans">
-            Admin Control Center
+        <div className="flex items-center gap-2 mb-2">
+          <span className="text-[10px] uppercase tracking-widest text-emerald-600 font-bold font-sans bg-emerald-50 px-2 py-1 rounded-full border border-emerald-100">
+            Live Feed Active
           </span>
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800">
+          <span className="text-[10px] uppercase tracking-widest text-zinc-500 font-bold font-sans px-2 py-1 bg-white/50 rounded-full border border-zinc-200">
             Admin: {currentAdmin.name}
           </span>
         </div>
-        <h1 className="text-3xl md:text-5xl font-sans text-black tracking-tight">RSVP Master Dashboard</h1>
-        <p className="text-zinc-500 font-karla mt-1 text-sm md:text-base">
-          Live management of all {stats.totalFamilies} families and {stats.totalGuests} invited guests.
+        <h1 className="text-3xl md:text-5xl font-sans text-zinc-900 tracking-tight font-light">RSVP Master Dashboard</h1>
+        <p className="text-zinc-500 font-karla mt-2 text-sm md:text-base max-w-2xl">
+          Overview of {stats.totalFamilies} families and {stats.totalGuests} invited guests. Changes are synced in real-time.
         </p>
       </div>
 
-      <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto">
-        <button
-          type="button"
-          onClick={onOpenAddFamily}
-          className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-black text-white rounded-xl font-sans tracking-wider uppercase text-xs hover:bg-sage transition-all duration-200 shadow-sm cursor-pointer"
-        >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-          </svg>
-          + Add Family
-        </button>
-
+      <div className="flex items-center gap-2 w-full lg:w-auto">
         <button
           type="button"
           onClick={handleExportCsv}
-          className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-zinc-100 text-zinc-700 rounded-xl font-sans tracking-wider uppercase text-xs hover:bg-zinc-200 transition-colors cursor-pointer"
+          className="flex-1 lg:flex-none inline-flex items-center justify-center gap-2 px-4 py-3 bg-zinc-100/80 text-zinc-700 rounded-2xl font-sans tracking-wide uppercase text-xs hover:bg-zinc-200 hover:text-black transition-all cursor-pointer shadow-sm border border-zinc-200/50"
         >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-4 h-4 hidden sm:block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
           </svg>
           Export CSV
@@ -148,36 +139,74 @@ export default function AdminHeader({
 
         <button
           type="button"
-          onClick={() => window.print()}
-          className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-zinc-100 text-zinc-700 rounded-xl font-sans tracking-wider uppercase text-xs hover:bg-zinc-200 transition-colors cursor-pointer"
-          title="Print this report"
+          onClick={onOpenAddFamily}
+          className="flex-1 lg:flex-none inline-flex items-center justify-center gap-2 px-4 py-3 bg-black text-white rounded-2xl font-sans tracking-wide uppercase text-xs hover:bg-zinc-800 hover:shadow-lg hover:shadow-black/20 transition-all shadow-md cursor-pointer"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
           </svg>
-          Print
+          Add Family
         </button>
 
-        <button
-          type="button"
-          onClick={handleClearCache}
-          disabled={isClearing}
-          className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-red-50 text-red-700 rounded-xl font-sans tracking-wider uppercase text-xs hover:bg-red-100 transition-colors cursor-pointer disabled:opacity-50"
-          title="Clear Redis Cache"
-        >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-          </svg>
-          {isClearing ? 'Clearing...' : 'Clear Cache'}
-        </button>
+        <div className="relative">
+          <button
+            type="button"
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+            className={`w-12 h-12 flex items-center justify-center rounded-2xl border transition-all cursor-pointer ${
+              isMenuOpen ? 'bg-zinc-200 border-zinc-300 text-black' : 'bg-white border-zinc-200 text-zinc-600 hover:bg-zinc-50'
+            }`}
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+            </svg>
+          </button>
 
-        <Link
-          href="/account"
-          className="inline-flex items-center justify-center px-4 py-2.5 bg-zinc-100 text-zinc-700 rounded-xl font-sans tracking-wider uppercase text-xs hover:bg-zinc-200 transition-colors"
-        >
-          My Account
-        </Link>
-        <PushNotificationManager />
+          {isMenuOpen && (
+            <>
+              <div className="fixed inset-0 z-40" onClick={() => setIsMenuOpen(false)} />
+              <div className="absolute right-0 top-full mt-2 w-56 bg-white/95 backdrop-blur-xl rounded-2xl shadow-xl shadow-zinc-200/50 border border-zinc-100 z-50 overflow-hidden py-2 animate-fade-in origin-top-right">
+                <button
+                  type="button"
+                  onClick={() => {
+                    window.print()
+                    setIsMenuOpen(false)
+                  }}
+                  className="w-full text-left px-4 py-3 text-sm font-sans text-zinc-700 hover:bg-zinc-50 hover:text-black flex items-center gap-3 transition-colors"
+                >
+                  <svg className="w-4 h-4 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                  </svg>
+                  Print Report
+                </button>
+                <button
+                  type="button"
+                  onClick={handleClearCache}
+                  disabled={isClearing}
+                  className="w-full text-left px-4 py-3 text-sm font-sans text-red-600 hover:bg-red-50 flex items-center gap-3 transition-colors disabled:opacity-50"
+                >
+                  <svg className="w-4 h-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                  {isClearing ? 'Clearing...' : 'Clear Redis Cache'}
+                </button>
+                <div className="h-px bg-zinc-100 my-1" />
+                <Link
+                  href="/account"
+                  className="w-full text-left px-4 py-3 text-sm font-sans text-zinc-700 hover:bg-zinc-50 hover:text-black flex items-center gap-3 transition-colors"
+                >
+                  <svg className="w-4 h-4 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                  My Account
+                </Link>
+                <div className="px-4 py-3">
+                  <div className="text-[10px] font-mono text-zinc-400 uppercase tracking-wider mb-2">Push Notifications</div>
+                  <PushNotificationManager />
+                </div>
+              </div>
+            </>
+          )}
+        </div>
       </div>
     </div>
   )

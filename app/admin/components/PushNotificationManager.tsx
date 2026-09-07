@@ -37,7 +37,7 @@ export default function PushNotificationManager() {
     <button
       onClick={subscription ? handleUnsubscribe : handleSubscribe}
       disabled={isSubscribing}
-      className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors border ${
+      className={`w-full inline-flex items-center justify-center px-3 py-2.5 text-[10px] sm:text-xs font-sans tracking-wider uppercase rounded-xl transition-colors border ${
         subscription 
           ? 'bg-red-50 text-red-700 border-red-200 hover:bg-red-100' 
           : 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100'

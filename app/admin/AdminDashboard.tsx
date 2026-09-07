@@ -16,6 +16,7 @@ import {
 import AdminHeader from './components/AdminHeader'
 import AdminKpiCards from './components/AdminKpiCards'
 import AdminFilterBar from './components/AdminFilterBar'
+import AdminSidebar from './components/AdminSidebar'
 
 import FamiliesTab from './components/tabs/FamiliesTab'
 import GuestsTab from './components/tabs/GuestsTab'
@@ -282,92 +283,74 @@ export default function AdminDashboard({
   const expandAll = () => setExpandedFamilies(new Set(initialFamilies.map((f) => f.id)))
   const collapseAll = () => setExpandedFamilies(new Set())
 
+  const counts = {
+    families: filteredFamilies.length,
+    guests: filteredGuests.length,
+    messages: initialMessages.length,
+    dietary: stats.dietaryCount,
+    travel: stats.hasFlightsCount + stats.hasHotelCount,
+    songs: stats.songRequestsCount,
+    activity: initialAuditEvents.length,
+  }
+
   return (
-    <div className="min-h-screen bg-sand/30 py-8 px-4 sm:px-6 lg:px-8 space-y-8 max-w-7xl mx-auto">
-      {/* Feedback Alert Toast */}
-      {actionFeedback && (
-        <div
-          className={`p-4 rounded-xl text-sm font-karla flex justify-between items-center shadow-md animate-fade-in ${
-            actionFeedback.error
-              ? 'bg-red-50 text-red-800 border border-red-200'
-              : 'bg-emerald-50 text-emerald-800 border border-emerald-200'
-          }`}
-        >
-          <span>{actionFeedback.error || actionFeedback.success}</span>
-          <button
-            type="button"
-            onClick={() => setActionFeedback(null)}
-            className="text-xs font-semibold px-2 py-1 rounded hover:bg-black/10 transition-colors cursor-pointer"
-          >
-            ✕
-          </button>
-        </div>
-      )}
+    <div className="min-h-screen bg-sand/20 flex flex-col lg:flex-row mx-auto max-w-[1800px] w-full">
+      {/* Sidebar Navigation */}
+      <AdminSidebar activeTab={activeTab} setActiveTab={setActiveTab} counts={counts} />
 
-      {/* Admin Header */}
-      <AdminHeader
-        currentAdmin={currentAdmin}
-        stats={stats}
-        initialFamilies={initialFamilies}
-        allGuests={allGuests}
-        onOpenAddFamily={() => setIsAddFamilyOpen(true)}
-      />
-
-      {/* KPI Cards */}
-      <AdminKpiCards stats={stats} />
-
-      {/* Tab Navigation */}
-      <div className="flex border-b border-zinc-200/80 overflow-x-auto no-scrollbar gap-2 sm:gap-4">
-        {[
-          { id: 'families', label: 'Party Overview', count: filteredFamilies.length },
-          { id: 'guests', label: 'All Guests (Flat Roster)', count: filteredGuests.length },
-          { id: 'messages', label: 'SMS Messages', count: initialMessages.length },
-          { id: 'dietary', label: 'Dietary & Catering', count: stats.dietaryCount },
-          { id: 'travel', label: 'Flights & Hotel', count: stats.hasFlightsCount + stats.hasHotelCount },
-          { id: 'songs', label: 'DJ Song Requests', count: stats.songRequestsCount },
-          { id: 'activity', label: 'Activity & Audit Log', count: initialAuditEvents.length },
-        ].map((tab) => (
-          <button
-            key={tab.id}
-            type="button"
-            onClick={() => setActiveTab(tab.id as TabType)}
-            className={`py-3 px-4 text-xs font-sans uppercase tracking-wider transition-all whitespace-nowrap border-b-2 flex items-center gap-2 cursor-pointer ${
-              activeTab === tab.id
-                ? 'border-sage text-black font-semibold bg-white/60 rounded-t-xl'
-                : 'border-transparent text-zinc-500 hover:text-black hover:border-zinc-300'
+      {/* Main Content Area */}
+      <div className="flex-1 w-full px-4 sm:px-6 lg:px-10 py-8 lg:py-12 space-y-8 lg:space-y-10 overflow-x-hidden animate-fade-in">
+        {/* Feedback Alert Toast */}
+        {actionFeedback && (
+          <div
+            className={`p-4 rounded-2xl text-sm font-sans flex justify-between items-center shadow-lg border backdrop-blur-md animate-fade-in ${
+              actionFeedback.error
+                ? 'bg-red-50/90 text-red-800 border-red-200'
+                : 'bg-emerald-50/90 text-emerald-800 border-emerald-200'
             }`}
           >
-            <span>{tab.label}</span>
-            <span
-              className={`px-2 py-0.5 rounded-full text-[10px] ${
-                activeTab === tab.id ? 'bg-sage text-white' : 'bg-zinc-200 text-zinc-700'
-              }`}
+            <span>{actionFeedback.error || actionFeedback.success}</span>
+            <button
+              type="button"
+              onClick={() => setActionFeedback(null)}
+              className="text-xs font-semibold px-2 py-1 rounded hover:bg-black/10 transition-colors cursor-pointer"
             >
-              {tab.count}
-            </span>
-          </button>
-        ))}
-      </div>
+              ✕
+            </button>
+          </div>
+        )}
 
-      {/* Filter and Search Bar (shown for Families & Guests tabs) */}
-      {(activeTab === 'families' || activeTab === 'guests') && (
-        <AdminFilterBar
-          activeTab={activeTab}
-          searchQuery={searchQuery}
-          setSearchQuery={setSearchQuery}
-          rsvpFilter={rsvpFilter}
-          setRsvpFilter={setRsvpFilter}
-          travelFilter={travelFilter}
-          setTravelFilter={setTravelFilter}
-          onlyDietary={onlyDietary}
-          setOnlyDietary={setOnlyDietary}
-          sortBy={sortBy}
-          setSortBy={setSortBy}
-          dietaryCount={stats.dietaryCount}
-          onExpandAll={expandAll}
-          onCollapseAll={collapseAll}
+        {/* Admin Header */}
+        <AdminHeader
+          currentAdmin={currentAdmin}
+          stats={stats}
+          initialFamilies={initialFamilies}
+          allGuests={allGuests}
+          onOpenAddFamily={() => setIsAddFamilyOpen(true)}
         />
-      )}
+
+        {/* KPI Cards */}
+        <AdminKpiCards stats={stats} />
+
+        {/* Filter and Search Bar (shown for Families & Guests tabs) */}
+        {(activeTab === 'families' || activeTab === 'guests') && (
+          <AdminFilterBar
+            activeTab={activeTab}
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
+            rsvpFilter={rsvpFilter}
+            setRsvpFilter={setRsvpFilter}
+            travelFilter={travelFilter}
+            setTravelFilter={setTravelFilter}
+            onlyDietary={onlyDietary}
+            setOnlyDietary={setOnlyDietary}
+            sortBy={sortBy}
+            setSortBy={setSortBy}
+            dietaryCount={stats.dietaryCount}
+            onExpandAll={expandAll}
+            onCollapseAll={collapseAll}
+          />
+        )}
 
       {/* Tab Panels */}
       {activeTab === 'families' && (
@@ -464,6 +447,7 @@ export default function AdminDashboard({
         startTransition={startTransition}
         setActionFeedback={setActionFeedback}
       />
+      </div>
     </div>
   )
 }
