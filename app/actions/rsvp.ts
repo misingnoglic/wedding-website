@@ -446,6 +446,7 @@ export async function updateRsvp(prevState: unknown, formData: FormData) {
     const existingGuestMap = new Map(existingGuests.map((g) => [g.id, g]))
 
     const guestChanges: string[] = []
+    const guestAttendanceChanges: string[] = []
 
     // Perform a transaction to update all valid guests
     await db.$transaction(async (tx) => {
@@ -493,27 +494,28 @@ export async function updateRsvp(prevState: unknown, formData: FormData) {
 
         // Compute field-level diffs for this guest
         const diffs: string[] = []
+        const attendanceDiffs: string[] = []
         const guestName = prev.name
 
         // 1. Wedding attendance
         if (prev.isAttendingWedding !== isAttendingWedding) {
-          if (isAttendingWedding === true) diffs.push('accepted Wedding')
-          else if (isAttendingWedding === false) diffs.push('declined Wedding')
-          else diffs.push('set Wedding to pending')
+          const msg = isAttendingWedding === true ? 'accepted Wedding' : isAttendingWedding === false ? 'declined Wedding' : 'set Wedding to pending'
+          diffs.push(msg)
+          attendanceDiffs.push(msg)
         }
 
         // 2. Welcome party attendance
         if (prev.isAttendingWelcome !== isAttendingWelcome) {
-          if (isAttendingWelcome === true) diffs.push('attending Welcome Party')
-          else if (isAttendingWelcome === false) diffs.push('declined Welcome Party')
-          else diffs.push('set Welcome Party to pending')
+          const msg = isAttendingWelcome === true ? 'attending Welcome Party' : isAttendingWelcome === false ? 'declined Welcome Party' : 'set Welcome Party to pending'
+          diffs.push(msg)
+          attendanceDiffs.push(msg)
         }
 
         // Rehearsal Dinner attendance
         if (prev.isAttendingRehearsalDinner !== isAttendingRehearsalDinner) {
-          if (isAttendingRehearsalDinner === true) diffs.push('attending Rehearsal Dinner')
-          else if (isAttendingRehearsalDinner === false) diffs.push('declined Rehearsal Dinner')
-          else diffs.push('set Rehearsal Dinner to pending')
+          const msg = isAttendingRehearsalDinner === true ? 'attending Rehearsal Dinner' : isAttendingRehearsalDinner === false ? 'declined Rehearsal Dinner' : 'set Rehearsal Dinner to pending'
+          diffs.push(msg)
+          attendanceDiffs.push(msg)
         }
 
         // 3. Dietary
@@ -552,6 +554,10 @@ export async function updateRsvp(prevState: unknown, formData: FormData) {
 
         if (diffs.length > 0) {
           guestChanges.push(`${guestName} (${diffs.join(', ')})`)
+        }
+        
+        if (attendanceDiffs.length > 0) {
+          guestAttendanceChanges.push(`${guestName} (${attendanceDiffs.join(', ')})`)
         }
 
         // Perform the actual update
@@ -624,11 +630,13 @@ export async function updateRsvp(prevState: unknown, formData: FormData) {
         })
       }
 
-      // Send push notification to admins
-      // Make sure we aren't waiting on it so it doesn't block the response
-      const title = `RSVP Update from ${familyDisplayName}: ${guestChanges}`
-      const body = guestChanges.join('\n')
-      sendAdminPushNotification(title, body, '/admin').catch(console.error)
+      // Send push notification to admins only if RSVP attendance statuses changed
+      if (guestAttendanceChanges.length > 0) {
+        // Make sure we aren't waiting on it so it doesn't block the response
+        const title = `RSVP Update from ${familyDisplayName}: ${guestAttendanceChanges}`
+        const body = guestAttendanceChanges.join('\n')
+        sendAdminPushNotification(title, body, '/admin').catch(console.error)
+      }
     }
 
     revalidatePath('/rsvp')
