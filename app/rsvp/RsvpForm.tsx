@@ -1,6 +1,6 @@
 'use client'
 
-import { useTransition, useRef, useState } from 'react'
+import { useTransition, useRef, useState, useEffect } from 'react'
 import { updateRsvp, logoutFamily } from '@/app/actions/rsvp'
 import { recordSqlInjectionEasterEgg } from '@/app/actions/easterEgg'
 import PushNotificationManager from '@/app/admin/components/PushNotificationManager'
@@ -134,6 +134,22 @@ export default function RsvpForm({ family }: { family: Family }) {
   const [state, setState] = useState<{ error?: string, success?: boolean, message?: string } | null>(null)
   const formRef = useRef<HTMLFormElement>(null)
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const [showMixupMessage, setShowMixupMessage] = useState(false)
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const dismissed = localStorage.getItem('mixupMessageDismissed')
+      if (!dismissed) {
+        setShowMixupMessage(true)
+      }
+    }
+  }, [])
+
+  const dismissMixupMessage = () => {
+    setShowMixupMessage(false)
+    localStorage.setItem('mixupMessageDismissed', 'true')
+  }
 
   const [guestTitles, setGuestTitles] = useState<Record<string, string>>(() => {
     const titles: Record<string, string> = {}
@@ -336,6 +352,22 @@ export default function RsvpForm({ family }: { family: Family }) {
           </button>
         </form>
       </div>
+
+      {showMixupMessage && (
+        <div className="mb-8 p-4 bg-zinc-50 border border-zinc-200 rounded-lg flex justify-between items-start gap-4 animate-in fade-in slide-in-from-top-2">
+          <p className="text-sm text-zinc-600 font-karla">
+            Not you? Sorry for the mixup, please contact us at <a href="mailto:aryaandchrista@gmail.com" className="text-sage hover:text-black transition-colors underline underline-offset-2">aryaandchrista@gmail.com</a> to get your correct code.
+          </p>
+          <button 
+            type="button" 
+            onClick={dismissMixupMessage} 
+            className="text-zinc-400 hover:text-black transition-colors p-0.5 rounded-md hover:bg-zinc-100" 
+            aria-label="Dismiss message"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+          </button>
+        </div>
+      )}
 
       <form ref={formRef} onSubmit={handleSubmit} onChange={handleAutoSave} className="space-y-12">
         {family.guests.map((guest) => {
