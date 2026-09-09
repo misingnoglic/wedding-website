@@ -128,6 +128,19 @@ export async function loginFamily(prevState: unknown, formData: FormData) {
       path: '/',
     })
 
+    if (!family.hasLoggedIn) {
+      await db.family.update({
+        where: { id: family.id },
+        data: { hasLoggedIn: true }
+      })
+      
+      sendAdminPushNotification(
+        `First Login: ${family.name}`,
+        `${family.name} just logged into the website for the very first time!`,
+        '/admin'
+      ).catch(console.error)
+    }
+
     await logAuditEvent({
       familyId: family.id,
       actorType: family.isAdmin ? 'ADMIN' : 'GUEST',

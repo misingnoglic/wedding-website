@@ -31,6 +31,7 @@ export type FamilyWithGuests = {
   password: string
   isAdmin: boolean
   isRehearsalDinnerInvited: boolean
+  hasLoggedIn: boolean
   passwordUpdatedAt: Date | string | null
   createdAt: Date | string
   updatedAt: Date | string

@@ -99,6 +99,11 @@ export default function FamiliesTab({
                         Rehearsal
                       </span>
                     )}
+                    {family.hasLoggedIn && (
+                      <span className="px-2 py-0.5 rounded-full text-[10px] uppercase tracking-wider font-sans font-semibold bg-indigo-100 text-indigo-800">
+                        Logged In
+                      </span>
+                    )}
                     {hasDiets && (
                       <span className="px-2 py-0.5 rounded-full text-[10px] uppercase tracking-wider font-sans font-semibold bg-amber-100 text-amber-800">
                         Dietary
