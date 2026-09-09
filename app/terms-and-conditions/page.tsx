@@ -108,8 +108,8 @@ export default function TermsAndConditions() {
           </h2>
           <p>
             If you have any questions regarding these Terms & Conditions, please contact us at:{' '}
-            <a href="mailto:admin@aryachrista.wedding" className="text-sage hover:underline font-medium">
-              admin@aryachrista.wedding
+            <a href="mailto:hi@aryachrista.wedding" className="text-sage hover:underline font-medium">
+              hi@aryachrista.wedding
             </a>
           </p>
         </section>
