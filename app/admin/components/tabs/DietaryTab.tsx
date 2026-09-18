@@ -88,31 +88,45 @@ export default function DietaryTab({ guests, onOpenEditGuest }: DietaryTabProps)
             No attending guests have specified dietary restrictions yet.
           </p>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {attendingDietaryGuests.map((g) => (
-              <div
-                key={g.id}
-                className="p-4 bg-amber-50/40 rounded-xl border border-amber-200/60 flex justify-between items-start"
-              >
-                <div>
-                  <div className="font-semibold text-black text-sm">
-                    {g.title && g.title !== 'None' ? `${g.title}. ` : ''}
-                    {g.name}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {Object.entries(categories)
+              .filter(([, list]) => list.length > 0)
+              .map(([category, list]) => (
+                <div
+                  key={category}
+                  className="p-4 rounded-xl border bg-amber-50/40 border-amber-200/60"
+                >
+                  <div className="flex justify-between items-baseline mb-2 border-b border-amber-200/30 pb-2">
+                    <h4 className="font-semibold text-sm text-black truncate">{category}</h4>
+                    <span className="text-xs font-bold font-sans text-amber-900 bg-amber-100 px-2 py-0.5 rounded-full ml-2">
+                      {list.length}
+                    </span>
                   </div>
-                  <div className="text-xs font-karla text-zinc-500">{g.familyName}</div>
-                  <div className="mt-2 text-xs font-medium text-amber-900 bg-white/80 px-2.5 py-1 rounded-md border border-amber-200/50 inline-block">
-                    🍴 {g.dietaryRestrictions}
+                  <div className="space-y-2 max-h-60 overflow-y-auto pr-1 text-xs font-karla text-zinc-600 mt-2">
+                    {list.map((g) => (
+                      <div key={g.id} className="flex justify-between items-start py-1 border-b border-amber-100 last:border-0">
+                        <div className="overflow-hidden">
+                          <div className="font-semibold text-black truncate">
+                            {g.name} <span className="text-zinc-400 font-normal">({g.familyName})</span>
+                          </div>
+                          {(category === 'Other' || g.dietaryRestrictions !== category) && (
+                            <div className="text-[10px] text-amber-800 italic mt-0.5 truncate">
+                              "{g.dietaryRestrictions}"
+                            </div>
+                          )}
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => onOpenEditGuest(g)}
+                          className="text-[10px] text-zinc-400 hover:text-black cursor-pointer ml-2 transition-colors shrink-0"
+                        >
+                          edit
+                        </button>
+                      </div>
+                    ))}
                   </div>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => onOpenEditGuest(g)}
-                  className="px-2.5 py-1 bg-white hover:bg-zinc-100 text-zinc-700 rounded-md text-xs font-karla border border-zinc-200 shadow-xs cursor-pointer"
-                >
-                  Edit
-                </button>
-              </div>
-            ))}
+              ))}
           </div>
         )}
       </div>

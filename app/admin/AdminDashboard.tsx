@@ -401,6 +401,7 @@ export default function AdminDashboard({
 
       {/* Modals */}
       <AddFamilyModal
+        key={`add-family-${isAddFamilyOpen}`}
         isOpen={isAddFamilyOpen}
         onClose={() => setIsAddFamilyOpen(false)}
         isPending={isPending}
@@ -409,6 +410,7 @@ export default function AdminDashboard({
       />
 
       <EditFamilyModal
+        key={`edit-family-${editFamilyTarget?.id || 'empty'}`}
         family={editFamilyTarget}
         onClose={() => setEditFamilyTarget(null)}
         isPending={isPending}
@@ -417,6 +419,7 @@ export default function AdminDashboard({
       />
 
       <DeleteFamilyModal
+        key={`del-family-${deleteFamilyTarget?.id || 'empty'}`}
         family={deleteFamilyTarget}
         onClose={() => setDeleteFamilyTarget(null)}
         isPending={isPending}
@@ -425,6 +428,7 @@ export default function AdminDashboard({
       />
 
       <AddGuestModal
+        key={`add-guest-${addGuestFamilyTarget?.id || 'empty'}`}
         family={addGuestFamilyTarget}
         onClose={() => setAddGuestFamilyTarget(null)}
         isPending={isPending}
@@ -433,6 +437,7 @@ export default function AdminDashboard({
       />
 
       <EditGuestModal
+        key={`edit-guest-${editGuestTarget?.id || 'empty'}`}
         guest={editGuestTarget}
         onClose={() => setEditGuestTarget(null)}
         isPending={isPending}
@@ -441,6 +446,7 @@ export default function AdminDashboard({
       />
 
       <DeleteGuestModal
+        key={`del-guest-${deleteGuestTarget?.id || 'empty'}`}
         guest={deleteGuestTarget}
         onClose={() => setDeleteGuestTarget(null)}
         isPending={isPending}

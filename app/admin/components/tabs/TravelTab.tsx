@@ -20,6 +20,24 @@ export default function TravelTab({ guests, onOpenEditGuest }: TravelTabProps) {
   const arrivalFlights = attendingGuests.filter((g) => g.arrivalFlightNumber)
   const departureFlights = attendingGuests.filter((g) => g.departureFlightNumber)
 
+  const arrivalFlightGroups: Record<string, FlatGuest[]> = {}
+  arrivalFlights.forEach((g) => {
+    const flight = g.arrivalFlightNumber ? g.arrivalFlightNumber.trim() : 'Unknown'
+    const dateStr = g.arrivalDate ? ` - ${g.arrivalDate}` : ''
+    const key = `${flight}${dateStr}`
+    if (!arrivalFlightGroups[key]) arrivalFlightGroups[key] = []
+    arrivalFlightGroups[key].push(g)
+  })
+
+  const departureFlightGroups: Record<string, FlatGuest[]> = {}
+  departureFlights.forEach((g) => {
+    const flight = g.departureFlightNumber ? g.departureFlightNumber.trim() : 'Unknown'
+    const dateStr = g.departureDate ? ` - ${g.departureDate}` : ''
+    const key = `${flight}${dateStr}`
+    if (!departureFlightGroups[key]) departureFlightGroups[key] = []
+    departureFlightGroups[key].push(g)
+  })
+
   return (
     <div className="space-y-6">
       {/* Hotel Accommodations */}
@@ -54,7 +72,7 @@ export default function TravelTab({ guests, onOpenEditGuest }: TravelTabProps) {
                     <button
                       type="button"
                       onClick={() => onOpenEditGuest(g)}
-                      className="text-[10px] text-zinc-400 hover:text-black cursor-pointer ml-1"
+                      className="text-[10px] text-zinc-400 hover:text-black cursor-pointer ml-1 transition-colors"
                     >
                       edit
                     </button>
@@ -85,21 +103,39 @@ export default function TravelTab({ guests, onOpenEditGuest }: TravelTabProps) {
               No arrival flights entered yet.
             </p>
           ) : (
-            <div className="space-y-2 max-h-96 overflow-y-auto pr-1">
-              {arrivalFlights.map((g) => (
+            <div className="grid grid-cols-1 gap-4 max-h-[500px] overflow-y-auto pr-1">
+              {Object.entries(arrivalFlightGroups)
+                .sort((a, b) => {
+                  const dateA = a[1][0]?.arrivalDate || '9999-99-99'
+                  const dateB = b[1][0]?.arrivalDate || '9999-99-99'
+                  return dateA.localeCompare(dateB)
+                })
+                .map(([flightKey, list]) => (
                 <div
-                  key={g.id}
-                  className="p-3 bg-zinc-50 rounded-xl border border-zinc-200 flex justify-between items-center text-xs font-karla"
+                  key={flightKey}
+                  className="p-4 rounded-xl border bg-emerald-50/40 border-emerald-200/60"
                 >
-                  <div>
-                    <div className="font-semibold text-black">{g.name}</div>
-                    <div className="text-zinc-500">{g.familyName}</div>
+                  <div className="flex justify-between items-baseline mb-2">
+                    <h4 className="font-semibold text-sm text-black truncate">{flightKey}</h4>
+                    <span className="text-xs font-bold font-sans text-emerald-900 bg-emerald-100 px-2 py-0.5 rounded-full ml-2">
+                      {list.length}
+                    </span>
                   </div>
-                  <div className="text-right">
-                    <div className="font-mono font-bold text-zinc-800 text-sm">
-                      {g.arrivalFlightNumber}
-                    </div>
-                    {g.arrivalDate && <div className="text-zinc-500 text-[11px]">{g.arrivalDate}</div>}
+                  <div className="space-y-1 max-h-36 overflow-y-auto pr-1 text-xs font-karla text-zinc-600">
+                    {list.map((g) => (
+                      <div key={g.id} className="flex justify-between items-center py-0.5">
+                        <span className="truncate">
+                          {g.name} <span className="text-zinc-400 ml-1">({g.familyName})</span>
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => onOpenEditGuest(g)}
+                          className="text-[10px] text-zinc-400 hover:text-black cursor-pointer ml-1 transition-colors"
+                        >
+                          edit
+                        </button>
+                      </div>
+                    ))}
                   </div>
                 </div>
               ))}
@@ -124,21 +160,39 @@ export default function TravelTab({ guests, onOpenEditGuest }: TravelTabProps) {
               No departure flights entered yet.
             </p>
           ) : (
-            <div className="space-y-2 max-h-96 overflow-y-auto pr-1">
-              {departureFlights.map((g) => (
+            <div className="grid grid-cols-1 gap-4 max-h-[500px] overflow-y-auto pr-1">
+              {Object.entries(departureFlightGroups)
+                .sort((a, b) => {
+                  const dateA = a[1][0]?.departureDate || '9999-99-99'
+                  const dateB = b[1][0]?.departureDate || '9999-99-99'
+                  return dateA.localeCompare(dateB)
+                })
+                .map(([flightKey, list]) => (
                 <div
-                  key={g.id}
-                  className="p-3 bg-zinc-50 rounded-xl border border-zinc-200 flex justify-between items-center text-xs font-karla"
+                  key={flightKey}
+                  className="p-4 rounded-xl border bg-sky-50/40 border-sky-200/60"
                 >
-                  <div>
-                    <div className="font-semibold text-black">{g.name}</div>
-                    <div className="text-zinc-500">{g.familyName}</div>
+                  <div className="flex justify-between items-baseline mb-2">
+                    <h4 className="font-semibold text-sm text-black truncate">{flightKey}</h4>
+                    <span className="text-xs font-bold font-sans text-sky-900 bg-sky-100 px-2 py-0.5 rounded-full ml-2">
+                      {list.length}
+                    </span>
                   </div>
-                  <div className="text-right">
-                    <div className="font-mono font-bold text-zinc-800 text-sm">
-                      {g.departureFlightNumber}
-                    </div>
-                    {g.departureDate && <div className="text-zinc-500 text-[11px]">{g.departureDate}</div>}
+                  <div className="space-y-1 max-h-36 overflow-y-auto pr-1 text-xs font-karla text-zinc-600">
+                    {list.map((g) => (
+                      <div key={g.id} className="flex justify-between items-center py-0.5">
+                        <span className="truncate">
+                          {g.name} <span className="text-zinc-400 ml-1">({g.familyName})</span>
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => onOpenEditGuest(g)}
+                          className="text-[10px] text-zinc-400 hover:text-black cursor-pointer ml-1 transition-colors"
+                        >
+                          edit
+                        </button>
+                      </div>
+                    ))}
                   </div>
                 </div>
               ))}

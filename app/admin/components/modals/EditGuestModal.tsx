@@ -260,12 +260,11 @@ export default function EditGuestModal({
                 />
               </div>
               <div>
-                <label className="block text-xs text-zinc-600 mb-1">Arrival Date (e.g. Dec 10)</label>
+                <label className="block text-xs text-zinc-600 mb-1">Arrival Date</label>
                 <input
-                  type="text"
+                  type="date"
                   name="arrivalDate"
                   defaultValue={guest.arrivalDate || ''}
-                  placeholder="Dec 10, 2026"
                   className="w-full px-3 py-1.5 bg-white border border-zinc-200 rounded-lg text-xs focus:border-sage outline-none"
                 />
               </div>
@@ -280,12 +279,11 @@ export default function EditGuestModal({
                 />
               </div>
               <div>
-                <label className="block text-xs text-zinc-600 mb-1">Departure Date (e.g. Dec 14)</label>
+                <label className="block text-xs text-zinc-600 mb-1">Departure Date</label>
                 <input
-                  type="text"
+                  type="date"
                   name="departureDate"
                   defaultValue={guest.departureDate || ''}
-                  placeholder="Dec 14, 2026"
                   className="w-full px-3 py-1.5 bg-white border border-zinc-200 rounded-lg text-xs focus:border-sage outline-none"
                 />
               </div>
