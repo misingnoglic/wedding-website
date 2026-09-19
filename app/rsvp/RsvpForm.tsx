@@ -65,7 +65,7 @@ const normalizeFlightInput = (fn: string): string => {
     }
   }
 
-  const match = val.match(/^([A-Z0-9]{2,3})\s*(\d+)$/i)
+  const match = val.match(/^([A-Z]{2,3}|[A-Z][0-9]|[0-9][A-Z])\s*(\d+)$/i)
   if (match) {
     val = `${match[1].toUpperCase()} ${match[2]}`
   } else {
