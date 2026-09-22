@@ -35,9 +35,16 @@ export default function AdminKpiCards({ stats }: AdminKpiCardsProps) {
       <div className="bg-white/60 backdrop-blur-xl rounded-3xl p-6 border border-white shadow-lg shadow-zinc-200/40 relative overflow-hidden group hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
         <div className="absolute top-0 left-0 w-1.5 h-full bg-emerald-500 opacity-80" />
         <span className="text-xs uppercase tracking-wider text-zinc-500 font-sans">Wedding Day (Dec 12)</span>
-        <div className="flex items-baseline justify-between mt-2">
-          <span className="text-3xl md:text-4xl font-bold font-sans text-emerald-700">{stats.weddingAccepted}</span>
-          <span className="text-xs font-karla text-emerald-700 font-medium">{stats.acceptanceRate}% Attending</span>
+        <div className="flex flex-col mt-2">
+          <div className="flex items-baseline gap-2">
+            <span className="text-3xl md:text-4xl font-bold font-sans text-emerald-700">{stats.weddingAccepted + stats.weddingPredictedAccepted}</span>
+            <span className="text-xs font-karla text-emerald-700 font-medium">Expected</span>
+          </div>
+          {stats.weddingPredictedAccepted > 0 && (
+            <span className="text-[10px] text-emerald-600/70 font-medium">
+              ({stats.weddingAccepted} confirmed, {stats.weddingPredictedAccepted} predicted)
+            </span>
+          )}
         </div>
         <div className="mt-4 pt-3 border-t border-zinc-100 flex items-center justify-between text-xs font-karla">
           <span className="text-zinc-500">
@@ -53,9 +60,16 @@ export default function AdminKpiCards({ stats }: AdminKpiCardsProps) {
       <div className="bg-white/60 backdrop-blur-xl rounded-3xl p-6 border border-white shadow-lg shadow-zinc-200/40 relative overflow-hidden group hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
         <div className="absolute top-0 left-0 w-1.5 h-full bg-amber-500 opacity-80" />
         <span className="text-xs uppercase tracking-wider text-zinc-500 font-sans">Welcome Party (Dec 11)</span>
-        <div className="flex items-baseline justify-between mt-2">
-          <span className="text-3xl md:text-4xl font-bold font-sans text-zinc-900">{stats.welcomeAccepted}</span>
-          <span className="text-xs font-karla text-zinc-500">Attending</span>
+        <div className="flex flex-col mt-2">
+          <div className="flex items-baseline gap-2">
+            <span className="text-3xl md:text-4xl font-bold font-sans text-zinc-900">{stats.welcomeAccepted + stats.welcomePredictedAccepted}</span>
+            <span className="text-xs font-karla text-zinc-500">Expected</span>
+          </div>
+          {stats.welcomePredictedAccepted > 0 && (
+            <span className="text-[10px] text-zinc-500/70 font-medium">
+              ({stats.welcomeAccepted} confirmed, {stats.welcomePredictedAccepted} predicted)
+            </span>
+          )}
         </div>
         <div className="mt-4 pt-3 border-t border-zinc-100 flex items-center justify-between text-xs font-karla">
           <span className="text-zinc-500">
@@ -71,9 +85,16 @@ export default function AdminKpiCards({ stats }: AdminKpiCardsProps) {
       <div className="bg-white/60 backdrop-blur-xl rounded-3xl p-6 border border-white shadow-lg shadow-zinc-200/40 relative overflow-hidden group hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
         <div className="absolute top-0 left-0 w-1.5 h-full bg-blue-500 opacity-80" />
         <span className="text-xs uppercase tracking-wider text-zinc-500 font-sans">Rehearsal (Dec 10)</span>
-        <div className="flex items-baseline justify-between mt-2">
-          <span className="text-3xl md:text-4xl font-bold font-sans text-blue-700">{stats.rehearsalAccepted}</span>
-          <span className="text-xs font-karla text-blue-700 font-medium">Attending</span>
+        <div className="flex flex-col mt-2">
+          <div className="flex items-baseline gap-2">
+            <span className="text-3xl md:text-4xl font-bold font-sans text-blue-700">{stats.rehearsalAccepted + stats.rehearsalPredictedAccepted}</span>
+            <span className="text-xs font-karla text-blue-700 font-medium">Expected</span>
+          </div>
+          {stats.rehearsalPredictedAccepted > 0 && (
+            <span className="text-[10px] text-blue-600/70 font-medium">
+              ({stats.rehearsalAccepted} confirmed, {stats.rehearsalPredictedAccepted} predicted)
+            </span>
+          )}
         </div>
         <div className="mt-4 pt-3 border-t border-zinc-100 flex items-center justify-between text-xs font-karla">
           <span className="text-zinc-500">

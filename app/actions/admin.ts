@@ -329,6 +329,15 @@ export async function updateGuestAdmin(prevState: unknown, formData: FormData) {
   const attendingRehearsalStr = formData.get('isAttendingRehearsalDinner') as string
   const isAttendingRehearsalDinner = attendingRehearsalStr === 'true' ? true : attendingRehearsalStr === 'false' ? false : null
 
+  const predictedAttendingWeddingStr = formData.get('predictedIsAttendingWedding') as string
+  const predictedIsAttendingWedding = predictedAttendingWeddingStr === 'true' ? true : predictedAttendingWeddingStr === 'false' ? false : null
+
+  const predictedAttendingWelcomeStr = formData.get('predictedIsAttendingWelcome') as string
+  const predictedIsAttendingWelcome = predictedAttendingWelcomeStr === 'true' ? true : predictedAttendingWelcomeStr === 'false' ? false : null
+
+  const predictedAttendingRehearsalStr = formData.get('predictedIsAttendingRehearsalDinner') as string
+  const predictedIsAttendingRehearsalDinner = predictedAttendingRehearsalStr === 'true' ? true : predictedAttendingRehearsalStr === 'false' ? false : null
+
   const arrivalFlightNumber = formatFlightNumber(formData.get('arrivalFlightNumber') as string)
   const arrivalDate = arrivalFlightNumber ? ((formData.get('arrivalDate') as string || '').trim() || null) : null
 
@@ -362,6 +371,9 @@ export async function updateGuestAdmin(prevState: unknown, formData: FormData) {
         isAttendingWedding,
         isAttendingWelcome,
         isAttendingRehearsalDinner,
+        predictedIsAttendingWedding,
+        predictedIsAttendingWelcome,
+        predictedIsAttendingRehearsalDinner,
         dietaryRestrictions,
         arrivalFlightNumber,
         arrivalDate,
@@ -386,6 +398,9 @@ export async function updateGuestAdmin(prevState: unknown, formData: FormData) {
         isAttendingWedding,
         isAttendingWelcome,
         isAttendingRehearsalDinner,
+        predictedIsAttendingWedding,
+        predictedIsAttendingWelcome,
+        predictedIsAttendingRehearsalDinner,
         dietaryRestrictions,
         hotelName,
         arrivalFlightNumber,
@@ -401,6 +416,100 @@ export async function updateGuestAdmin(prevState: unknown, formData: FormData) {
   } catch (error) {
     console.error('Update guest error:', error)
     return { error: 'Failed to update guest.' }
+  }
+}
+
+export async function updateGuestPredictions(guestId: string, predictions: {
+  predictedIsAttendingWedding?: boolean | null,
+  predictedIsAttendingWelcome?: boolean | null,
+  predictedIsAttendingRehearsalDinner?: boolean | null
+}) {
+  const admin = await getAuthenticatedAdmin()
+
+  try {
+    const existing = await db.guest.findUnique({
+      where: { id: guestId },
+      include: { family: true }
+    })
+
+    if (!existing) {
+      return { error: 'Guest not found.' }
+    }
+
+    if (!existing.family.isRehearsalDinnerInvited && predictions.predictedIsAttendingRehearsalDinner !== undefined) {
+      predictions.predictedIsAttendingRehearsalDinner = null
+    }
+
+    await db.guest.update({
+      where: { id: guestId },
+      data: predictions
+    })
+
+    await logAuditEvent({
+      familyId: existing.familyId,
+      actorType: 'ADMIN',
+      actorName: `${admin.name} (Admin)`,
+      eventType: 'GUEST_UPDATED',
+      description: `Admin updated RSVP predictions for "${existing.name}".`,
+    })
+
+    revalidatePath('/admin')
+    return { success: true }
+  } catch (error) {
+    console.error('Update prediction error:', error)
+    return { error: 'Failed to update prediction.' }
+  }
+}
+
+export async function bulkUpdatePredictions(guestIds: string[], predictions: {
+  predictedIsAttendingWedding?: boolean | null,
+  predictedIsAttendingWelcome?: boolean | null,
+  predictedIsAttendingRehearsalDinner?: boolean | null
+}) {
+  const admin = await getAuthenticatedAdmin()
+
+  try {
+    if (guestIds.length === 0) return { success: true }
+
+    if (predictions.predictedIsAttendingRehearsalDinner !== undefined && predictions.predictedIsAttendingRehearsalDinner !== null) {
+      const { predictedIsAttendingRehearsalDinner, ...rest } = predictions
+      if (Object.keys(rest).length > 0) {
+        await db.guest.updateMany({
+          where: { id: { in: guestIds } },
+          data: rest
+        })
+      }
+      
+      // Update rehearsal dinner prediction only for invited guests
+      await db.guest.updateMany({
+        where: { id: { in: guestIds }, family: { isRehearsalDinnerInvited: true } },
+        data: { predictedIsAttendingRehearsalDinner }
+      })
+
+      // Clear rehearsal dinner prediction for uninvited guests
+      await db.guest.updateMany({
+        where: { id: { in: guestIds }, family: { isRehearsalDinnerInvited: false } },
+        data: { predictedIsAttendingRehearsalDinner: null }
+      })
+    } else {
+      await db.guest.updateMany({
+        where: { id: { in: guestIds } },
+        data: predictions
+      })
+    }
+
+    await logAuditEvent({
+      actorType: 'ADMIN',
+      actorName: `${admin.name} (Admin)`,
+      eventType: 'GUEST_UPDATED',
+      description: `Admin bulk updated RSVP predictions for ${guestIds.length} guests.`,
+    })
+
+    revalidatePath('/admin')
+    return { success: true, message: `Updated predictions for ${guestIds.length} guests.` }
+  } catch (error) {
+    console.error('Bulk update prediction error:', error)
+    return { error: 'Failed to bulk update predictions.' }
   }
 }
 

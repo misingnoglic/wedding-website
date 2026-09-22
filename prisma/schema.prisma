@@ -38,6 +38,11 @@ model Guest {
   isAttendingRehearsalDinner Boolean?
   isAttendingWedding         Boolean?
 
+  // Predicted RSVP Statuses
+  predictedIsAttendingWelcome         Boolean?
+  predictedIsAttendingRehearsalDinner Boolean?
+  predictedIsAttendingWedding         Boolean?
+
   // Additional info
   dietaryRestrictions   String?
   arrivalFlightNumber   String?

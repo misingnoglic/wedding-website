@@ -25,6 +25,7 @@ import TravelTab from './components/tabs/TravelTab'
 import SongsTab from './components/tabs/SongsTab'
 import MessagesTab from './components/tabs/MessagesTab'
 import ActivityLogTab from './components/tabs/ActivityLogTab'
+import PredictionsTab from './components/tabs/PredictionsTab'
 
 import AddFamilyModal from './components/modals/AddFamilyModal'
 import EditFamilyModal from './components/modals/EditFamilyModal'
@@ -94,12 +95,20 @@ export default function AdminDashboard({
     let weddingAccepted = 0
     let weddingDeclined = 0
     let weddingPending = 0
+    let weddingPredictedAccepted = 0
+    let weddingPredictedDeclined = 0
+    
     let welcomeAccepted = 0
     let welcomeDeclined = 0
     let welcomePending = 0
+    let welcomePredictedAccepted = 0
+    let welcomePredictedDeclined = 0
+    
     let rehearsalAccepted = 0
     let rehearsalDeclined = 0
     let rehearsalPending = 0
+    let rehearsalPredictedAccepted = 0
+    let rehearsalPredictedDeclined = 0
     let hasFlightsCount = 0
     let hasHotelCount = 0
     let dietaryCount = 0
@@ -108,15 +117,27 @@ export default function AdminDashboard({
     allGuests.forEach((g) => {
       if (g.isAttendingWedding === true) weddingAccepted++
       else if (g.isAttendingWedding === false) weddingDeclined++
-      else weddingPending++
+      else {
+        weddingPending++
+        if (g.predictedIsAttendingWedding === true) weddingPredictedAccepted++
+        else if (g.predictedIsAttendingWedding === false) weddingPredictedDeclined++
+      }
 
       if (g.isAttendingWelcome === true) welcomeAccepted++
       else if (g.isAttendingWelcome === false) welcomeDeclined++
-      else welcomePending++
+      else {
+        welcomePending++
+        if (g.predictedIsAttendingWelcome === true) welcomePredictedAccepted++
+        else if (g.predictedIsAttendingWelcome === false) welcomePredictedDeclined++
+      }
 
       if (g.isAttendingRehearsalDinner === true) rehearsalAccepted++
       else if (g.isAttendingRehearsalDinner === false) rehearsalDeclined++
-      else rehearsalPending++
+      else {
+        rehearsalPending++
+        if (g.predictedIsAttendingRehearsalDinner === true) rehearsalPredictedAccepted++
+        else if (g.predictedIsAttendingRehearsalDinner === false) rehearsalPredictedDeclined++
+      }
 
       if (g.arrivalFlightNumber || g.departureFlightNumber) hasFlightsCount++
       if (g.hotelName && g.hotelName.trim().length > 0) hasHotelCount++
@@ -135,12 +156,18 @@ export default function AdminDashboard({
       weddingAccepted,
       weddingDeclined,
       weddingPending,
+      weddingPredictedAccepted,
+      weddingPredictedDeclined,
       welcomeAccepted,
       welcomeDeclined,
       welcomePending,
+      welcomePredictedAccepted,
+      welcomePredictedDeclined,
       rehearsalAccepted,
       rehearsalDeclined,
       rehearsalPending,
+      rehearsalPredictedAccepted,
+      rehearsalPredictedDeclined,
       responseRate,
       acceptanceRate,
       hasFlightsCount,
@@ -396,6 +423,8 @@ export default function AdminDashboard({
       )}
 
       {activeTab === 'songs' && <SongsTab guests={allGuests} />}
+
+      {activeTab === 'predictions' && <PredictionsTab guests={allGuests} />}
 
       {activeTab === 'activity' && <ActivityLogTab auditEvents={initialAuditEvents} />}
 

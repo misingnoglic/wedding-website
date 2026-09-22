@@ -8,6 +8,9 @@ export type Guest = {
   isAttendingWelcome: boolean | null
   isAttendingRehearsalDinner: boolean | null
   isAttendingWedding: boolean | null
+  predictedIsAttendingWelcome: boolean | null
+  predictedIsAttendingRehearsalDinner: boolean | null
+  predictedIsAttendingWedding: boolean | null
   dietaryRestrictions: string | null
   arrivalFlightNumber: string | null
   arrivalDate: string | null
@@ -81,7 +84,7 @@ export type SmsMessageItem = {
   } | null
 }
 
-export type TabType = 'families' | 'guests' | 'dietary' | 'travel' | 'songs' | 'messages' | 'activity'
+export type TabType = 'families' | 'guests' | 'dietary' | 'travel' | 'songs' | 'messages' | 'activity' | 'predictions'
 export type RsvpFilter = 'all' | 'attending_wedding' | 'declined_wedding' | 'pending_wedding' | 'attending_welcome' | 'attending_rehearsal'
 export type TravelFilter = 'all' | 'has_flights' | 'has_hotel' | 'missing_travel'
 export type SortOption = 'name_asc' | 'name_desc' | 'guests_desc' | 'updated_desc'
@@ -93,12 +96,18 @@ export interface AdminStats {
   weddingAccepted: number
   weddingDeclined: number
   weddingPending: number
+  weddingPredictedAccepted: number
+  weddingPredictedDeclined: number
   rehearsalAccepted: number
   rehearsalDeclined: number
   rehearsalPending: number
+  rehearsalPredictedAccepted: number
+  rehearsalPredictedDeclined: number
   welcomeAccepted: number
   welcomeDeclined: number
   welcomePending: number
+  welcomePredictedAccepted: number
+  welcomePredictedDeclined: number
   responseRate: number
   acceptanceRate: number
   hasFlightsCount: number

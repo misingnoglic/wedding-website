@@ -559,21 +559,30 @@ export async function updateRsvp(prevState: unknown, formData: FormData) {
 
         // 1. Wedding attendance
         if (prev.isAttendingWedding !== isAttendingWedding) {
-          const msg = isAttendingWedding === true ? 'accepted Wedding' : isAttendingWedding === false ? 'declined Wedding' : 'set Wedding to pending'
+          let msg = isAttendingWedding === true ? 'accepted Wedding' : isAttendingWedding === false ? 'declined Wedding' : 'set Wedding to pending'
+          if (prev.predictedIsAttendingWedding != null && isAttendingWedding != null && prev.predictedIsAttendingWedding !== isAttendingWedding) {
+            msg += ` (⚠️ Mismatch! Predicted: ${prev.predictedIsAttendingWedding ? 'Yes' : 'No'})`
+          }
           diffs.push(msg)
           attendanceDiffs.push(msg)
         }
 
         // 2. Welcome party attendance
         if (prev.isAttendingWelcome !== isAttendingWelcome) {
-          const msg = isAttendingWelcome === true ? 'attending Welcome Party' : isAttendingWelcome === false ? 'declined Welcome Party' : 'set Welcome Party to pending'
+          let msg = isAttendingWelcome === true ? 'attending Welcome Party' : isAttendingWelcome === false ? 'declined Welcome Party' : 'set Welcome Party to pending'
+          if (prev.predictedIsAttendingWelcome != null && isAttendingWelcome != null && prev.predictedIsAttendingWelcome !== isAttendingWelcome) {
+            msg += ` (⚠️ Mismatch! Predicted: ${prev.predictedIsAttendingWelcome ? 'Yes' : 'No'})`
+          }
           diffs.push(msg)
           attendanceDiffs.push(msg)
         }
 
         // Rehearsal Dinner attendance
         if (prev.isAttendingRehearsalDinner !== isAttendingRehearsalDinner) {
-          const msg = isAttendingRehearsalDinner === true ? 'attending Rehearsal Dinner' : isAttendingRehearsalDinner === false ? 'declined Rehearsal Dinner' : 'set Rehearsal Dinner to pending'
+          let msg = isAttendingRehearsalDinner === true ? 'attending Rehearsal Dinner' : isAttendingRehearsalDinner === false ? 'declined Rehearsal Dinner' : 'set Rehearsal Dinner to pending'
+          if (prev.predictedIsAttendingRehearsalDinner != null && isAttendingRehearsalDinner != null && prev.predictedIsAttendingRehearsalDinner !== isAttendingRehearsalDinner) {
+            msg += ` (⚠️ Mismatch! Predicted: ${prev.predictedIsAttendingRehearsalDinner ? 'Yes' : 'No'})`
+          }
           diffs.push(msg)
           attendanceDiffs.push(msg)
         }
