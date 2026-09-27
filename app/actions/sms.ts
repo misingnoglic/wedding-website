@@ -4,6 +4,7 @@ import { db } from '@/lib/db'
 import { logAuditEvent } from '@/lib/audit'
 import { getAuthenticatedAdmin } from '@/lib/auth'
 import { revalidatePath } from 'next/cache'
+import twilio from 'twilio'
 
 export async function sendSmsAction(toPhone: string, body: string, guestId?: string | null, familyId?: string | null) {
   const admin = await getAuthenticatedAdmin()
@@ -17,28 +18,12 @@ export async function sendSmsAction(toPhone: string, body: string, guestId?: str
       throw new Error('Twilio credentials are not fully configured in environment variables.')
     }
 
-    const basicAuth = Buffer.from(`${TWILIO_ACCOUNT_SID}:${TWILIO_AUTH_TOKEN}`).toString('base64')
-
-    const formData = new URLSearchParams()
-    formData.append('To', toPhone)
-    formData.append('From', TWILIO_PHONE_NUMBER)
-    formData.append('Body', body)
-
-    const response = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${TWILIO_ACCOUNT_SID}/Messages.json`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Basic ${basicAuth}`,
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      body: formData.toString()
+    const client = twilio(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
+    const data = await client.messages.create({
+      to: toPhone,
+      from: TWILIO_PHONE_NUMBER,
+      body,
     })
-
-    const data = await response.json()
-
-    if (!response.ok) {
-      console.error('Twilio Error:', data)
-      throw new Error(`Failed to send SMS via Twilio: ${data.message || response.statusText}`)
-    }
 
     // Save outgoing message to DB
     await db.smsMessage.create({

@@ -1,5 +1,5 @@
-import { createHmac, timingSafeEqual } from 'crypto'
 import { NextRequest, NextResponse } from 'next/server'
+import twilio from 'twilio'
 import { revalidatePath } from 'next/cache'
 import { db } from '@/lib/db'
 import { logAuditEvent } from '@/lib/audit'
@@ -20,10 +20,6 @@ export async function GET() {
   })
 }
 
-/**
- * Validates the X-Twilio-Signature header: base64(HMAC-SHA1(authToken, url + sorted key/value pairs)).
- * https://www.twilio.com/docs/usage/webhooks/webhooks-security
- */
 function isValidTwilioSignature(request: NextRequest, params: URLSearchParams): boolean {
   const authToken = process.env.TWILIO_AUTH_TOKEN
   const signature = request.headers.get('x-twilio-signature')
@@ -35,14 +31,7 @@ function isValidTwilioSignature(request: NextRequest, params: URLSearchParams): 
   const host = request.headers.get('x-forwarded-host') || request.headers.get('host') || url.host
   const publicUrl = `${proto}://${host}${url.pathname}${url.search}`
 
-  const payload = [...params.keys()]
-    .sort()
-    .reduce((acc, key) => acc + key + params.get(key), publicUrl)
-  const expected = createHmac('sha1', authToken).update(payload, 'utf8').digest('base64')
-
-  const a = Buffer.from(expected)
-  const b = Buffer.from(signature)
-  return a.length === b.length && timingSafeEqual(a, b)
+  return twilio.validateRequest(authToken, signature, publicUrl, Object.fromEntries(params))
 }
 
 /**
