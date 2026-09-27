@@ -3,6 +3,7 @@
 import { cookies, headers } from 'next/headers'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
+import { after } from 'next/server'
 import { db } from '@/lib/db'
 import { logAuditEvent } from '@/lib/audit'
 import { sendAdminPushNotification } from '@/lib/push'
@@ -134,11 +135,13 @@ export async function loginFamily(prevState: unknown, formData: FormData) {
         data: { hasLoggedIn: true }
       })
       
-      sendAdminPushNotification(
-        `First Login: ${family.name}`,
-        `${family.name} just logged into the website for the very first time!`,
-        '/admin'
-      ).catch(console.error)
+      after(() =>
+        sendAdminPushNotification(
+          `First Login: ${family.name}`,
+          `${family.name} just logged into the website for the very first time!`,
+          '/admin'
+        )
+      )
     }
 
     await logAuditEvent({
@@ -701,10 +704,9 @@ export async function updateRsvp(prevState: unknown, formData: FormData) {
 
       // Send push notification to admins only if RSVP attendance statuses changed
       if (guestAttendanceChanges.length > 0) {
-        // Make sure we aren't waiting on it so it doesn't block the response
         const title = `RSVP Update from ${familyDisplayName}: ${guestAttendanceChanges}`
         const body = guestAttendanceChanges.join('\n')
-        sendAdminPushNotification(title, body, '/admin').catch(console.error)
+        after(() => sendAdminPushNotification(title, body, '/admin'))
       }
     }
 
