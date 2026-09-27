@@ -1,9 +1,10 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest, NextResponse, after } from 'next/server'
 import twilio from 'twilio'
 import { revalidatePath } from 'next/cache'
 import { db } from '@/lib/db'
 import { logAuditEvent } from '@/lib/audit'
 import { findMatchingGuestForPhone, formatPhoneNumber } from '@/lib/phone'
+import { sendAdminPushNotification } from '@/lib/push'
 
 export const dynamic = 'force-dynamic'
 
@@ -126,12 +127,15 @@ export async function POST(request: NextRequest) {
       },
     })
 
-    // Revalidate admin page to show new message immediately
-    try {
-      revalidatePath('/admin')
-    } catch {
-      // Ignored in non-page context
-    }
+    after(() =>
+      sendAdminPushNotification(
+        `Text from ${matchedGuest ? matchedGuest.name : formattedSender}`,
+        body || '(empty message)',
+        '/admin'
+      )
+    )
+
+    revalidatePath('/admin')
 
     // Respond with standard empty TwiML XML (no automated reply)
     return new Response('<?xml version="1.0" encoding="UTF-8"?><Response></Response>', {
