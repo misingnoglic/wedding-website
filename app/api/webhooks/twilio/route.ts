@@ -25,7 +25,11 @@ export async function GET() {
 function isValidTwilioSignature(request: NextRequest, params: URLSearchParams): boolean {
   const authToken = process.env.TWILIO_AUTH_TOKEN
   const signature = request.headers.get('x-twilio-signature')
-  if (!authToken || !signature) return false
+  if (!authToken) {
+    console.error('TWILIO_AUTH_TOKEN is not set; cannot validate Twilio webhook signatures')
+    return false
+  }
+  if (!signature) return false
 
   // Twilio signs the public URL it was configured with, so rebuild it from the forwarded headers
   const url = new URL(request.url)
