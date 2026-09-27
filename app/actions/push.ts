@@ -44,9 +44,16 @@ export async function saveSubscription(subscription: any) {
 }
 
 export async function deleteSubscription(endpoint: string) {
+  const cookieStore = await cookies()
+  const familyId = cookieStore.get('rsvp_family_id')?.value
+
+  if (!familyId) {
+    return { error: 'Not authenticated' }
+  }
+
   try {
-    await db.pushSubscription.delete({
-      where: { endpoint },
+    await db.pushSubscription.deleteMany({
+      where: { endpoint, familyId },
     })
     return { success: true }
   } catch (error) {
