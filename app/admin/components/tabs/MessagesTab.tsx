@@ -1,8 +1,9 @@
 'use client'
 
-import { useState, useMemo, useEffect, useRef } from 'react'
+import { useState, useMemo, useEffect, useRef, useTransition } from 'react'
 import { SmsMessageItem, FlatGuest } from '../../types'
 import { formatPhoneNumber, doPhoneNumbersMatch, getComparablePhone } from '@/lib/phone'
+import { sendSmsAction } from '@/app/actions/sms'
 
 interface MessagesTabProps {
   messages: SmsMessageItem[]
@@ -49,6 +50,8 @@ export default function MessagesTab({ messages, allGuests }: MessagesTabProps) {
   const [copiedPhoneId, setCopiedPhoneId] = useState<string | null>(null)
   const [copiedWebhook, setCopiedWebhook] = useState(false)
   const [sendSuccessToast, setSendSuccessToast] = useState<string | null>(null)
+  const [sendErrorToast, setSendErrorToast] = useState<string | null>(null)
+  const [isPending, startTransition] = useTransition()
 
   const chatStreamRef = useRef<HTMLDivElement>(null)
 
@@ -120,12 +123,23 @@ export default function MessagesTab({ messages, allGuests }: MessagesTabProps) {
   const threads = useMemo(() => {
     const threadMap = new Map<string, MessageThread>()
 
-    // 1. Process DB incoming messages
+    // 1. Process DB messages
     for (const msg of messages) {
-      const phoneKey = getComparablePhone(msg.fromPhone) || msg.fromPhone.trim().toLowerCase()
+      let isOutgoing = false
+      if (msg.rawPayload) {
+        try {
+          const payload = JSON.parse(msg.rawPayload)
+          if (payload.direction === 'outbound-api' || payload.direction === 'outbound-reply') {
+            isOutgoing = true
+          }
+        } catch (e) {}
+      }
+
+      const threadPhone = (isOutgoing && msg.toPhone) ? msg.toPhone : msg.fromPhone
+      const phoneKey = getComparablePhone(threadPhone) || threadPhone.trim().toLowerCase()
 
       // Match guest from allGuests flat roster or relation
-      const matchedGuest = allGuests.find((g) => doPhoneNumbersMatch(g.phoneNumber, msg.fromPhone)) || null
+      const matchedGuest = allGuests.find((g) => doPhoneNumbersMatch(g.phoneNumber, threadPhone)) || null
       const familyName = matchedGuest?.familyName || msg.guest?.family?.name || msg.family?.name || null
       const familyPassword = matchedGuest?.familyPassword || msg.guest?.family?.password || msg.family?.password || null
 
@@ -135,7 +149,7 @@ export default function MessagesTab({ messages, allGuests }: MessagesTabProps) {
         toPhone: msg.toPhone,
         body: msg.body,
         createdAt: msg.createdAt,
-        isOutgoing: false,
+        isOutgoing,
         messageSid: msg.messageSid,
         rawPayload: msg.rawPayload,
       }
@@ -143,8 +157,8 @@ export default function MessagesTab({ messages, allGuests }: MessagesTabProps) {
       if (!threadMap.has(phoneKey)) {
         threadMap.set(phoneKey, {
           phoneKey,
-          displayPhone: formatPhoneNumber(msg.fromPhone) || msg.fromPhone,
-          rawPhone: msg.fromPhone,
+          displayPhone: formatPhoneNumber(threadPhone) || threadPhone,
+          rawPhone: threadPhone,
           guest: matchedGuest,
           familyName,
           familyPassword,
@@ -247,39 +261,39 @@ export default function MessagesTab({ messages, allGuests }: MessagesTabProps) {
     return threads.find((t) => t.phoneKey === selectedPhoneKey) || null
   }, [threads, selectedPhoneKey])
 
-  // Send mock outgoing message
-  const handleSendMockMessage = (e?: React.FormEvent) => {
+  // Send live outgoing message via Twilio
+  const handleSendMessage = (e?: React.FormEvent) => {
     if (e) e.preventDefault()
-    if (!activeThread || !replyText.trim()) return
+    if (!activeThread || !replyText.trim() || isPending) return
 
-    const newMsg: ThreadMessage = {
-      id: `mock_out_${Date.now()}`,
-      fromPhone: 'Arya & Christa',
-      toPhone: activeThread.rawPhone,
-      body: replyText.trim(),
-      createdAt: new Date().toISOString(),
-      isOutgoing: true,
-    }
-
-    setMockOutgoingByPhone((prev) => ({
-      ...prev,
-      [activeThread.phoneKey]: [...(prev[activeThread.phoneKey] || []), newMsg],
-    }))
-
+    const textToSend = replyText.trim()
+    const guestId = activeThread.guest?.id || null
+    const familyId = activeThread.guest?.familyId || null
+    const toPhone = activeThread.rawPhone
     const recipientName = activeThread.guest?.name || activeThread.displayPhone
-    setSendSuccessToast(`Simulated SMS sent to ${recipientName}`)
-    setReplyText('')
-    setTimeout(() => setSendSuccessToast(null), 3000)
 
-    // Smoothly scroll only the internal chat stream box down without scrolling the page
-    setTimeout(() => {
-      if (chatStreamRef.current) {
-        chatStreamRef.current.scrollTo({
-          top: chatStreamRef.current.scrollHeight,
-          behavior: 'smooth',
-        })
+    startTransition(async () => {
+      setSendErrorToast(null)
+      const res = await sendSmsAction(toPhone, textToSend, guestId, familyId)
+      
+      if (res.success) {
+        setSendSuccessToast(`SMS sent to ${recipientName}`)
+        setReplyText('')
+        setTimeout(() => setSendSuccessToast(null), 3000)
+        
+        setTimeout(() => {
+          if (chatStreamRef.current) {
+            chatStreamRef.current.scrollTo({
+              top: chatStreamRef.current.scrollHeight,
+              behavior: 'smooth',
+            })
+          }
+        }, 500) // slight delay to let the UI re-render new message from DB via server component
+      } else {
+        setSendErrorToast(res.error || 'Failed to send SMS')
+        setTimeout(() => setSendErrorToast(null), 5000)
       }
-    }, 50)
+    })
   }
 
   // Count stats
@@ -589,14 +603,23 @@ export default function MessagesTab({ messages, allGuests }: MessagesTabProps) {
                   )}
                 </div>
 
-                {/* Toast alert for mock sending */}
+                {/* Toast alert for sending */}
                 {sendSuccessToast && (
                   <div className="mx-4 mt-2 px-3 py-1.5 rounded-xl bg-emerald-600 text-white text-xs font-karla flex items-center justify-between shadow-sm animate-fade-in">
                     <span className="flex items-center gap-1.5">
                       <span>✓</span>
                       <span>{sendSuccessToast}</span>
                     </span>
-                    <span className="text-[10px] opacity-80 uppercase tracking-wider font-semibold">Simulated</span>
+                    <span className="text-[10px] opacity-80 uppercase tracking-wider font-semibold">Sent</span>
+                  </div>
+                )}
+                {sendErrorToast && (
+                  <div className="mx-4 mt-2 px-3 py-1.5 rounded-xl bg-red-600 text-white text-xs font-karla flex items-center justify-between shadow-sm animate-fade-in">
+                    <span className="flex items-center gap-1.5">
+                      <span>✕</span>
+                      <span>{sendErrorToast}</span>
+                    </span>
+                    <span className="text-[10px] opacity-80 uppercase tracking-wider font-semibold">Error</span>
                   </div>
                 )}
 
@@ -654,7 +677,7 @@ export default function MessagesTab({ messages, allGuests }: MessagesTabProps) {
                               {msg.isOutgoing ? (
                                 <>
                                   <span>•</span>
-                                  <span className="text-sage font-medium">Delivered (Mock)</span>
+                                  <span className="text-sage font-medium">Delivered (Twilio)</span>
                                 </>
                               ) : (
                                 msg.toPhone && (
@@ -690,7 +713,7 @@ export default function MessagesTab({ messages, allGuests }: MessagesTabProps) {
                   </div>
 
                   {/* Input Form */}
-                  <form onSubmit={handleSendMockMessage} className="space-y-2">
+                  <form onSubmit={handleSendMessage} className="space-y-2">
                     <div className="relative flex items-end gap-2 bg-zinc-50 border border-zinc-200 rounded-2xl p-2 focus-within:ring-1 focus-within:ring-sage focus-within:border-sage transition-all">
                       <textarea
                         rows={2}
@@ -700,25 +723,32 @@ export default function MessagesTab({ messages, allGuests }: MessagesTabProps) {
                         onKeyDown={(e) => {
                           if (e.key === 'Enter' && !e.shiftKey) {
                             e.preventDefault()
-                            handleSendMockMessage()
+                            handleSendMessage()
                           }
                         }}
-                        className="w-full bg-transparent text-xs sm:text-sm font-karla text-zinc-900 placeholder:text-zinc-400 focus:outline-none resize-none px-2 py-1"
+                        className="w-full bg-transparent text-xs sm:text-sm font-karla text-zinc-900 placeholder:text-zinc-400 focus:outline-none resize-none px-2 py-1 disabled:opacity-50"
+                        disabled={isPending}
                       />
 
                       <div className="flex items-center gap-2 shrink-0 pb-1 pr-1">
                         <button
                           type="submit"
-                          disabled={!replyText.trim()}
-                          className={`px-4 py-2 rounded-xl text-xs font-sans uppercase tracking-wider font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${replyText.trim()
+                          disabled={!replyText.trim() || isPending}
+                          className={`px-4 py-2 rounded-xl text-xs font-sans uppercase tracking-wider font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${(replyText.trim() && !isPending)
                             ? 'bg-sage text-white hover:bg-sage-dark shadow-xs'
                             : 'bg-zinc-200 text-zinc-400 cursor-not-allowed'
                             }`}
                         >
-                          <span>Send SMS</span>
-                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-                          </svg>
+                          {isPending ? (
+                            <div className="w-3.5 h-3.5 border-2 border-zinc-400 border-t-transparent rounded-full animate-spin"></div>
+                          ) : (
+                            <>
+                              <span>Send SMS</span>
+                              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                              </svg>
+                            </>
+                          )}
                         </button>
                       </div>
                     </div>
@@ -726,8 +756,8 @@ export default function MessagesTab({ messages, allGuests }: MessagesTabProps) {
                     {/* Footer Info: Char count + Outbound status */}
                     <div className="flex items-center justify-between text-[11px] font-karla text-zinc-400 px-1">
                       <span className="flex items-center gap-1 text-zinc-500">
-                        <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-                        <span>Mock Reply Box (Button adds message to thread preview)</span>
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                        <span>Live Twilio SMS Connection</span>
                       </span>
                       <span>
                         {charCount} / 160 chars ({smsSegments} {smsSegments === 1 ? 'SMS' : 'segments'})

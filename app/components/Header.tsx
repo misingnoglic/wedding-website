@@ -31,7 +31,7 @@ export default function Header() {
                             alt="Arya & Christa Monogram"
                             width={48}
                             height={48}
-                            className=" object-contain"
+                            className="w-12 h-auto object-contain"
                         />
                     </Link>
                     <Link href="/" className="text-4xl md:text-5xl font-sans tracking-wide mb-2 hover:text-sage transition-colors duration-300">
