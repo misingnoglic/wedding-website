@@ -20,6 +20,7 @@ export async function GET() {
   })
 }
 
+// Twilio signs webhooks with the account's primary Auth Token (API key secrets can't be used here)
 function isValidTwilioSignature(request: NextRequest, params: URLSearchParams): boolean {
   const authToken = process.env.TWILIO_AUTH_TOKEN
   const signature = request.headers.get('x-twilio-signature')

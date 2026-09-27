@@ -11,14 +11,15 @@ export async function sendSmsAction(toPhone: string, body: string, guestId?: str
 
   try {
     const TWILIO_ACCOUNT_SID = process.env.TWILIO_ACCOUNT_SID
-    const TWILIO_AUTH_TOKEN = process.env.TWILIO_AUTH_TOKEN
+    const TWILIO_API_KEY = process.env.TWILIO_API_KEY
+    const TWILIO_API_SECRET = process.env.TWILIO_API_SECRET
     const TWILIO_PHONE_NUMBER = process.env.TWILIO_PHONE_NUMBER
 
-    if (!TWILIO_ACCOUNT_SID || !TWILIO_AUTH_TOKEN || !TWILIO_PHONE_NUMBER) {
+    if (!TWILIO_ACCOUNT_SID || !TWILIO_API_KEY || !TWILIO_API_SECRET || !TWILIO_PHONE_NUMBER) {
       throw new Error('Twilio credentials are not fully configured in environment variables.')
     }
 
-    const client = twilio(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
+    const client = twilio(TWILIO_API_KEY, TWILIO_API_SECRET, { accountSid: TWILIO_ACCOUNT_SID })
     const data = await client.messages.create({
       to: toPhone,
       from: TWILIO_PHONE_NUMBER,
