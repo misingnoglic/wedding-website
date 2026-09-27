@@ -12,6 +12,9 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Local, gitignored files
+    "scratch/**",
+    "prisma/seed.ts",
   ]),
 ]);
 
