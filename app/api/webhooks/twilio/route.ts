@@ -1,3 +1,4 @@
+import { createHmac, timingSafeEqual } from 'crypto'
 import { NextRequest, NextResponse } from 'next/server'
 import { revalidatePath } from 'next/cache'
 import { db } from '@/lib/db'
@@ -20,75 +21,49 @@ export async function GET() {
 }
 
 /**
+ * Validates the X-Twilio-Signature header: base64(HMAC-SHA1(authToken, url + sorted key/value pairs)).
+ * https://www.twilio.com/docs/usage/webhooks/webhooks-security
+ */
+function isValidTwilioSignature(request: NextRequest, params: URLSearchParams): boolean {
+  const authToken = process.env.TWILIO_AUTH_TOKEN
+  const signature = request.headers.get('x-twilio-signature')
+  if (!authToken || !signature) return false
+
+  // Twilio signs the public URL it was configured with, so rebuild it from the forwarded headers
+  const url = new URL(request.url)
+  const proto = request.headers.get('x-forwarded-proto') || url.protocol.replace(':', '')
+  const host = request.headers.get('x-forwarded-host') || request.headers.get('host') || url.host
+  const publicUrl = `${proto}://${host}${url.pathname}${url.search}`
+
+  const payload = [...params.keys()]
+    .sort()
+    .reduce((acc, key) => acc + key + params.get(key), publicUrl)
+  const expected = createHmac('sha1', authToken).update(payload, 'utf8').digest('base64')
+
+  const a = Buffer.from(expected)
+  const b = Buffer.from(signature)
+  return a.length === b.length && timingSafeEqual(a, b)
+}
+
+/**
  * POST /api/webhooks/twilio
  * Twilio incoming SMS webhook endpoint.
  */
 export async function POST(request: NextRequest) {
   try {
-    let fromPhone = ''
-    let toPhone: string | null = null
-    let body = ''
-    let messageSid: string | null = null
-    const rawPayload: Record<string, unknown> = {}
+    const text = await request.text().catch(() => '')
+    const params = new URLSearchParams(text)
 
-    const contentType = request.headers.get('content-type') || ''
-
-    if (contentType.includes('application/json')) {
-      // JSON Payload
-      const json = await request.json().catch(() => ({}))
-      Object.assign(rawPayload, json)
-
-      fromPhone = (json.From || json.from || json.sender || json.phoneNumber || '').toString().trim()
-      toPhone = (json.To || json.to || '').toString().trim() || null
-      body = (json.Body || json.body || json.text || json.message || '').toString().trim()
-      messageSid = (json.MessageSid || json.SmsSid || json.SmsMessageSid || json.sid || json.id || '').toString().trim() || null
-    } else if (contentType.includes('application/x-www-form-urlencoded')) {
-      // URL encoded Payload (standard Twilio format)
-      const text = await request.text().catch(() => '')
-      const params = new URLSearchParams(text)
-      for (const [key, val] of params.entries()) {
-        rawPayload[key] = val
-      }
-
-      fromPhone = (params.get('From') || params.get('from') || params.get('sender') || '').trim()
-      toPhone = (params.get('To') || params.get('to') || '').trim() || null
-      body = (params.get('Body') || params.get('body') || '').trim()
-      messageSid = (
-        params.get('MessageSid') ||
-        params.get('SmsSid') ||
-        params.get('SmsMessageSid') ||
-        params.get('sid') ||
-        ''
-      ).trim() || null
-    } else {
-      // Multipart or fallback formData
-      try {
-        const formData = await request.formData()
-        for (const [key, val] of formData.entries()) {
-          rawPayload[key] = typeof val === 'string' ? val : val.name
-        }
-
-        fromPhone = (formData.get('From') as string || formData.get('from') as string || '').trim()
-        toPhone = (formData.get('To') as string || formData.get('to') as string || '').trim() || null
-        body = (formData.get('Body') as string || formData.get('body') as string || '').trim()
-        messageSid = (
-          formData.get('MessageSid') as string ||
-          formData.get('SmsSid') as string ||
-          formData.get('SmsMessageSid') as string ||
-          ''
-        ).trim() || null
-      } catch {
-        const text = await request.text().catch(() => '')
-        const params = new URLSearchParams(text)
-        for (const [key, val] of params.entries()) {
-          rawPayload[key] = val
-        }
-        fromPhone = (params.get('From') || params.get('from') || '').trim()
-        toPhone = (params.get('To') || params.get('to') || '').trim() || null
-        body = (params.get('Body') || params.get('body') || '').trim()
-        messageSid = (params.get('MessageSid') || params.get('SmsSid') || '').trim() || null
-      }
+    if (!isValidTwilioSignature(request, params)) {
+      console.warn('Rejected Twilio webhook with missing or invalid signature')
+      return new Response('Forbidden', { status: 403 })
     }
+
+    const rawPayload: Record<string, unknown> = Object.fromEntries(params.entries())
+    const fromPhone = (params.get('From') || '').trim()
+    const toPhone = (params.get('To') || '').trim() || null
+    const body = (params.get('Body') || '').trim()
+    const messageSid = (params.get('MessageSid') || params.get('SmsSid') || '').trim() || null
 
     if (!fromPhone && !body) {
       console.warn('Twilio webhook received with no sender or body')
