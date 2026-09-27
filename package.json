@@ -35,5 +35,8 @@
   },
   "prisma": {
     "seed": "echo 'DO NOT RESEED'"
+  },
+  "overrides": {
+    "deepmerge-ts": "^8.0.0"
   }
 }
