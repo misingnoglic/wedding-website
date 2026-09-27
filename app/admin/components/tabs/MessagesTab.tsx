@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useMemo, useEffect, useRef, useTransition } from 'react'
+import { useRouter } from 'next/navigation'
 import { SmsMessageItem, FlatGuest } from '../../types'
 import { formatPhoneNumber, doPhoneNumbersMatch, getComparablePhone } from '@/lib/phone'
 import { sendSmsAction } from '@/app/actions/sms'
@@ -11,6 +12,8 @@ interface MessagesTabProps {
 }
 
 type MessageFilter = 'all' | 'matched' | 'unknown'
+
+const REFRESH_INTERVAL_MS = 10_000
 
 interface ThreadMessage {
   id: string
@@ -48,6 +51,20 @@ export default function MessagesTab({ messages, allGuests }: MessagesTabProps) {
   const [replyText, setReplyText] = useState('')
   const [mockOutgoingByPhone, setMockOutgoingByPhone] = useState<Record<string, ThreadMessage[]>>({})
   const [copiedPhoneId, setCopiedPhoneId] = useState<string | null>(null)
+  const router = useRouter()
+
+  // Poll for new incoming messages while this tab is open and visible, and refresh on return
+  useEffect(() => {
+    const refreshIfVisible = () => {
+      if (document.visibilityState === 'visible') router.refresh()
+    }
+    const interval = setInterval(refreshIfVisible, REFRESH_INTERVAL_MS)
+    document.addEventListener('visibilitychange', refreshIfVisible)
+    return () => {
+      clearInterval(interval)
+      document.removeEventListener('visibilitychange', refreshIfVisible)
+    }
+  }, [router])
   const [copiedWebhook, setCopiedWebhook] = useState(false)
   const [sendSuccessToast, setSendSuccessToast] = useState<string | null>(null)
   const [sendErrorToast, setSendErrorToast] = useState<string | null>(null)
