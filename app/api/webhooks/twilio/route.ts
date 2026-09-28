@@ -102,7 +102,7 @@ export async function POST(request: NextRequest) {
       sendAdminPushNotification(
         `Text from ${matchedGuest ? matchedGuest.name : formattedSender}`,
         body || '(empty message)',
-        '/admin'
+        `/admin?tab=messages&phone=${encodeURIComponent(data.phoneKey)}`
       )
     )
 

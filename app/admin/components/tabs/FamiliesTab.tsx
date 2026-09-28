@@ -13,6 +13,7 @@ interface FamiliesTabProps {
   onOpenAddGuest: (family: FamilyWithGuests) => void
   onOpenEditGuest: (guest: FlatGuest) => void
   onOpenDeleteGuest: (guest: FlatGuest) => void
+  onTextFamily: (family: FamilyWithGuests) => void
   isPending: boolean
   startTransition: (fn: () => Promise<void>) => void
   setActionFeedback: (feedback: { error?: string; success?: string } | null) => void
@@ -27,6 +28,7 @@ export default function FamiliesTab({
   onOpenAddGuest,
   onOpenEditGuest,
   onOpenDeleteGuest,
+  onTextFamily,
   isPending,
   startTransition,
   setActionFeedback,
@@ -180,6 +182,19 @@ export default function FamiliesTab({
                     />
                   </svg>
                   <span>View RSVP</span>
+                </button>
+
+                {/* Text family in Messages */}
+                <button
+                  type="button"
+                  onClick={() => onTextFamily(family)}
+                  className="p-2 text-zinc-500 hover:text-black hover:bg-zinc-100 rounded-lg transition-colors text-xs font-karla flex items-center gap-1 cursor-pointer"
+                  title="Text everyone in this family"
+                >
+                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+                  </svg>
+                  <span>Text family</span>
                 </button>
 
                 {/* Copy SMS Invite */}

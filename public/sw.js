@@ -31,16 +31,20 @@ self.addEventListener('push', function (event) {
 
 self.addEventListener('notificationclick', function (event) {
   event.notification.close()
+  const url = event.notification.data.url
+  const path = new URL(url, self.location.origin).pathname
   event.waitUntil(
     clients.matchAll({ type: 'window' }).then((windowClients) => {
-      for (let i = 0; i < windowClients.length; i++) {
-        const client = windowClients[i]
-        if (client.url.includes(event.notification.data.url) && 'focus' in client) {
-          return client.focus()
-        }
+      // Reuse an open tab on the same page, navigating it to the exact target (e.g. a conversation)
+      const existing = windowClients.find((client) => new URL(client.url).pathname === path)
+      if (existing) {
+        return existing
+          .navigate(url)
+          .then((client) => (client || existing).focus())
+          .catch(() => existing.focus()) // navigate() fails for tabs this worker doesn't control
       }
       if (clients.openWindow) {
-        return clients.openWindow(event.notification.data.url)
+        return clients.openWindow(url)
       }
     })
   )

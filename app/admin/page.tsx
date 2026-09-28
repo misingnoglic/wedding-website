@@ -16,7 +16,8 @@ export const metadata: Metadata = {
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
 
-export default async function AdminPage() {
+export default async function AdminPage({ searchParams }: { searchParams: Promise<{ tab?: string; phone?: string }> }) {
+  const { tab, phone } = await searchParams
   // Secret access: If not logged in as admin, triggers Next.js notFound() (404)
   const adminFamily = await getAuthenticatedAdmin()
 
@@ -50,6 +51,8 @@ export default async function AdminPage() {
         currentAdmin={adminFamily}
         initialAuditEvents={auditEvents}
         initialThreads={inboxThreads}
+        initialTab={tab === 'messages' ? 'messages' : undefined}
+        initialPhone={phone}
       />
     </div>
   )

@@ -28,6 +28,8 @@ export interface ComposeRequest {
   label?: string
 }
 
+export type MessagesTarget = { phone: string } | { compose: ComposeRequest }
+
 interface MessagesTabProps {
   initialThreads: InboxThread[]
   allGuests: FlatGuest[]
@@ -35,6 +37,7 @@ interface MessagesTabProps {
   currentAdminName: string
   onOpenMenu: () => void
   onEditGuest: (guest: FlatGuest) => void
+  initialTarget?: MessagesTarget // Open a conversation or prefilled composer on mount
 }
 
 // What the right-hand pane (or mobile overlay) is showing
@@ -53,12 +56,17 @@ export default function MessagesTab({
   currentAdminName,
   onOpenMenu,
   onEditGuest,
+  initialTarget,
 }: MessagesTabProps) {
   const router = useRouter()
   const [fetchedThreads, setThreads] = useState(initialThreads)
   const [broadcasts, setBroadcasts] = useState<BroadcastSummary[] | null>(null)
   const [messagesByKey, setMessagesByKey] = useState<Record<string, ThreadMessage[]>>({})
-  const [pane, setPane] = useState<Pane>({ kind: 'none' })
+  const [pane, setPane] = useState<Pane>(() => {
+    if (!initialTarget) return { kind: 'none' }
+    if ('compose' in initialTarget) return { kind: 'compose', request: initialTarget.compose, id: 0 }
+    return { kind: 'thread', phoneKey: getPhoneKey(initialTarget.phone) }
+  })
   const [listView, setListView] = useState<ListView>('conversations')
   const [filter, setFilter] = useState<ThreadFilter>('all')
   const [search, setSearch] = useState('')
@@ -66,7 +74,9 @@ export default function MessagesTab({
   const [sendingKey, setSendingKey] = useState<string | null>(null)
   const [sendError, setSendError] = useState<string | null>(null)
   // Phone for a conversation that has no messages yet (e.g. texting a guest for the first time)
-  const [newConversationPhone, setNewConversationPhone] = useState<string | null>(null)
+  const [newConversationPhone, setNewConversationPhone] = useState<string | null>(
+    initialTarget && 'phone' in initialTarget ? initialTarget.phone : null
+  )
   const [isPanelOpen, setIsPanelOpen] = useState(false)
   const isDesktop = useMediaQuery('(min-width: 1024px)')
   const selectedKey = pane.kind === 'thread' ? pane.phoneKey : null
@@ -111,6 +121,12 @@ export default function MessagesTab({
     const messages = await getThreadMessagesAction(phoneKey)
     setMessagesByKey((prev) => ({ ...prev, [phoneKey]: messages }))
   }, [])
+
+  // Load the conversation opened from a link (e.g. a push notification)
+  const initialKeyRef = useRef(selectedKey)
+  useEffect(() => {
+    if (initialKeyRef.current) loadMessages(initialKeyRef.current)
+  }, [loadMessages])
 
   // Poll for new texts and delivery updates while the page is visible, and refresh on return
   useEffect(() => {

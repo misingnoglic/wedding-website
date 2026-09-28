@@ -23,7 +23,7 @@ import GuestsTab from './components/tabs/GuestsTab'
 import DietaryTab from './components/tabs/DietaryTab'
 import TravelTab from './components/tabs/TravelTab'
 import SongsTab from './components/tabs/SongsTab'
-import MessagesTab from './components/tabs/MessagesTab'
+import MessagesTab, { MessagesTarget } from './components/tabs/MessagesTab'
 import ActivityLogTab from './components/tabs/ActivityLogTab'
 import PredictionsTab from './components/tabs/PredictionsTab'
 
@@ -38,6 +38,8 @@ interface AdminDashboardProps {
   initialFamilies: FamilyWithGuests[]
   initialAuditEvents: AuditEventItem[]
   initialThreads: InboxThread[]
+  initialTab?: TabType
+  initialPhone?: string
   currentAdmin: {
     id: string
     name: string
@@ -49,9 +51,15 @@ export default function AdminDashboard({
   initialFamilies,
   initialAuditEvents,
   initialThreads,
+  initialTab,
+  initialPhone,
   currentAdmin,
 }: AdminDashboardProps) {
-  const [activeTab, setActiveTab] = useState<TabType>('families')
+  const [activeTab, setActiveTab] = useState<TabType>(initialTab || 'families')
+  // Where the Messages tab should open (a conversation or a prefilled composer)
+  const [messagesTarget, setMessagesTarget] = useState<MessagesTarget | undefined>(
+    initialPhone ? { phone: initialPhone } : undefined
+  )
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [rsvpFilter, setRsvpFilter] = useState<RsvpFilter>('all')
@@ -328,7 +336,10 @@ export default function AdminDashboard({
       {/* Sidebar Navigation */}
       <AdminSidebar
         activeTab={activeTab}
-        setActiveTab={setActiveTab}
+        setActiveTab={(tab) => {
+          setMessagesTarget(undefined)
+          setActiveTab(tab)
+        }}
         counts={counts}
         isOpen={isSidebarOpen}
         setIsOpen={setIsSidebarOpen}
@@ -409,6 +420,10 @@ export default function AdminDashboard({
           onOpenAddGuest={(f) => setAddGuestFamilyTarget(f)}
           onOpenEditGuest={(g) => setEditGuestTarget(g)}
           onOpenDeleteGuest={(g) => setDeleteGuestTarget(g)}
+          onTextFamily={(f) => {
+            setMessagesTarget({ compose: { guestIds: f.guests.map((g) => g.id), label: f.name } })
+            setActiveTab('messages')
+          }}
           isPending={isPending}
           startTransition={startTransition}
           setActionFeedback={setActionFeedback}
@@ -431,6 +446,7 @@ export default function AdminDashboard({
           currentAdminName={currentAdmin.name}
           onOpenMenu={() => setIsSidebarOpen(true)}
           onEditGuest={(g) => setEditGuestTarget(g)}
+          initialTarget={messagesTarget}
         />
       )}
 
