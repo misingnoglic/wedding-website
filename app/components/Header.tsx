@@ -30,7 +30,7 @@ export default function Header() {
                             src="/ac-logo.png"
                             alt="Arya & Christa Monogram"
                             width={48}
-                            height={48}
+                            height={45}
                             className="w-12 h-auto object-contain"
                         />
                     </Link>

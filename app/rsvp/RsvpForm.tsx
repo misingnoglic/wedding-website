@@ -129,6 +129,29 @@ const normalizeHotelInput = (val: string): string => {
   return trimmed
 }
 
+type TravelFields = {
+  arrivalFlightNumber: string
+  arrivalDate: string
+  departureFlightNumber: string
+  departureDate: string
+  hotelName: string
+}
+
+const hasTravelDetails = (t: TravelFields) =>
+  !!(t.arrivalFlightNumber.trim() || t.departureFlightNumber.trim() || t.hotelName.trim())
+
+// Mirrors the server: a date is only saved alongside its flight number
+const travelSignature = (t: TravelFields) => JSON.stringify([
+  t.arrivalFlightNumber.trim(),
+  t.arrivalFlightNumber.trim() ? t.arrivalDate : '',
+  t.departureFlightNumber.trim(),
+  t.departureFlightNumber.trim() ? t.departureDate : '',
+  t.hotelName.trim(),
+])
+
+const joinNames = (names: string[]) =>
+  names.length <= 1 ? names.join('') : `${names.slice(0, -1).join(', ')} & ${names[names.length - 1]}`
+
 export default function RsvpForm({ family }: { family: Family }) {
   const [isPending, startTransition] = useTransition()
   const [state, setState] = useState<{ error?: string, success?: boolean, message?: string } | null>(null)
@@ -173,8 +196,11 @@ export default function RsvpForm({ family }: { family: Family }) {
       isAttendingWelcome: boolean | null,
       isAttendingRehearsalDinner: boolean | null,
       isAttendingWedding: boolean | null,
+      arrivalFlightNumber: string,
       arrivalDate: string,
+      departureFlightNumber: string,
       departureDate: string,
+      hotelName: string,
       dietaryType: string,
       dietaryText: string,
       hasBookedTravel: boolean | null,
@@ -198,8 +224,11 @@ export default function RsvpForm({ family }: { family: Family }) {
         isAttendingWelcome: g.isAttendingWelcome,
         isAttendingRehearsalDinner: g.isAttendingRehearsalDinner,
         isAttendingWedding: g.isAttendingWedding,
+        arrivalFlightNumber: g.arrivalFlightNumber || '',
         arrivalDate: g.arrivalDate || '2026-12-10',
+        departureFlightNumber: g.departureFlightNumber || '',
         departureDate: g.departureDate || '2026-12-13',
+        hotelName: g.hotelName || '',
         dietaryType: dType,
         dietaryText: dText,
         hasBookedTravel: (g.arrivalFlightNumber || g.departureFlightNumber || g.hotelName) ? true : null,
@@ -241,8 +270,11 @@ export default function RsvpForm({ family }: { family: Family }) {
         isAttendingWelcome: null,
         isAttendingRehearsalDinner: null,
         isAttendingWedding: null,
+        arrivalFlightNumber: '',
         arrivalDate: '2026-12-10',
+        departureFlightNumber: '',
         departureDate: '2026-12-13',
+        hotelName: '',
         dietaryType: 'None',
         dietaryText: '',
         hasBookedTravel: null,
@@ -255,9 +287,6 @@ export default function RsvpForm({ family }: { family: Family }) {
         `email_${guestId}`,
         `phoneNumber_${guestId}`,
         `songRequests_${guestId}`,
-        `arrivalFlightNumber_${guestId}`,
-        `departureFlightNumber_${guestId}`,
-        `hotelName_${guestId}`,
       ]
       fields.forEach(name => {
         const el = form.elements.namedItem(name) as HTMLInputElement | HTMLTextAreaElement | null
@@ -268,57 +297,55 @@ export default function RsvpForm({ family }: { family: Family }) {
     handleAutoSave()
   }
 
-  const copyTravelInfoToAll = (sourceGuestId: string) => {
-    if (!formRef.current) return
-    const form = formRef.current
+  const isDecliningBoth = (guestId: string) =>
+    guestState[guestId].isAttendingWelcome === false && guestState[guestId].isAttendingWedding === false
 
-    const fieldsToCopy = [
-      'arrivalFlightNumber',
-      'arrivalDate',
-      'departureFlightNumber',
-      'departureDate',
-      'hotelName'
-    ]
+  const displayName = (guest: Guest) => guestNames[guest.id]?.trim() || guest.name
 
-    const sourceValues = fieldsToCopy.reduce((acc, field) => {
-      const input = form.elements.namedItem(`${field}_${sourceGuestId}`) as HTMLInputElement
-      if (input) {
-        let val = input.value
-        if (field === 'hotelName') {
-          val = normalizeHotelInput(val)
-          input.value = val
-        } else if (field === 'arrivalFlightNumber' || field === 'departureFlightNumber') {
-          val = normalizeFlightInput(val)
-          input.value = val
-        }
-        acc[field] = val
-      }
-      return acc
-    }, {} as Record<string, string>)
+  const hasFilledTravel = (guestId: string) =>
+    !isDecliningBoth(guestId) && guestState[guestId].hasBookedTravel === true && hasTravelDetails(guestState[guestId])
 
+  // Guests who've entered travel details, grouped so identical itineraries share one button
+  const travelSources = (() => {
+    const groups = new Map<string, Guest[]>()
     family.guests.forEach(guest => {
-      if (guest.id === sourceGuestId) return
-      fieldsToCopy.forEach(field => {
-        const input = form.elements.namedItem(`${field}_${guest.id}`) as HTMLInputElement
-        if (input) input.value = sourceValues[field] || ''
-      })
+      if (!hasFilledTravel(guest.id)) return
+      const key = travelSignature(guestState[guest.id])
+      groups.set(key, [...(groups.get(key) ?? []), guest])
     })
+    return [...groups.values()]
+  })()
+
+  const copyTravelInfo = (sourceGuestId: string, targetGuestIds: string[]) => {
+    const src = guestState[sourceGuestId]
+    const values = {
+      arrivalFlightNumber: normalizeFlightInput(src.arrivalFlightNumber),
+      arrivalDate: src.arrivalDate,
+      departureFlightNumber: normalizeFlightInput(src.departureFlightNumber),
+      departureDate: src.departureDate,
+      hotelName: normalizeHotelInput(src.hotelName),
+    }
 
     setGuestState(prev => {
-      const next = { ...prev }
-      family.guests.forEach(guest => {
-        if (guest.id === sourceGuestId) return
-        next[guest.id] = {
-          ...next[guest.id],
-          arrivalDate: sourceValues['arrivalDate'] || '',
-          departureDate: sourceValues['departureDate'] || '',
-          hasBookedTravel: true,
-        }
+      const next = { ...prev, [sourceGuestId]: { ...prev[sourceGuestId], ...values } }
+      targetGuestIds.forEach(id => {
+        next[id] = { ...next[id], ...values, hasBookedTravel: true }
       })
       return next
     })
 
     handleAutoSave()
+  }
+
+  const copyTravelInfoToAll = (sourceGuestId: string) => {
+    copyTravelInfo(
+      sourceGuestId,
+      family.guests.map(g => g.id).filter(id => id !== sourceGuestId && !isDecliningBoth(id))
+    )
+  }
+
+  const setTravelField = (guestId: string, field: 'arrivalFlightNumber' | 'departureFlightNumber' | 'hotelName', value: string) => {
+    setGuestState(prev => ({ ...prev, [guestId]: { ...prev[guestId], [field]: value } }))
   }
 
   const adjustDate = (guestId: string, field: 'arrivalDate' | 'departureDate', days: number) => {
@@ -371,7 +398,9 @@ export default function RsvpForm({ family }: { family: Family }) {
 
       <form ref={formRef} onSubmit={handleSubmit} onChange={handleAutoSave} className="space-y-12">
         {family.guests.map((guest) => {
-          const isDecliningBoth = guestState[guest.id].isAttendingWelcome === false && guestState[guest.id].isAttendingWedding === false;
+          const copySources = hasTravelDetails(guestState[guest.id])
+            ? []
+            : travelSources.filter(group => !group.some(g => g.id === guest.id))
 
           return (
             <div key={guest.id} className="bg-white p-6 md:p-8 rounded-xl border border-zinc-100 shadow-sm relative overflow-hidden transition-all duration-300">
@@ -590,7 +619,7 @@ export default function RsvpForm({ family }: { family: Family }) {
                   </div>
                 </div>
 
-                {!isDecliningBoth && (
+                {!isDecliningBoth(guest.id) && (
                   <>
                     {/* Contact Info */}
                     <div className="col-span-1 md:col-span-2 animate-in fade-in slide-in-from-top-2 duration-300">
@@ -704,7 +733,7 @@ export default function RsvpForm({ family }: { family: Family }) {
                       <div className="flex flex-col mb-4">
                         <div className="flex justify-between items-center mb-4">
                           <h4 className="text-sm font-sans uppercase tracking-wider text-zinc-500">Travel & Accommodation Info</h4>
-                          {family.guests.length > 1 && guestState[guest.id].hasBookedTravel === true && (
+                          {family.guests.length > 1 && hasFilledTravel(guest.id) && (
                             <button
                               type="button"
                               onClick={() => copyTravelInfoToAll(guest.id)}
@@ -714,6 +743,22 @@ export default function RsvpForm({ family }: { family: Family }) {
                             </button>
                           )}
                         </div>
+
+                        {copySources.length > 0 && (
+                          <div className="mb-5 flex flex-wrap items-center gap-2 animate-in fade-in">
+                            <span className="text-sm font-karla text-zinc-500">Traveling together?</span>
+                            {copySources.map(group => (
+                              <button
+                                key={group[0].id}
+                                type="button"
+                                onClick={() => copyTravelInfo(group[0].id, [guest.id])}
+                                className="px-3 py-1.5 text-xs font-karla rounded-full border border-sage/40 text-sage bg-sage/5 hover:bg-sage hover:text-white hover:border-sage transition-colors cursor-pointer"
+                              >
+                                Copy from {joinNames(group.map(displayName))}
+                              </button>
+                            ))}
+                          </div>
+                        )}
 
                         <div className="mb-2">
                           <label className="block text-sm font-medium text-black mb-3">Have you booked your flights or hotel yet?</label>
@@ -764,10 +809,11 @@ export default function RsvpForm({ family }: { family: Family }) {
                           <input
                             type="text"
                             name={`arrivalFlightNumber_${guest.id}`}
-                            defaultValue={guest.arrivalFlightNumber || ''}
+                            value={guestState[guest.id].arrivalFlightNumber}
+                            onChange={(e) => setTravelField(guest.id, 'arrivalFlightNumber', e.target.value)}
                             placeholder="e.g. AA 1234"
                             onBlur={(e) => {
-                              e.target.value = normalizeFlightInput(e.target.value)
+                              setTravelField(guest.id, 'arrivalFlightNumber', normalizeFlightInput(e.target.value))
                               handleAutoSave()
                             }}
                             className="w-full px-3 py-2 border border-zinc-200 rounded-md focus:border-sage font-karla outline-none"
@@ -792,10 +838,11 @@ export default function RsvpForm({ family }: { family: Family }) {
                           <input
                             type="text"
                             name={`departureFlightNumber_${guest.id}`}
-                            defaultValue={guest.departureFlightNumber || ''}
+                            value={guestState[guest.id].departureFlightNumber}
+                            onChange={(e) => setTravelField(guest.id, 'departureFlightNumber', e.target.value)}
                             placeholder="e.g. DL 567"
                             onBlur={(e) => {
-                              e.target.value = normalizeFlightInput(e.target.value)
+                              setTravelField(guest.id, 'departureFlightNumber', normalizeFlightInput(e.target.value))
                               handleAutoSave()
                             }}
                             className="w-full px-3 py-2 border border-zinc-200 rounded-md focus:border-sage font-karla outline-none"
@@ -820,10 +867,11 @@ export default function RsvpForm({ family }: { family: Family }) {
                           <input
                             type="text"
                             name={`hotelName_${guest.id}`}
-                            defaultValue={guest.hotelName || ''}
+                            value={guestState[guest.id].hotelName}
+                            onChange={(e) => setTravelField(guest.id, 'hotelName', e.target.value)}
                             placeholder="Where are you staying?"
                             onBlur={(e) => {
-                              e.target.value = normalizeHotelInput(e.target.value)
+                              setTravelField(guest.id, 'hotelName', normalizeHotelInput(e.target.value))
                               handleAutoSave()
                             }}
                             className="w-full px-3 py-2 border border-zinc-200 rounded-md focus:border-sage font-karla outline-none"

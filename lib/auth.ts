@@ -15,7 +15,7 @@ export async function getOptionalAuthenticatedFamily() {
       where: { id: familyId },
       include: {
         guests: {
-          orderBy: { createdAt: 'asc' },
+          orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
         },
       },
     })
