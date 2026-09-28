@@ -87,6 +87,10 @@ export default function ThreadView({
           <div className="h-full flex items-center justify-center text-zinc-400">
             <Spinner className="w-6 h-6" />
           </div>
+        ) : messages.length === 0 ? (
+          <div className="h-full flex items-center justify-center text-sm font-karla text-zinc-400">
+            No messages yet
+          </div>
         ) : (
           messages.map((msg, i) => {
             const prev = messages[i - 1]

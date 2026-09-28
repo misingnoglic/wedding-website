@@ -1,9 +1,11 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import type { InboxThread, ThreadMessage } from '@/lib/inbox'
 import { getPhoneKey } from '@/lib/phone'
 import {
+  assignPhoneToGuestAction,
   dismissThreadAction,
   getInboxThreadsAction,
   getThreadMessagesAction,
@@ -13,6 +15,8 @@ import {
 import { FlatGuest } from '../../types'
 import ThreadList, { ThreadFilter } from '../messages/ThreadList'
 import ThreadView from '../messages/ThreadView'
+import GuestPanel from '../messages/GuestPanel'
+import { Icon, ICONS } from '../messages/ui'
 import { useMediaQuery } from '../messages/utils'
 
 interface MessagesTabProps {
@@ -20,11 +24,19 @@ interface MessagesTabProps {
   allGuests: FlatGuest[]
   currentAdminName: string
   onOpenMenu: () => void
+  onEditGuest: (guest: FlatGuest) => void
 }
 
 const REFRESH_INTERVAL_MS = 10_000
 
-export default function MessagesTab({ initialThreads, allGuests, currentAdminName, onOpenMenu }: MessagesTabProps) {
+export default function MessagesTab({
+  initialThreads,
+  allGuests,
+  currentAdminName,
+  onOpenMenu,
+  onEditGuest,
+}: MessagesTabProps) {
+  const router = useRouter()
   const [fetchedThreads, setThreads] = useState(initialThreads)
   const [messagesByKey, setMessagesByKey] = useState<Record<string, ThreadMessage[]>>({})
   const [selectedKey, setSelectedKey] = useState<string | null>(null)
@@ -33,6 +45,9 @@ export default function MessagesTab({ initialThreads, allGuests, currentAdminNam
   const [drafts, setDrafts] = useState<Record<string, string>>({})
   const [sendingKey, setSendingKey] = useState<string | null>(null)
   const [sendError, setSendError] = useState<string | null>(null)
+  // Phone for a conversation that has no messages yet (e.g. texting a guest for the first time)
+  const [newConversationPhone, setNewConversationPhone] = useState<string | null>(null)
+  const [isPanelOpen, setIsPanelOpen] = useState(false)
   const isDesktop = useMediaQuery('(min-width: 1024px)')
 
   // On desktop the inbox sticks to the top of the viewport; scroll there so the whole thing is visible
@@ -93,7 +108,19 @@ export default function MessagesTab({ initialThreads, allGuests, currentAdminNam
     () => fetchedThreads.map((t) => (t.phoneKey === selectedKey && t.unreadCount > 0 ? { ...t, unreadCount: 0 } : t)),
     [fetchedThreads, selectedKey]
   )
-  const activeThread = threads.find((t) => t.phoneKey === selectedKey) || null
+  const activeThread = useMemo<InboxThread | null>(() => {
+    const existing = threads.find((t) => t.phoneKey === selectedKey)
+    if (existing) return existing
+    if (!selectedKey || !newConversationPhone || getPhoneKey(newConversationPhone) !== selectedKey) return null
+    return {
+      phoneKey: selectedKey,
+      phone: newConversationPhone,
+      lastMessage: { id: '', body: '', createdAt: new Date(), direction: 'outbound', status: null },
+      messageCount: 0,
+      unreadCount: 0,
+      needsReply: false,
+    }
+  }, [threads, selectedKey, newConversationPhone])
 
   // The mobile conversation view is a full-screen overlay; keep the page behind it from scrolling
   const isOverlayOpen = !isDesktop && selectedKey !== null
@@ -109,7 +136,20 @@ export default function MessagesTab({ initialThreads, allGuests, currentAdminNam
   const selectThread = (phoneKey: string) => {
     setSelectedKey(phoneKey)
     setSendError(null)
+    setIsPanelOpen(false)
     loadMessages(phoneKey)
+  }
+
+  // Open a guest's conversation, starting an empty one if they've never texted
+  const openPhone = (phone: string) => {
+    setNewConversationPhone(phone)
+    selectThread(getPhoneKey(phone))
+  }
+
+  const handleAssign = async (guest: FlatGuest) => {
+    if (!activeThread) return
+    const result = await assignPhoneToGuestAction(activeThread.phone, guest.id)
+    if (result.success) router.refresh() // Reload guests so the new number matches this thread
   }
 
   const counts = useMemo<Record<ThreadFilter, number>>(
@@ -177,6 +217,19 @@ export default function MessagesTab({ initialThreads, allGuests, currentAdminNam
     await dismissThreadAction(phoneKey)
   }
 
+  const renderPanel = (onClose?: () => void) =>
+    activeThread && (
+      <GuestPanel
+        phone={activeThread.phone}
+        guests={guestsByKey.get(activeThread.phoneKey) || []}
+        allGuests={allGuests}
+        onClose={onClose}
+        onEditGuest={onEditGuest}
+        onTextGuest={(guest) => guest.phoneNumber && openPhone(guest.phoneNumber)}
+        onAssign={handleAssign}
+      />
+    )
+
   return (
     <div
       ref={containerRef}
@@ -205,18 +258,46 @@ export default function MessagesTab({ initialThreads, allGuests, currentAdminNam
         }
       >
         {activeThread ? (
-          <ThreadView
-            thread={activeThread}
-            guests={guestsByKey.get(activeThread.phoneKey) || []}
-            messages={messagesByKey[activeThread.phoneKey]}
-            draft={drafts[activeThread.phoneKey] || ''}
-            onDraftChange={(value) => setDrafts((prev) => ({ ...prev, [activeThread.phoneKey]: value }))}
-            onSend={handleSend}
-            isSending={sendingKey === activeThread.phoneKey}
-            sendError={sendError}
-            onBack={() => setSelectedKey(null)}
-            onDismiss={handleDismiss}
-          />
+          <div className="flex h-full min-h-0">
+            <div className="flex-1 min-w-0 h-full">
+              <ThreadView
+                thread={activeThread}
+                guests={guestsByKey.get(activeThread.phoneKey) || []}
+                messages={messagesByKey[activeThread.phoneKey]}
+                draft={drafts[activeThread.phoneKey] || ''}
+                onDraftChange={(value) => setDrafts((prev) => ({ ...prev, [activeThread.phoneKey]: value }))}
+                onSend={handleSend}
+                isSending={sendingKey === activeThread.phoneKey}
+                sendError={sendError}
+                onBack={() => {
+                  setSelectedKey(null)
+                  setIsPanelOpen(false)
+                }}
+                onDismiss={handleDismiss}
+                headerActions={
+                  <button
+                    type="button"
+                    onClick={() => setIsPanelOpen(true)}
+                    aria-label="Guest details"
+                    className="xl:hidden h-10 w-10 shrink-0 flex items-center justify-center rounded-full text-zinc-500 hover:bg-zinc-100"
+                  >
+                    <Icon path={ICONS.info} />
+                  </button>
+                }
+              />
+            </div>
+
+            {/* Details: a column on wide screens, a slide-over otherwise */}
+            <aside className="hidden xl:block w-80 shrink-0 border-l border-zinc-200/80 h-full">
+              {renderPanel()}
+            </aside>
+            {isPanelOpen && (
+              <div className="xl:hidden fixed inset-0 z-[70] flex justify-end">
+                <button type="button" aria-label="Close details" onClick={() => setIsPanelOpen(false)} className="absolute inset-0 bg-black/30" />
+                <div className="relative w-full max-w-sm h-full shadow-2xl animate-fade-in">{renderPanel(() => setIsPanelOpen(false))}</div>
+              </div>
+            )}
+          </div>
         ) : (
           <p className="text-sm font-karla text-zinc-400">Select a conversation</p>
         )}

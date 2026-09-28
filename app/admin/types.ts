@@ -26,6 +26,7 @@ export type FlatGuest = Guest & {
   familyName: string
   familyPassword?: string
   isRehearsalDinnerInvited: boolean
+  hasLoggedIn: boolean
 }
 
 export type FamilyWithGuests = {

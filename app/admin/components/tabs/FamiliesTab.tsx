@@ -267,6 +267,7 @@ export default function FamiliesTab({
                       familyName: family.name,
                       familyPassword: family.password,
                       isRehearsalDinnerInvited: family.isRehearsalDinnerInvited,
+                      hasLoggedIn: family.hasLoggedIn,
                     }
 
                     return (

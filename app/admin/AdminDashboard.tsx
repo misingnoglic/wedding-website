@@ -82,6 +82,7 @@ export default function AdminDashboard({
           familyName: f.name,
           familyPassword: f.password,
           isRehearsalDinnerInvited: f.isRehearsalDinnerInvited,
+          hasLoggedIn: f.hasLoggedIn,
         })
       })
     })
@@ -428,6 +429,7 @@ export default function AdminDashboard({
           allGuests={allGuests}
           currentAdminName={currentAdmin.name}
           onOpenMenu={() => setIsSidebarOpen(true)}
+          onEditGuest={(g) => setEditGuestTarget(g)}
         />
       )}
 

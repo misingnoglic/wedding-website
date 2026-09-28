@@ -25,7 +25,7 @@ export default function EditGuestModal({
   if (!guest) return null
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fade-in overflow-y-auto">
+    <div className="fixed inset-0 z-[80] flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fade-in overflow-y-auto">
       <div className="bg-white rounded-2xl p-6 md:p-8 max-w-2xl w-full border border-zinc-200 shadow-2xl space-y-6 my-8">
         <div className="flex justify-between items-start border-b border-zinc-100 pb-4">
           <div>
