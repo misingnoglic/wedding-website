@@ -2,44 +2,64 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import type { BroadcastSummary } from '@/lib/broadcasts'
 import type { InboxThread, ThreadMessage } from '@/lib/inbox'
 import { getPhoneKey } from '@/lib/phone'
 import {
   assignPhoneToGuestAction,
   dismissThreadAction,
+  getBroadcastsAction,
   getInboxThreadsAction,
   getThreadMessagesAction,
   markThreadReadAction,
   sendSmsAction,
 } from '@/app/actions/sms'
 import { FlatGuest } from '../../types'
-import ThreadList, { ThreadFilter } from '../messages/ThreadList'
+import ThreadList, { ListView, ThreadFilter } from '../messages/ThreadList'
 import ThreadView from '../messages/ThreadView'
 import GuestPanel from '../messages/GuestPanel'
+import Composer from '../messages/Composer'
+import { BroadcastList, BroadcastView } from '../messages/Broadcasts'
 import { Icon, ICONS } from '../messages/ui'
 import { useMediaQuery } from '../messages/utils'
+
+export interface ComposeRequest {
+  guestIds: string[]
+  label?: string
+}
 
 interface MessagesTabProps {
   initialThreads: InboxThread[]
   allGuests: FlatGuest[]
+  currentAdminId: string
   currentAdminName: string
   onOpenMenu: () => void
   onEditGuest: (guest: FlatGuest) => void
 }
+
+// What the right-hand pane (or mobile overlay) is showing
+type Pane =
+  | { kind: 'none' }
+  | { kind: 'thread'; phoneKey: string }
+  | { kind: 'compose'; request?: ComposeRequest; id: number }
+  | { kind: 'broadcast'; id: string }
 
 const REFRESH_INTERVAL_MS = 10_000
 
 export default function MessagesTab({
   initialThreads,
   allGuests,
+  currentAdminId,
   currentAdminName,
   onOpenMenu,
   onEditGuest,
 }: MessagesTabProps) {
   const router = useRouter()
   const [fetchedThreads, setThreads] = useState(initialThreads)
+  const [broadcasts, setBroadcasts] = useState<BroadcastSummary[] | null>(null)
   const [messagesByKey, setMessagesByKey] = useState<Record<string, ThreadMessage[]>>({})
-  const [selectedKey, setSelectedKey] = useState<string | null>(null)
+  const [pane, setPane] = useState<Pane>({ kind: 'none' })
+  const [listView, setListView] = useState<ListView>('conversations')
   const [filter, setFilter] = useState<ThreadFilter>('all')
   const [search, setSearch] = useState('')
   const [drafts, setDrafts] = useState<Record<string, string>>({})
@@ -49,6 +69,7 @@ export default function MessagesTab({
   const [newConversationPhone, setNewConversationPhone] = useState<string | null>(null)
   const [isPanelOpen, setIsPanelOpen] = useState(false)
   const isDesktop = useMediaQuery('(min-width: 1024px)')
+  const selectedKey = pane.kind === 'thread' ? pane.phoneKey : null
 
   // On desktop the inbox sticks to the top of the viewport; scroll there so the whole thing is visible
   const containerRef = useRef<HTMLDivElement>(null)
@@ -59,9 +80,11 @@ export default function MessagesTab({
   }, [])
 
   const selectedKeyRef = useRef(selectedKey)
+  const listViewRef = useRef(listView)
   useEffect(() => {
     selectedKeyRef.current = selectedKey
-  }, [selectedKey])
+    listViewRef.current = listView
+  }, [selectedKey, listView])
 
   // Guests can share a phone (e.g. a couple), so map each key to every matching guest
   const guestsByKey = useMemo(() => {
@@ -74,8 +97,14 @@ export default function MessagesTab({
     return map
   }, [allGuests])
 
+  const adminGuests = useMemo(() => allGuests.filter((g) => g.familyId === currentAdminId), [allGuests, currentAdminId])
+
   const refreshThreads = useCallback(async () => {
     setThreads(await getInboxThreadsAction())
+  }, [])
+
+  const refreshBroadcasts = useCallback(async () => {
+    setBroadcasts(await getBroadcastsAction())
   }, [])
 
   const loadMessages = useCallback(async (phoneKey: string) => {
@@ -89,6 +118,7 @@ export default function MessagesTab({
       if (document.visibilityState !== 'visible') return
       refreshThreads()
       if (selectedKeyRef.current) loadMessages(selectedKeyRef.current)
+      if (listViewRef.current === 'broadcasts') refreshBroadcasts()
     }
     const interval = setInterval(refresh, REFRESH_INTERVAL_MS)
     document.addEventListener('visibilitychange', refresh)
@@ -96,7 +126,7 @@ export default function MessagesTab({
       clearInterval(interval)
       document.removeEventListener('visibilitychange', refresh)
     }
-  }, [refreshThreads, loadMessages])
+  }, [refreshThreads, loadMessages, refreshBroadcasts])
 
   // The open conversation is read by definition; tell the server whenever it has unread messages
   const activeUnread = fetchedThreads.find((t) => t.phoneKey === selectedKey)?.unreadCount || 0
@@ -108,6 +138,7 @@ export default function MessagesTab({
     () => fetchedThreads.map((t) => (t.phoneKey === selectedKey && t.unreadCount > 0 ? { ...t, unreadCount: 0 } : t)),
     [fetchedThreads, selectedKey]
   )
+
   const activeThread = useMemo<InboxThread | null>(() => {
     const existing = threads.find((t) => t.phoneKey === selectedKey)
     if (existing) return existing
@@ -122,8 +153,11 @@ export default function MessagesTab({
     }
   }, [threads, selectedKey, newConversationPhone])
 
-  // The mobile conversation view is a full-screen overlay; keep the page behind it from scrolling
-  const isOverlayOpen = !isDesktop && selectedKey !== null
+  const activeBroadcast = pane.kind === 'broadcast' ? broadcasts?.find((b) => b.id === pane.id) || null : null
+  const isPaneOpen = pane.kind !== 'none' && (pane.kind !== 'thread' || activeThread !== null)
+
+  // On mobile the pane is a full-screen overlay; keep the page behind it from scrolling
+  const isOverlayOpen = !isDesktop && isPaneOpen
   useEffect(() => {
     if (!isOverlayOpen) return
     const previous = document.body.style.overflow
@@ -133,8 +167,13 @@ export default function MessagesTab({
     }
   }, [isOverlayOpen])
 
+  const closePane = () => {
+    setPane({ kind: 'none' })
+    setIsPanelOpen(false)
+  }
+
   const selectThread = (phoneKey: string) => {
-    setSelectedKey(phoneKey)
+    setPane({ kind: 'thread', phoneKey })
     setSendError(null)
     setIsPanelOpen(false)
     loadMessages(phoneKey)
@@ -143,7 +182,24 @@ export default function MessagesTab({
   // Open a guest's conversation, starting an empty one if they've never texted
   const openPhone = (phone: string) => {
     setNewConversationPhone(phone)
+    setListView('conversations')
     selectThread(getPhoneKey(phone))
+  }
+
+  const openComposer = (request?: ComposeRequest) => {
+    setPane({ kind: 'compose', request, id: Date.now() })
+    setIsPanelOpen(false)
+  }
+
+  const openBroadcast = (id: string) => {
+    setListView('broadcasts')
+    setPane({ kind: 'broadcast', id })
+    refreshBroadcasts()
+  }
+
+  const changeListView = (view: ListView) => {
+    setListView(view)
+    if (view === 'broadcasts') refreshBroadcasts()
   }
 
   const handleAssign = async (guest: FlatGuest) => {
@@ -230,6 +286,84 @@ export default function MessagesTab({
       />
     )
 
+  const renderPane = () => {
+    if (pane.kind === 'compose') {
+      return (
+        <Composer
+          key={pane.id}
+          allGuests={allGuests}
+          adminGuests={adminGuests}
+          initialGuestIds={pane.request?.guestIds}
+          initialLabel={pane.request?.label}
+          onClose={closePane}
+          onOpenConversation={openPhone}
+          onOpenBroadcast={openBroadcast}
+          onSent={() => {
+            refreshThreads()
+            refreshBroadcasts()
+          }}
+        />
+      )
+    }
+
+    if (pane.kind === 'broadcast') {
+      return activeBroadcast ? (
+        <BroadcastView
+          broadcast={activeBroadcast}
+          guestsByKey={guestsByKey}
+          onBack={closePane}
+          onOpenConversation={openPhone}
+          onChanged={() => {
+            refreshBroadcasts()
+            refreshThreads()
+          }}
+        />
+      ) : null
+    }
+
+    if (activeThread) {
+      return (
+        <div className="flex h-full min-h-0">
+          <div className="flex-1 min-w-0 h-full">
+            <ThreadView
+              thread={activeThread}
+              guests={guestsByKey.get(activeThread.phoneKey) || []}
+              messages={messagesByKey[activeThread.phoneKey]}
+              draft={drafts[activeThread.phoneKey] || ''}
+              onDraftChange={(value) => setDrafts((prev) => ({ ...prev, [activeThread.phoneKey]: value }))}
+              onSend={handleSend}
+              isSending={sendingKey === activeThread.phoneKey}
+              sendError={sendError}
+              onBack={closePane}
+              onDismiss={handleDismiss}
+              headerActions={
+                <button
+                  type="button"
+                  onClick={() => setIsPanelOpen(true)}
+                  aria-label="Guest details"
+                  className="xl:hidden h-10 w-10 shrink-0 flex items-center justify-center rounded-full text-zinc-500 hover:bg-zinc-100"
+                >
+                  <Icon path={ICONS.info} />
+                </button>
+              }
+            />
+          </div>
+
+          {/* Details: a column on wide screens, a slide-over otherwise */}
+          <aside className="hidden xl:block w-80 shrink-0 border-l border-zinc-200/80 h-full">{renderPanel()}</aside>
+          {isPanelOpen && (
+            <div className="xl:hidden fixed inset-0 z-[70] flex justify-end">
+              <button type="button" aria-label="Close details" onClick={() => setIsPanelOpen(false)} className="absolute inset-0 bg-black/30" />
+              <div className="relative w-full max-w-sm h-full shadow-2xl animate-fade-in">{renderPanel(() => setIsPanelOpen(false))}</div>
+            </div>
+          )}
+        </div>
+      )
+    }
+
+    return null
+  }
+
   return (
     <div
       ref={containerRef}
@@ -247,60 +381,32 @@ export default function MessagesTab({
           search={search}
           onSearchChange={setSearch}
           onOpenMenu={onOpenMenu}
+          view={listView}
+          onViewChange={changeListView}
+          broadcastList={
+            <BroadcastList broadcasts={broadcasts} selectedId={pane.kind === 'broadcast' ? pane.id : null} onSelect={openBroadcast} />
+          }
+          headerActions={
+            <button
+              type="button"
+              onClick={() => openComposer()}
+              className="flex items-center gap-1.5 rounded-full bg-sage px-3.5 py-2 text-xs font-karla font-semibold text-white hover:bg-black transition-colors cursor-pointer"
+            >
+              <Icon path={ICONS.compose} className="w-4 h-4" />
+              New
+            </button>
+          }
         />
       </div>
 
       <section
         className={
-          activeThread
+          isPaneOpen
             ? 'fixed inset-x-0 top-0 h-[100dvh] z-[60] lg:static lg:h-auto lg:z-auto lg:min-h-0'
             : 'hidden lg:flex lg:items-center lg:justify-center lg:bg-zinc-50/70'
         }
       >
-        {activeThread ? (
-          <div className="flex h-full min-h-0">
-            <div className="flex-1 min-w-0 h-full">
-              <ThreadView
-                thread={activeThread}
-                guests={guestsByKey.get(activeThread.phoneKey) || []}
-                messages={messagesByKey[activeThread.phoneKey]}
-                draft={drafts[activeThread.phoneKey] || ''}
-                onDraftChange={(value) => setDrafts((prev) => ({ ...prev, [activeThread.phoneKey]: value }))}
-                onSend={handleSend}
-                isSending={sendingKey === activeThread.phoneKey}
-                sendError={sendError}
-                onBack={() => {
-                  setSelectedKey(null)
-                  setIsPanelOpen(false)
-                }}
-                onDismiss={handleDismiss}
-                headerActions={
-                  <button
-                    type="button"
-                    onClick={() => setIsPanelOpen(true)}
-                    aria-label="Guest details"
-                    className="xl:hidden h-10 w-10 shrink-0 flex items-center justify-center rounded-full text-zinc-500 hover:bg-zinc-100"
-                  >
-                    <Icon path={ICONS.info} />
-                  </button>
-                }
-              />
-            </div>
-
-            {/* Details: a column on wide screens, a slide-over otherwise */}
-            <aside className="hidden xl:block w-80 shrink-0 border-l border-zinc-200/80 h-full">
-              {renderPanel()}
-            </aside>
-            {isPanelOpen && (
-              <div className="xl:hidden fixed inset-0 z-[70] flex justify-end">
-                <button type="button" aria-label="Close details" onClick={() => setIsPanelOpen(false)} className="absolute inset-0 bg-black/30" />
-                <div className="relative w-full max-w-sm h-full shadow-2xl animate-fade-in">{renderPanel(() => setIsPanelOpen(false))}</div>
-              </div>
-            )}
-          </div>
-        ) : (
-          <p className="text-sm font-karla text-zinc-400">Select a conversation</p>
-        )}
+        {isPaneOpen ? renderPane() : <p className="text-sm font-karla text-zinc-400">Select a conversation</p>}
       </section>
     </div>
   )

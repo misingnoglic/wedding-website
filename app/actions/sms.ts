@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { db } from '@/lib/db'
 import { logAuditEvent } from '@/lib/audit'
 import { getAuthenticatedAdmin } from '@/lib/auth'
+import { getBroadcastMessages, getBroadcasts, retryBroadcastFailures, sendBroadcastBatch } from '@/lib/broadcasts'
 import { dismissThread, getInboxThreads, getThreadMessages, markThreadRead } from '@/lib/inbox'
 import { formatPhoneNumber, getPhoneKey } from '@/lib/phone'
 import { sendSms } from '@/lib/sms'
@@ -72,4 +73,39 @@ export async function assignPhoneToGuestAction(phone: string, guestId: string) {
 
   revalidatePath('/admin')
   return { success: true as const }
+}
+
+export async function createBroadcastAction(body: string, audience: string, recipientCount: number) {
+  const admin = await getAuthenticatedAdmin()
+  const broadcast = await db.smsBroadcast.create({
+    data: { body, audience, recipientCount, sentByName: admin.name },
+  })
+  await logAuditEvent({
+    actorType: 'ADMIN',
+    actorName: `${admin.name} (Admin)`,
+    eventType: 'SMS_SENT',
+    description: `Started a text to ${recipientCount} recipient${recipientCount === 1 ? '' : 's'} (${audience}): "${body.slice(0, 100)}${body.length > 100 ? '...' : ''}"`,
+    details: { broadcastId: broadcast.id, audience, recipientCount, body },
+  })
+  return broadcast.id
+}
+
+export async function sendBroadcastBatchAction(broadcastId: string, recipientGuestIds: string[][]) {
+  const admin = await getAuthenticatedAdmin()
+  return sendBroadcastBatch(broadcastId, recipientGuestIds, admin.name)
+}
+
+export async function retryBroadcastFailuresAction(broadcastId: string) {
+  const admin = await getAuthenticatedAdmin()
+  return retryBroadcastFailures(broadcastId, admin.name)
+}
+
+export async function getBroadcastsAction() {
+  await getAuthenticatedAdmin()
+  return getBroadcasts()
+}
+
+export async function getBroadcastMessagesAction(broadcastId: string) {
+  await getAuthenticatedAdmin()
+  return getBroadcastMessages(broadcastId)
 }

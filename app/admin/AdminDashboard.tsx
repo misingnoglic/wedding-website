@@ -427,6 +427,7 @@ export default function AdminDashboard({
         <MessagesTab
           initialThreads={initialThreads}
           allGuests={allGuests}
+          currentAdminId={currentAdmin.id}
           currentAdminName={currentAdmin.name}
           onOpenMenu={() => setIsSidebarOpen(true)}
           onEditGuest={(g) => setEditGuestTarget(g)}
