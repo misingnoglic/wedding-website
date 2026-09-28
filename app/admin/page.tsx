@@ -1,6 +1,7 @@
 import { Metadata } from 'next'
 import { getAuthenticatedAdmin } from '@/lib/auth'
 import { db } from '@/lib/db'
+import { getInboxThreads } from '@/lib/inbox'
 import AdminDashboard from './AdminDashboard'
 
 export const metadata: Metadata = {
@@ -40,23 +41,7 @@ export default async function AdminPage() {
     },
   })
 
-  // Fetch incoming SMS messages
-  const smsMessages = await db.smsMessage.findMany({
-    orderBy: { createdAt: 'desc' },
-    take: 200,
-    include: {
-      guest: {
-        include: {
-          family: {
-            select: { id: true, name: true, password: true },
-          },
-        },
-      },
-      family: {
-        select: { id: true, name: true, password: true },
-      },
-    },
-  })
+  const inboxThreads = await getInboxThreads()
 
   return (
     <div className="w-full flex-grow flex flex-col animate-fade-in">
@@ -64,7 +49,7 @@ export default async function AdminPage() {
         initialFamilies={families}
         currentAdmin={adminFamily}
         initialAuditEvents={auditEvents}
-        initialMessages={smsMessages}
+        initialThreads={inboxThreads}
       />
     </div>
   )

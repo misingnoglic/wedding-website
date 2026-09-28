@@ -1,11 +1,11 @@
 'use client'
 
 import { useState, useMemo, useTransition } from 'react'
+import type { InboxThread } from '@/lib/inbox'
 import {
   FamilyWithGuests,
   FlatGuest,
   AuditEventItem,
-  SmsMessageItem,
   TabType,
   RsvpFilter,
   TravelFilter,
@@ -37,7 +37,7 @@ import DeleteGuestModal from './components/modals/DeleteGuestModal'
 interface AdminDashboardProps {
   initialFamilies: FamilyWithGuests[]
   initialAuditEvents: AuditEventItem[]
-  initialMessages?: SmsMessageItem[]
+  initialThreads: InboxThread[]
   currentAdmin: {
     id: string
     name: string
@@ -48,10 +48,11 @@ interface AdminDashboardProps {
 export default function AdminDashboard({
   initialFamilies,
   initialAuditEvents,
-  initialMessages = [],
+  initialThreads,
   currentAdmin,
 }: AdminDashboardProps) {
   const [activeTab, setActiveTab] = useState<TabType>('families')
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [rsvpFilter, setRsvpFilter] = useState<RsvpFilter>('all')
   const [travelFilter, setTravelFilter] = useState<TravelFilter>('all')
@@ -174,11 +175,10 @@ export default function AdminDashboard({
       hasHotelCount,
       dietaryCount,
       songRequestsCount,
-      totalMessagesCount: initialMessages.length,
       websiteVisitsCount,
       totalAuditEvents: initialAuditEvents.length,
     }
-  }, [initialFamilies, allGuests, initialAuditEvents, initialMessages])
+  }, [initialFamilies, allGuests, initialAuditEvents])
 
   // Filter and sort families
   const filteredFamilies = useMemo(() => {
@@ -313,20 +313,33 @@ export default function AdminDashboard({
   const counts = {
     families: filteredFamilies.length,
     guests: filteredGuests.length,
-    messages: initialMessages.length,
+    messages: initialThreads.filter((t) => t.needsReply).length,
     dietary: stats.dietaryCount,
     travel: stats.hasFlightsCount + stats.hasHotelCount,
     songs: stats.songRequestsCount,
     activity: initialAuditEvents.length,
   }
 
+  const isMessagesTab = activeTab === 'messages'
+
   return (
     <div className="min-h-screen bg-sand/20 flex flex-col lg:flex-row mx-auto max-w-[1800px] w-full">
       {/* Sidebar Navigation */}
-      <AdminSidebar activeTab={activeTab} setActiveTab={setActiveTab} counts={counts} />
+      <AdminSidebar
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        counts={counts}
+        isOpen={isSidebarOpen}
+        setIsOpen={setIsSidebarOpen}
+        hideMobileToggle={isMessagesTab}
+      />
 
       {/* Main Content Area */}
-      <div className="flex-1 w-full px-4 sm:px-6 lg:px-10 py-8 lg:py-12 space-y-8 lg:space-y-10 overflow-x-hidden animate-fade-in">
+      <div
+        className={`flex-1 w-full px-4 sm:px-6 lg:px-10 space-y-8 lg:space-y-10 animate-fade-in ${
+          isMessagesTab ? 'pt-0 pb-4 sm:py-6' : 'py-8 lg:py-12 overflow-x-hidden'
+        }`}
+      >
         {/* Feedback Alert Toast */}
         {actionFeedback && (
           <div
@@ -347,6 +360,9 @@ export default function AdminDashboard({
           </div>
         )}
 
+        {/* Header and KPIs are hidden on Messages so the inbox can fill the screen */}
+        {!isMessagesTab && (
+        <>
         {/* Admin Header */}
         <AdminHeader
           currentAdmin={currentAdmin}
@@ -358,6 +374,8 @@ export default function AdminDashboard({
 
         {/* KPI Cards */}
         <AdminKpiCards stats={stats} />
+        </>
+        )}
 
         {/* Filter and Search Bar (shown for Families & Guests tabs) */}
         {(activeTab === 'families' || activeTab === 'guests') && (
@@ -405,7 +423,12 @@ export default function AdminDashboard({
       )}
 
       {activeTab === 'messages' && (
-        <MessagesTab messages={initialMessages} allGuests={allGuests} />
+        <MessagesTab
+          initialThreads={initialThreads}
+          allGuests={allGuests}
+          currentAdminName={currentAdmin.name}
+          onOpenMenu={() => setIsSidebarOpen(true)}
+        />
       )}
 
       {activeTab === 'dietary' && (

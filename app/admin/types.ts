@@ -56,34 +56,6 @@ export type AuditEventItem = {
   } | null
 }
 
-export type SmsMessageItem = {
-  id: string
-  fromPhone: string
-  toPhone: string | null
-  body: string
-  messageSid: string | null
-  guestId: string | null
-  familyId: string | null
-  rawPayload: string | null
-  createdAt: Date | string
-  updatedAt: Date | string
-  guest?: {
-    id: string
-    name: string
-    phoneNumber: string | null
-    family?: {
-      id: string
-      name: string
-      password?: string
-    } | null
-  } | null
-  family?: {
-    id: string
-    name: string
-    password?: string
-  } | null
-}
-
 export type TabType = 'families' | 'guests' | 'dietary' | 'travel' | 'songs' | 'messages' | 'activity' | 'predictions'
 export type RsvpFilter = 'all' | 'attending_wedding' | 'declined_wedding' | 'pending_wedding' | 'attending_welcome' | 'attending_rehearsal'
 export type TravelFilter = 'all' | 'has_flights' | 'has_hotel' | 'missing_travel'
@@ -114,7 +86,6 @@ export interface AdminStats {
   hasHotelCount: number
   dietaryCount: number
   songRequestsCount: number
-  totalMessagesCount: number
   websiteVisitsCount: number
   totalAuditEvents: number
 }

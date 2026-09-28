@@ -1,7 +1,6 @@
 'use client'
 
 import { TabType } from '../types'
-import { useState } from 'react'
 
 interface AdminSidebarProps {
   activeTab: TabType
@@ -15,15 +14,17 @@ interface AdminSidebarProps {
     songs: number
     activity: number
   }
+  isOpen: boolean
+  setIsOpen: (isOpen: boolean) => void
+  hideMobileToggle?: boolean // For views that provide their own menu button
 }
 
-export default function AdminSidebar({ activeTab, setActiveTab, counts }: AdminSidebarProps) {
-  const [isOpen, setIsOpen] = useState(false)
+export default function AdminSidebar({ activeTab, setActiveTab, counts, isOpen, setIsOpen, hideMobileToggle }: AdminSidebarProps) {
 
   const tabs = [
     { id: 'families', label: 'Party Overview', count: counts.families, icon: 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z' },
     { id: 'guests', label: 'All Guests', count: counts.guests, icon: 'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z' },
-    { id: 'messages', label: 'SMS Messages', count: counts.messages, icon: 'M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z' },
+    { id: 'messages', label: 'Messages', count: counts.messages, icon: 'M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z' },
     { id: 'dietary', label: 'Dietary & Catering', count: counts.dietary, icon: 'M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z' },
     { id: 'travel', label: 'Flights & Hotel', count: counts.travel, icon: 'M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z' },
     { id: 'songs', label: 'Song Requests', count: counts.songs, icon: 'M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3' },
@@ -35,7 +36,7 @@ export default function AdminSidebar({ activeTab, setActiveTab, counts }: AdminS
     <>
       {/* Mobile Toggle Button */}
       <button 
-        className="lg:hidden fixed bottom-6 right-6 z-50 p-4 bg-black text-white rounded-full shadow-2xl shadow-black/50"
+        className={`${hideMobileToggle ? 'hidden' : 'lg:hidden'} fixed bottom-6 right-6 z-50 p-4 bg-black text-white rounded-full shadow-2xl shadow-black/50`}
         onClick={() => setIsOpen(!isOpen)}
       >
         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">

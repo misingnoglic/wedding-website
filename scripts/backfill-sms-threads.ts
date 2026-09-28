@@ -4,8 +4,7 @@
  */
 import 'dotenv/config'
 import { PrismaClient } from '@prisma/client'
-import { getComparablePhone } from '../lib/phone'
-import { getPhoneKey } from '../lib/sms'
+import { getComparablePhone, getPhoneKey } from '../lib/phone'
 
 const db = new PrismaClient()
 

@@ -1,5 +1,3 @@
-import { db } from './db'
-
 /**
  * Extracts digits only from a raw phone string.
  */
@@ -63,34 +61,8 @@ export function formatPhoneNumber(phone: string | null | undefined): string {
 }
 
 /**
- * Finds a matching guest in the database by phone number using best-effort digit comparison.
+ * Key used to group messages into one conversation per guest phone number.
  */
-export async function findMatchingGuestForPhone(rawPhone: string) {
-  if (!rawPhone || !rawPhone.trim()) return null
-
-  const targetKey = getComparablePhone(rawPhone)
-  if (!targetKey) return null
-
-  try {
-    const guestsWithPhone = await db.guest.findMany({
-      where: {
-        phoneNumber: {
-          not: null,
-        },
-      },
-      include: {
-        family: true,
-      },
-    })
-
-    const matchedGuest = guestsWithPhone.find((g) => {
-      if (!g.phoneNumber) return false
-      return doPhoneNumbersMatch(g.phoneNumber, rawPhone)
-    })
-
-    return matchedGuest || null
-  } catch (error) {
-    console.error('Failed to match guest for phone:', error)
-    return null
-  }
+export function getPhoneKey(phone: string): string {
+  return getComparablePhone(phone) || phone.trim().toLowerCase()
 }
