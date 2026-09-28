@@ -1,5 +1,6 @@
 import twilio from 'twilio'
 import type { NextRequest } from 'next/server'
+import { headers } from 'next/headers'
 import { db } from '@/lib/db'
 import { findMatchingGuestForPhone, getComparablePhone } from '@/lib/phone'
 
@@ -8,6 +9,18 @@ import { findMatchingGuestForPhone, getComparablePhone } from '@/lib/phone'
  */
 export function getPhoneKey(phone: string): string {
   return getComparablePhone(phone) || phone.trim().toLowerCase()
+}
+
+/**
+ * Public URL Twilio should POST delivery updates to, based on the current request's host.
+ * Skipped on localhost since Twilio can't reach it.
+ */
+async function getStatusCallbackUrl(): Promise<string | undefined> {
+  const headerList = await headers()
+  const host = headerList.get('x-forwarded-host') || headerList.get('host')
+  if (!host || host.startsWith('localhost') || host.startsWith('127.0.0.1')) return undefined
+  const proto = headerList.get('x-forwarded-proto') || 'https'
+  return `${proto}://${host}/api/webhooks/twilio/status`
 }
 
 function getTwilioClient() {
@@ -48,7 +61,12 @@ export async function sendSms({ to, body, sentByName, broadcastId }: SendSmsPara
   }
 
   try {
-    const message = await getTwilioClient().messages.create({ to, from: fromPhone, body })
+    const message = await getTwilioClient().messages.create({
+      to,
+      from: fromPhone,
+      body,
+      statusCallback: await getStatusCallbackUrl(),
+    })
     const row = await db.smsMessage.create({
       data: {
         ...base,
