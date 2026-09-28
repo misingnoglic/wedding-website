@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse, after } from 'next/server'
-import twilio from 'twilio'
 import { revalidatePath } from 'next/cache'
 import { db } from '@/lib/db'
 import { logAuditEvent } from '@/lib/audit'
 import { findMatchingGuestForPhone, formatPhoneNumber } from '@/lib/phone'
 import { sendAdminPushNotification } from '@/lib/push'
+import { getPhoneKey, isValidTwilioSignature } from '@/lib/sms'
 
 export const dynamic = 'force-dynamic'
 
@@ -19,25 +19,6 @@ export async function GET() {
     endpoint: '/api/webhooks/twilio',
     timestamp: new Date().toISOString(),
   })
-}
-
-// Twilio signs webhooks with the account's primary Auth Token (API key secrets can't be used here)
-function isValidTwilioSignature(request: NextRequest, params: URLSearchParams): boolean {
-  const authToken = process.env.TWILIO_AUTH_TOKEN
-  const signature = request.headers.get('x-twilio-signature')
-  if (!authToken) {
-    console.error('TWILIO_AUTH_TOKEN is not set; cannot validate Twilio webhook signatures')
-    return false
-  }
-  if (!signature) return false
-
-  // Twilio signs the public URL it was configured with, so rebuild it from the forwarded headers
-  const url = new URL(request.url)
-  const proto = request.headers.get('x-forwarded-proto') || url.protocol.replace(':', '')
-  const host = request.headers.get('x-forwarded-host') || request.headers.get('host') || url.host
-  const publicUrl = `${proto}://${host}${url.pathname}${url.search}`
-
-  return twilio.validateRequest(authToken, signature, publicUrl, Object.fromEntries(params))
 }
 
 /**
@@ -74,38 +55,24 @@ export async function POST(request: NextRequest) {
     const familyId = matchedGuest?.familyId || null
 
     // Persist SMS message row (idempotent upsert if messageSid exists)
+    const data = {
+      fromPhone: fromPhone || 'Unknown',
+      toPhone,
+      body: body || '(empty message)',
+      phoneKey: getPhoneKey(fromPhone || 'Unknown'),
+      direction: 'inbound',
+      guestId,
+      familyId,
+      rawPayload: JSON.stringify(rawPayload),
+    }
     if (messageSid) {
       await db.smsMessage.upsert({
         where: { messageSid },
-        create: {
-          fromPhone: fromPhone || 'Unknown',
-          toPhone,
-          body: body || '(empty message)',
-          messageSid,
-          guestId,
-          familyId,
-          rawPayload: JSON.stringify(rawPayload),
-        },
-        update: {
-          fromPhone: fromPhone || 'Unknown',
-          toPhone,
-          body: body || '(empty message)',
-          guestId,
-          familyId,
-          rawPayload: JSON.stringify(rawPayload),
-        },
+        create: { ...data, messageSid },
+        update: data,
       })
     } else {
-      await db.smsMessage.create({
-        data: {
-          fromPhone: fromPhone || 'Unknown',
-          toPhone,
-          body: body || '(empty message)',
-          guestId,
-          familyId,
-          rawPayload: JSON.stringify(rawPayload),
-        },
-      })
+      await db.smsMessage.create({ data })
     }
 
     // Log audit event for tracking in live activity log

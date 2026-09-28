@@ -8,19 +8,19 @@ datasource db {
 }
 
 model Family {
-  id                       String       @id @default(cuid())
+  id                       String             @id @default(cuid())
   name                     String
-  password                 String       @unique
-  isAdmin                  Boolean      @default(false)
-  isRehearsalDinnerInvited Boolean      @default(false)
-  hasLoggedIn              Boolean      @default(false)
+  password                 String             @unique
+  isAdmin                  Boolean            @default(false)
+  isRehearsalDinnerInvited Boolean            @default(false)
+  hasLoggedIn              Boolean            @default(false)
   passwordUpdatedAt        DateTime?
   guests                   Guest[]
   smsMessages              SmsMessage[]
   auditEvents              AuditEvent[]
   pushSubscriptions        PushSubscription[]
-  createdAt                DateTime     @default(now())
-  updatedAt                DateTime     @updatedAt
+  createdAt                DateTime           @default(now())
+  updatedAt                DateTime           @updatedAt
 }
 
 model Guest {
@@ -73,6 +73,16 @@ model SmsMessage {
 
   rawPayload String? // JSON stringified webhook payload for diagnostics
 
+  // Normalized phone of the guest side of the conversation (see getComparablePhone); groups messages into threads
+  phoneKey   String  @default("")
+  direction  String  @default("inbound") // 'inbound' | 'outbound'
+  status     String? // Twilio status for outbound: queued | sent | delivered | undelivered | failed
+  errorCode  Int?
+  sentByName String?
+
+  broadcastId String?
+  broadcast   SmsBroadcast? @relation(fields: [broadcastId], references: [id], onDelete: SetNull)
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -80,6 +90,26 @@ model SmsMessage {
   @@index([createdAt])
   @@index([guestId])
   @@index([familyId])
+  @@index([phoneKey, createdAt])
+  @@index([broadcastId])
+}
+
+// Per-conversation admin state, keyed by SmsMessage.phoneKey
+model SmsThread {
+  phoneKey    String    @id
+  lastReadAt  DateTime?
+  dismissedAt DateTime? // "Needs reply" is hidden until a newer inbound message arrives
+  updatedAt   DateTime  @updatedAt
+}
+
+model SmsBroadcast {
+  id             String       @id @default(cuid())
+  body           String // Template with {firstName} / {familyName} / {code} placeholders
+  audience       String // Human-readable description of who it was sent to
+  recipientCount Int          @default(0)
+  sentByName     String
+  messages       SmsMessage[]
+  createdAt      DateTime     @default(now())
 }
 
 model AuditEvent {
@@ -99,14 +129,14 @@ model AuditEvent {
 }
 
 model PushSubscription {
-  id        String   @id @default(cuid())
-  endpoint  String   @unique
-  p256dh    String
-  auth      String
-  
-  familyId  String
-  family    Family   @relation(fields: [familyId], references: [id], onDelete: Cascade)
-  
+  id       String @id @default(cuid())
+  endpoint String @unique
+  p256dh   String
+  auth     String
+
+  familyId String
+  family   Family @relation(fields: [familyId], references: [id], onDelete: Cascade)
+
   createdAt DateTime @default(now())
 
   @@index([familyId])

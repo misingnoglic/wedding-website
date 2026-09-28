@@ -291,7 +291,7 @@ export default function MessagesTab({ messages, allGuests }: MessagesTabProps) {
 
     startTransition(async () => {
       setSendErrorToast(null)
-      const res = await sendSmsAction(toPhone, textToSend, guestId, familyId)
+      const res = await sendSmsAction(toPhone, textToSend)
       
       if (res.success) {
         setSendSuccessToast(`SMS sent to ${recipientName}`)
