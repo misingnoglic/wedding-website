@@ -41,7 +41,8 @@ export async function sendAdminPushNotification(title: string, body: string, url
         }
 
         try {
-          await webpush.sendNotification(pushSubscription, payload)
+          // High urgency so Apple/Google deliver right away instead of batching while the phone is idle
+          await webpush.sendNotification(pushSubscription, payload, { urgency: 'high' })
         } catch (error: any) {
           // If the subscription is invalid or expired, remove it from the DB
           if (error.statusCode === 404 || error.statusCode === 410) {
