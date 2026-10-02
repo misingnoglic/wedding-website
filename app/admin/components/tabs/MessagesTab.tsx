@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import type { BroadcastSummary } from '@/lib/broadcasts'
 import type { InboxThread, ThreadMessage } from '@/lib/inbox'
 import { getPhoneKey } from '@/lib/phone'
+import { isPendingStatus } from '@/lib/smsStatus'
 import {
   assignPhoneToGuestAction,
   dismissThreadAction,
@@ -13,6 +14,7 @@ import {
   getThreadMessagesAction,
   markThreadReadAction,
   sendSmsAction,
+  syncSmsStatusesAction,
 } from '@/app/actions/sms'
 import { FlatGuest } from '../../types'
 import ThreadList, { ListView, ThreadFilter } from '../messages/ThreadList'
@@ -128,10 +130,25 @@ export default function MessagesTab({
     if (initialKeyRef.current) loadMessages(initialKeyRef.current)
   }, [loadMessages])
 
+  // Any outbound text on screen still in flight? Then ask Twilio directly, since status callbacks
+  // don't arrive for texts sent from localhost
+  const hasPendingStatus = useMemo(
+    () =>
+      fetchedThreads.some((t) => t.lastMessage.direction === 'outbound' && isPendingStatus(t.lastMessage.status)) ||
+      Object.values(messagesByKey).some((msgs) => msgs.some((m) => m.direction === 'outbound' && isPendingStatus(m.status))) ||
+      !!broadcasts?.some((b) => b.counts.sent > 0),
+    [fetchedThreads, messagesByKey, broadcasts]
+  )
+  const hasPendingStatusRef = useRef(hasPendingStatus)
+  useEffect(() => {
+    hasPendingStatusRef.current = hasPendingStatus
+  }, [hasPendingStatus])
+
   // Poll for new texts and delivery updates while the page is visible, and refresh on return
   useEffect(() => {
-    const refresh = () => {
+    const refresh = async () => {
       if (document.visibilityState !== 'visible') return
+      if (hasPendingStatusRef.current) await syncSmsStatusesAction().catch(() => 0)
       refreshThreads()
       if (selectedKeyRef.current) loadMessages(selectedKeyRef.current)
       if (listViewRef.current === 'broadcasts') refreshBroadcasts()

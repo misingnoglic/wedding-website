@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { describeSmsError, isFailedStatus, shouldUpdateStatus } from './smsStatus'
+import { describeSmsError, isFailedStatus, isPendingStatus, shouldUpdateStatus } from './smsStatus'
 
 test('shouldUpdateStatus only moves forward', () => {
   assert.ok(shouldUpdateStatus(null, 'queued'))
@@ -14,6 +14,16 @@ test('shouldUpdateStatus only moves forward', () => {
 test('shouldUpdateStatus ignores unknown statuses', () => {
   assert.ok(!shouldUpdateStatus('sent', 'bogus'))
   assert.ok(shouldUpdateStatus('bogus', 'sent'))
+})
+
+test('isPendingStatus', () => {
+  assert.ok(isPendingStatus('queued'))
+  assert.ok(isPendingStatus('accepted'))
+  assert.ok(isPendingStatus('sent'))
+  assert.ok(!isPendingStatus('delivered'))
+  assert.ok(!isPendingStatus('undelivered'))
+  assert.ok(!isPendingStatus('failed'))
+  assert.ok(!isPendingStatus(null))
 })
 
 test('isFailedStatus', () => {

@@ -3,6 +3,7 @@ import type { NextRequest } from 'next/server'
 import { headers } from 'next/headers'
 import { db } from '@/lib/db'
 import { doPhoneNumbersMatch, getComparablePhone, getPhoneKey } from '@/lib/phone'
+import { isPendingStatus, shouldUpdateStatus } from '@/lib/smsStatus'
 
 /**
  * Finds a matching guest in the database by phone number using best-effort digit comparison.
@@ -55,6 +56,46 @@ function getTwilioClient() {
     throw new Error('Twilio credentials are not fully configured in environment variables.')
   }
   return twilio(TWILIO_API_KEY, TWILIO_API_SECRET, { accountSid: TWILIO_ACCOUNT_SID })
+}
+
+// Twilio settles delivery well within this; older stragglers aren't worth re-checking
+const STATUS_SYNC_WINDOW_MS = 3 * 24 * 60 * 60 * 1000
+
+/**
+ * Pulls current delivery status from Twilio for recent outbound texts that are still in flight.
+ * Status callbacks normally do this, but they're skipped when sending from localhost.
+ */
+export async function syncPendingStatuses(): Promise<number> {
+  const candidates = await db.smsMessage.findMany({
+    where: {
+      direction: 'outbound',
+      messageSid: { not: null },
+      status: { not: null },
+      createdAt: { gte: new Date(Date.now() - STATUS_SYNC_WINDOW_MS) },
+    },
+    select: { id: true, messageSid: true, status: true },
+  })
+  const pending = candidates.filter((m) => isPendingStatus(m.status))
+  if (pending.length === 0) return 0
+
+  const client = getTwilioClient()
+  const updated = await Promise.all(
+    pending.map(async (m) => {
+      try {
+        const latest = await client.messages(m.messageSid!).fetch()
+        if (!shouldUpdateStatus(m.status, latest.status)) return false
+        await db.smsMessage.update({
+          where: { id: m.id },
+          data: { status: latest.status, ...(latest.errorCode ? { errorCode: latest.errorCode } : {}) },
+        })
+        return true
+      } catch (error) {
+        console.error(`Failed to sync status for ${m.messageSid}:`, error)
+        return false
+      }
+    })
+  )
+  return updated.filter(Boolean).length
 }
 
 export interface SendSmsParams {

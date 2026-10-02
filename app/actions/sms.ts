@@ -7,7 +7,7 @@ import { getAuthenticatedAdmin } from '@/lib/auth'
 import { getBroadcastMessages, getBroadcastReach, getBroadcasts, retryBroadcastFailures, sendBroadcastBatch } from '@/lib/broadcasts'
 import { dismissThread, getInboxThreads, getThreadMessages, markThreadRead } from '@/lib/inbox'
 import { formatPhoneNumber, getPhoneKey } from '@/lib/phone'
-import { sendSms } from '@/lib/sms'
+import { sendSms, syncPendingStatuses } from '@/lib/sms'
 
 export async function sendSmsAction(toPhone: string, body: string) {
   const admin = await getAuthenticatedAdmin()
@@ -98,6 +98,11 @@ export async function sendBroadcastBatchAction(broadcastId: string, recipientGue
 export async function retryBroadcastFailuresAction(broadcastId: string) {
   const admin = await getAuthenticatedAdmin()
   return retryBroadcastFailures(broadcastId, admin.name)
+}
+
+export async function syncSmsStatusesAction() {
+  await getAuthenticatedAdmin()
+  return syncPendingStatuses()
 }
 
 export async function getBroadcastsAction() {

@@ -19,6 +19,13 @@ export function shouldUpdateStatus(current: string | null, next: string): boolea
   return STATUS_RANK[next] > STATUS_RANK[current]
 }
 
+/**
+ * Outbound statuses that are still in flight (null means it predates status tracking, so ignore it).
+ */
+export function isPendingStatus(status: string | null | undefined): boolean {
+  return !!status && status in STATUS_RANK && STATUS_RANK[status] < 4
+}
+
 export function isFailedStatus(status: string | null | undefined): boolean {
   return status === 'failed' || status === 'undelivered'
 }
