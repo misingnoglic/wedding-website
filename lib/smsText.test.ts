@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { firstName, getSegmentInfo, joinNames } from './smsText'
+import { firstName, fullName, getSegmentInfo, joinNames } from './smsText'
 
 test('plain text fits 160 characters in one segment', () => {
   assert.deepEqual(getSegmentInfo('a'.repeat(160)), { length: 160, segments: 1, isUnicode: false })
@@ -26,6 +26,14 @@ test('empty text', () => {
 test('firstName', () => {
   assert.equal(firstName('Ana Maria Lopez'), 'Ana')
   assert.equal(firstName('  Ben  '), 'Ben')
+})
+
+test('fullName', () => {
+  assert.equal(fullName('Ana Lopez', 'Dr'), 'Dr. Ana Lopez')
+  assert.equal(fullName('Ana Lopez', 'Mrs.'), 'Mrs. Ana Lopez')
+  assert.equal(fullName('Cleo Lopez', 'Miss'), 'Miss Cleo Lopez')
+  assert.equal(fullName(' Ben Lopez ', null), 'Ben Lopez')
+  assert.equal(fullName('Ben Lopez', 'None'), 'Ben Lopez')
 })
 
 test('joinNames', () => {

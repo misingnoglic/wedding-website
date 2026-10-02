@@ -34,6 +34,19 @@ export function firstName(fullName: string): string {
   return fullName.trim().split(/\s+/)[0] || fullName
 }
 
+// Titles that aren't abbreviations, so they don't get a trailing period
+const UNABBREVIATED_TITLES = new Set(['miss'])
+
+/**
+ * Name with title, e.g. "Dr. Ana Lopez" or "Miss Cleo Lopez"
+ */
+export function fullName(name: string, title: string | null | undefined): string {
+  const t = title?.trim()
+  if (!t || t.toLowerCase() === 'none') return name.trim()
+  const formatted = t.endsWith('.') || UNABBREVIATED_TITLES.has(t.toLowerCase()) ? t : `${t}.`
+  return `${formatted} ${name.trim()}`
+}
+
 /**
  * "Ana", "Ana & Ben", "Ana, Ben & Cleo"
  */

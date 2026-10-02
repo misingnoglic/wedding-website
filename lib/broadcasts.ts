@@ -108,6 +108,39 @@ export async function getBroadcasts(): Promise<BroadcastSummary[]> {
   })
 }
 
+export interface BroadcastReach {
+  id: string
+  body: string
+  createdAt: Date
+  reachedPhoneKeys: string[]
+}
+
+/**
+ * Phones each broadcast reached, judged by their latest attempt. Failed sends don't count, so those
+ * guests can be texted again, except opted-out numbers, which would just fail again.
+ */
+export async function getBroadcastReach(): Promise<BroadcastReach[]> {
+  const [broadcasts, messages] = await Promise.all([
+    db.smsBroadcast.findMany({ orderBy: { createdAt: 'desc' }, select: { id: true, body: true, createdAt: true } }),
+    db.smsMessage.findMany({
+      where: { broadcastId: { not: null } },
+      orderBy: { createdAt: 'asc' },
+      select: { broadcastId: true, phoneKey: true, status: true, errorCode: true },
+    }),
+  ])
+
+  const latest = new Map<string, (typeof messages)[number]>()
+  for (const m of messages) latest.set(`${m.broadcastId}:${m.phoneKey}`, m)
+
+  const reached = new Map<string, string[]>()
+  for (const m of latest.values()) {
+    if (isFailedStatus(m.status) && m.errorCode !== OPTED_OUT_ERROR) continue
+    reached.set(m.broadcastId!, [...(reached.get(m.broadcastId!) ?? []), m.phoneKey])
+  }
+
+  return broadcasts.map((b) => ({ ...b, reachedPhoneKeys: reached.get(b.id) ?? [] }))
+}
+
 export async function getBroadcastMessages(broadcastId: string) {
   return db.smsMessage.findMany({
     where: { broadcastId },

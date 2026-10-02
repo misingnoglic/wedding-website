@@ -6,6 +6,7 @@ import { redirect } from 'next/navigation'
 import { db } from '@/lib/db'
 import { getAuthenticatedAdmin } from '@/lib/auth'
 import { logAuditEvent } from '@/lib/audit'
+import { formatPhoneNumber } from '@/lib/phone'
 import { Redis } from '@upstash/redis'
 
 export async function clearRedisCache() {
@@ -77,7 +78,7 @@ export async function createFamilyAdmin(prevState: unknown, formData: FormData) 
               title: g.title && g.title.trim() !== 'None' ? g.title.trim() : null,
               name: (g.name || '').trim(),
               email: g.email && g.email.trim() ? g.email.trim() : null,
-              phoneNumber: g.phoneNumber && g.phoneNumber.trim() ? g.phoneNumber.trim() : null,
+              phoneNumber: formatPhoneNumber(g.phoneNumber) || null,
             }))
             .filter((g) => g.name.length > 0)
         }
@@ -248,7 +249,7 @@ export async function addGuestAdmin(prevState: unknown, formData: FormData) {
   const rawName = formData.get('name') as string || ''
   const name = rawName.trim()
   const email = (formData.get('email') as string || '').trim() || null
-  const phoneNumber = (formData.get('phoneNumber') as string || '').trim() || null
+  const phoneNumber = formatPhoneNumber(formData.get('phoneNumber') as string | null) || null
 
   if (!familyId) {
     return { error: 'Missing family ID.' }
@@ -329,14 +330,15 @@ export async function updateGuestAdmin(prevState: unknown, formData: FormData) {
   const attendingRehearsalStr = formData.get('isAttendingRehearsalDinner') as string
   const isAttendingRehearsalDinner = attendingRehearsalStr === 'true' ? true : attendingRehearsalStr === 'false' ? false : null
 
-  const predictedAttendingWeddingStr = formData.get('predictedIsAttendingWedding') as string
-  const predictedIsAttendingWedding = predictedAttendingWeddingStr === 'true' ? true : predictedAttendingWeddingStr === 'false' ? false : null
-
-  const predictedAttendingWelcomeStr = formData.get('predictedIsAttendingWelcome') as string
-  const predictedIsAttendingWelcome = predictedAttendingWelcomeStr === 'true' ? true : predictedAttendingWelcomeStr === 'false' ? false : null
-
-  const predictedAttendingRehearsalStr = formData.get('predictedIsAttendingRehearsalDinner') as string
-  const predictedIsAttendingRehearsalDinner = predictedAttendingRehearsalStr === 'true' ? true : predictedAttendingRehearsalStr === 'false' ? false : null
+  // Predictions are edited on the Predictions tab; only touch them if this form actually sent them
+  const parsePrediction = (field: string) => {
+    if (!formData.has(field)) return undefined
+    const val = formData.get(field)
+    return val === 'true' ? true : val === 'false' ? false : null
+  }
+  const predictedIsAttendingWedding = parsePrediction('predictedIsAttendingWedding')
+  const predictedIsAttendingWelcome = parsePrediction('predictedIsAttendingWelcome')
+  const predictedIsAttendingRehearsalDinner = parsePrediction('predictedIsAttendingRehearsalDinner')
 
   const arrivalFlightNumber = formatFlightNumber(formData.get('arrivalFlightNumber') as string)
   const arrivalDate = arrivalFlightNumber ? ((formData.get('arrivalDate') as string || '').trim() || null) : null
@@ -349,7 +351,7 @@ export async function updateGuestAdmin(prevState: unknown, formData: FormData) {
   const hotelName = rawHotelName && /\bcape\b/i.test(rawHotelName) ? 'The Cape' : rawHotelName
   const songRequests = (formData.get('songRequests') as string || '').trim() || null
   const email = (formData.get('email') as string || '').trim() || null
-  const phoneNumber = (formData.get('phoneNumber') as string || '').trim() || null
+  const phoneNumber = formatPhoneNumber(formData.get('phoneNumber') as string | null) || null
 
   try {
     const existing = await db.guest.findUnique({

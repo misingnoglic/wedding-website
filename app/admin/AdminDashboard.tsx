@@ -11,6 +11,7 @@ import {
   TravelFilter,
   SortOption,
   AdminStats,
+  rsvpAnswers,
 } from './types'
 
 import AdminHeader from './components/AdminHeader'
@@ -228,6 +229,11 @@ export default function AdminDashboard({
             if (!family.guests.some((g) => g.isAttendingWelcome === true)) return false
           } else if (rsvpFilter === 'attending_rehearsal') {
             if (!family.guests.some((g) => g.isAttendingRehearsalDinner === true)) return false
+          } else {
+            const answers = family.guests.flatMap((g) => rsvpAnswers(g, family.isRehearsalDinnerInvited))
+            const answered = answers.filter((a) => a !== null).length
+            if (rsvpFilter === 'no_rsvp' && answered > 0) return false
+            if (rsvpFilter === 'mixed_rsvp' && (answered === 0 || answered === answers.length)) return false
           }
         }
 
@@ -285,6 +291,12 @@ export default function AdminDashboard({
         if (rsvpFilter === 'pending_wedding' && g.isAttendingWedding !== null) return false
         if (rsvpFilter === 'attending_welcome' && g.isAttendingWelcome !== true) return false
         if (rsvpFilter === 'attending_rehearsal' && g.isAttendingRehearsalDinner !== true) return false
+        if (rsvpFilter === 'no_rsvp' || rsvpFilter === 'mixed_rsvp') {
+          const answers = rsvpAnswers(g, g.isRehearsalDinnerInvited)
+          const answered = answers.filter((a) => a !== null).length
+          if (rsvpFilter === 'no_rsvp' && answered > 0) return false
+          if (rsvpFilter === 'mixed_rsvp' && (answered === 0 || answered === answers.length)) return false
+        }
       }
 
       if (travelFilter !== 'all') {

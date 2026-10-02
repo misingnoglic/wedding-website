@@ -4,7 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { db } from '@/lib/db'
 import { logAuditEvent } from '@/lib/audit'
 import { getAuthenticatedAdmin } from '@/lib/auth'
-import { getBroadcastMessages, getBroadcasts, retryBroadcastFailures, sendBroadcastBatch } from '@/lib/broadcasts'
+import { getBroadcastMessages, getBroadcastReach, getBroadcasts, retryBroadcastFailures, sendBroadcastBatch } from '@/lib/broadcasts'
 import { dismissThread, getInboxThreads, getThreadMessages, markThreadRead } from '@/lib/inbox'
 import { formatPhoneNumber, getPhoneKey } from '@/lib/phone'
 import { sendSms } from '@/lib/sms'
@@ -103,6 +103,11 @@ export async function retryBroadcastFailuresAction(broadcastId: string) {
 export async function getBroadcastsAction() {
   await getAuthenticatedAdmin()
   return getBroadcasts()
+}
+
+export async function getBroadcastReachAction() {
+  await getAuthenticatedAdmin()
+  return getBroadcastReach()
 }
 
 export async function getBroadcastMessagesAction(broadcastId: string) {

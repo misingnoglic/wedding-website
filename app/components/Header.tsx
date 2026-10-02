@@ -17,9 +17,10 @@ const links = [
     { href: "/account", label: "Account" },
 ];
 
-export default function Header() {
+export default function Header({ isAdmin = false }: { isAdmin?: boolean }) {
     const [isOpen, setIsOpen] = useState(false);
     const pathname = usePathname();
+    const navLinks = isAdmin ? [...links, { href: "/admin", label: "Admin" }] : links;
 
     return (
         <header className="w-full bg-white/90 backdrop-blur-sm border-b border-zinc-200 relative z-50">
@@ -44,7 +45,7 @@ export default function Header() {
 
                 {/* Desktop Navigation */}
                 <nav className="hidden md:flex justify-center space-x-8 pb-6">
-                    {links.map((link) => (
+                    {navLinks.map((link) => (
                         <Link
                             key={link.href}
                             href={link.href}
@@ -96,7 +97,7 @@ export default function Header() {
             {isOpen && (
                 <div className="md:hidden fixed top-0 left-0 w-full h-screen bg-white/95 backdrop-blur-lg z-[100] flex flex-col items-center justify-center">
                     <nav className="flex flex-col space-y-8 text-center">
-                        {links.map((link) => (
+                        {navLinks.map((link) => (
                             <Link
                                 key={link.href}
                                 href={link.href}

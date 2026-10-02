@@ -1,9 +1,10 @@
 import { getPhoneKey } from './phone'
-import { firstName, joinNames } from './smsText'
+import { firstName, fullName, joinNames } from './smsText'
 
 /** The guest fields audience filtering and templates need (FlatGuest satisfies this). */
 export interface AudienceGuest {
   id: string
+  title: string | null
   name: string
   phoneNumber: string | null
   familyId: string
@@ -90,7 +91,7 @@ export function describeFilters(filters: AudienceFilters): string {
   if (filters.welcome !== 'any') parts.push(`Welcome party: ${RSVP_LABELS[filters.welcome]}`)
   if (filters.rehearsal !== 'any') parts.push(`Rehearsal dinner: ${RSVP_LABELS[filters.rehearsal]}`)
   if (filters.anyEventYes) parts.push('Yes to any event')
-  if (filters.noResponse) parts.push('No response yet')
+  if (filters.noResponse) parts.push('No RSVP')
   if (filters.login === 'never') parts.push('Never logged in')
   if (filters.login === 'loggedIn') parts.push('Logged in')
   if (filters.rehearsalInvited === 'yes') parts.push('Rehearsal dinner invitees')
@@ -131,6 +132,7 @@ export function groupRecipients<G extends AudienceGuest>(guests: G[]): { recipie
 
 export const PLACEHOLDERS = [
   { token: '{firstName}', description: 'First name (e.g. "Ana & Ben" on a shared phone)' },
+  { token: '{fullName}', description: 'Title and full name (e.g. "Dr. Ana Lopez")' },
   { token: '{familyName}', description: 'Family / party name' },
   { token: '{code}', description: 'Their invite code' },
 ] as const
@@ -139,6 +141,7 @@ export function renderTemplate(template: string, guests: AudienceGuest[]): strin
   const primary = guests[0]
   return template
     .replaceAll('{firstName}', joinNames(guests.map((g) => firstName(g.name))))
+    .replaceAll('{fullName}', joinNames(guests.map((g) => fullName(g.name, g.title))))
     .replaceAll('{familyName}', primary?.familyName || '')
     .replaceAll('{code}', primary?.familyPassword || '')
 }

@@ -26,6 +26,22 @@ export async function getOptionalAuthenticatedFamily() {
   }
 }
 
+export async function isAdminSession() {
+  const familyId = (await cookies()).get('rsvp_family_id')?.value
+  if (!familyId) return false
+
+  try {
+    const family = await db.family.findUnique({
+      where: { id: familyId },
+      select: { isAdmin: true },
+    })
+    return family?.isAdmin ?? false
+  } catch (error) {
+    console.error('Failed to check admin session:', error)
+    return false
+  }
+}
+
 export async function getAuthenticatedFamily(redirectPath: string = '/rsvp') {
   const family = await getOptionalAuthenticatedFamily()
 

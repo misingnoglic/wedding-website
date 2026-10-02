@@ -109,6 +109,8 @@ export default function AdminFilterBar({
             <option value="pending_wedding">Pending Wedding</option>
             <option value="attending_welcome">Attending Welcome</option>
             <option value="attending_rehearsal">Attending Rehearsal</option>
+            <option value="no_rsvp">No RSVP</option>
+            <option value="mixed_rsvp">Mixed RSVP (Partially Answered)</option>
           </select>
         </div>
 

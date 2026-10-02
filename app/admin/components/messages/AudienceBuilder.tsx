@@ -1,6 +1,9 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import { getBroadcastReachAction } from '@/app/actions/sms'
+import type { BroadcastReach } from '@/lib/broadcasts'
+import { getPhoneKey } from '@/lib/phone'
 import { AudienceFilters, DEFAULT_FILTERS, describeFilters, matchesFilters, RsvpChoice } from '@/lib/smsAudience'
 import { FlatGuest } from '../../types'
 
@@ -12,7 +15,7 @@ interface AudienceBuilderProps {
 const PRESETS: { label: string; filters: Partial<AudienceFilters> }[] = [
   { label: 'Everyone', filters: {} },
   { label: 'Yes to any event', filters: { anyEventYes: true } },
-  { label: 'No response yet', filters: { noResponse: true } },
+  { label: 'No RSVP', filters: { noResponse: true } },
   { label: 'At The Cape', filters: { hotel: 'cape' } },
   { label: 'Not at The Cape', filters: { hotel: 'notCape' } },
   { label: 'Never logged in', filters: { login: 'never' } },
@@ -25,6 +28,12 @@ const RSVP_OPTIONS: { value: RsvpChoice; label: string }[] = [
   { value: 'no', label: 'No' },
   { value: 'pending', label: 'Pending' },
 ]
+
+const broadcastLabel = (b: BroadcastReach) => {
+  const date = new Date(b.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+  const snippet = b.body.length > 32 ? `${b.body.slice(0, 32).trim()}…` : b.body
+  return `${date} · "${snippet}"`
+}
 
 function Select<T extends string>({
   label,
@@ -57,11 +66,42 @@ function Select<T extends string>({
 
 export default function AudienceBuilder({ guests, onAdd }: AudienceBuilderProps) {
   const [filters, setFilters] = useState<AudienceFilters>(DEFAULT_FILTERS)
+  const [broadcasts, setBroadcasts] = useState<BroadcastReach[]>([])
+  const [skipBroadcastIds, setSkipBroadcastIds] = useState<string[]>([])
   const set = <K extends keyof AudienceFilters>(key: K, value: AudienceFilters[K]) =>
     setFilters((prev) => ({ ...prev, [key]: value }))
 
-  const matching = useMemo(() => guests.filter((g) => matchesFilters(g, filters)), [guests, filters])
-  const label = describeFilters(filters)
+  useEffect(() => {
+    let cancelled = false
+    getBroadcastReachAction().then((result) => {
+      if (!cancelled) setBroadcasts(result)
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  const toggleSkip = (id: string) =>
+    setSkipBroadcastIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]))
+
+  // Anyone reached by any of the checked texts is skipped
+  const skipBroadcasts = useMemo(
+    () => broadcasts.filter((b) => skipBroadcastIds.includes(b.id)),
+    [broadcasts, skipBroadcastIds]
+  )
+  const matching = useMemo(() => {
+    const reached = new Set(skipBroadcasts.flatMap((b) => b.reachedPhoneKeys))
+    return guests.filter(
+      (g) => matchesFilters(g, filters) && !(g.phoneNumber?.trim() && reached.has(getPhoneKey(g.phoneNumber)))
+    )
+  }, [guests, filters, skipBroadcasts])
+  const skipLabel =
+    skipBroadcasts.length === 1
+      ? ` · Skipping ${broadcastLabel(skipBroadcasts[0])}`
+      : skipBroadcasts.length > 1
+        ? ` · Skipping ${skipBroadcasts.length} earlier texts`
+        : ''
+  const label = describeFilters(filters) + skipLabel
 
   return (
     <div className="rounded-2xl border border-zinc-200 p-4 space-y-3">
@@ -125,6 +165,26 @@ export default function AudienceBuilder({ guests, onAdd }: AudienceBuilderProps)
           />
         </div>
       </details>
+
+      {broadcasts.length > 0 && (
+        <div className="space-y-1">
+          <div className="text-xs font-karla text-zinc-600">Skip people who already got</div>
+          <div className="max-h-32 overflow-y-auto rounded-lg border border-zinc-200 divide-y divide-zinc-100">
+            {broadcasts.map((b) => (
+              <label key={b.id} className="flex items-center gap-2 px-2 py-1.5 text-xs font-karla text-zinc-700 cursor-pointer hover:bg-zinc-50">
+                <input
+                  type="checkbox"
+                  checked={skipBroadcastIds.includes(b.id)}
+                  onChange={() => toggleSkip(b.id)}
+                  className="accent-[#9CA986] shrink-0"
+                />
+                <span className="min-w-0 flex-1 truncate">{broadcastLabel(b)}</span>
+                <span className="shrink-0 text-zinc-400">{b.reachedPhoneKeys.length}</span>
+              </label>
+            ))}
+          </div>
+        </div>
+      )}
 
       <label className="flex items-start gap-2 text-xs font-karla text-zinc-600 cursor-pointer">
         <input

@@ -58,7 +58,7 @@ export type AuditEventItem = {
 }
 
 export type TabType = 'families' | 'guests' | 'dietary' | 'travel' | 'songs' | 'messages' | 'activity' | 'predictions'
-export type RsvpFilter = 'all' | 'attending_wedding' | 'declined_wedding' | 'pending_wedding' | 'attending_welcome' | 'attending_rehearsal'
+export type RsvpFilter = 'all' | 'attending_wedding' | 'declined_wedding' | 'pending_wedding' | 'attending_welcome' | 'attending_rehearsal' | 'no_rsvp' | 'mixed_rsvp'
 export type TravelFilter = 'all' | 'has_flights' | 'has_hotel' | 'missing_travel'
 export type SortOption = 'name_asc' | 'name_desc' | 'guests_desc' | 'updated_desc'
 export type ActivityFilter = 'all' | 'visits' | 'rsvps' | 'messages' | 'management' | 'auth'
@@ -90,6 +90,13 @@ export interface AdminStats {
   websiteVisitsCount: number
   totalAuditEvents: number
 }
+
+// A guest's answers for each event they're invited to (null = not answered yet)
+export const rsvpAnswers = (guest: Guest, isRehearsalDinnerInvited: boolean) => [
+  guest.isAttendingWelcome,
+  guest.isAttendingWedding,
+  ...(isRehearsalDinnerInvited ? [guest.isAttendingRehearsalDinner] : []),
+]
 
 export const TITLE_OPTIONS = ['None', 'Mr', 'Mrs', 'Ms', 'Miss', 'Dr', 'Prof', 'Rev']
 export const DIETARY_QUICK_CHIPS = ['None', 'Vegetarian', 'Vegan', 'Gluten Free', 'Nut Allergy', 'Dairy Free', 'Kosher', 'Kids Meal']

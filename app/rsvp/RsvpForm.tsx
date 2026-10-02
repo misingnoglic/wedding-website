@@ -4,6 +4,7 @@ import { useTransition, useRef, useState, useEffect } from 'react'
 import { updateRsvp, logoutFamily } from '@/app/actions/rsvp'
 import { recordSqlInjectionEasterEgg } from '@/app/actions/easterEgg'
 import PushNotificationManager from '@/app/admin/components/PushNotificationManager'
+import { formatPhoneNumber } from '@/lib/phone'
 
 type Guest = {
   id: string
@@ -73,23 +74,6 @@ const normalizeFlightInput = (fn: string): string => {
   }
 
   return val
-}
-
-const normalizePhoneInput = (val: string): string => {
-  const trimmed = val.trim()
-  if (!trimmed) return ''
-
-  const digits = trimmed.replace(/\D/g, '')
-  if (digits.length === 10) {
-    return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`
-  }
-  if (digits.length === 11 && digits.startsWith('1')) {
-    return `+1 (${digits.slice(1, 4)}) ${digits.slice(4, 7)}-${digits.slice(7)}`
-  }
-  if (trimmed.startsWith('+')) {
-    return '+' + trimmed.slice(1).replace(/\s+/g, ' ').trim()
-  }
-  return trimmed
 }
 
 const checkSqlInjection = (val: string): boolean => {
@@ -659,7 +643,7 @@ export default function RsvpForm({ family }: { family: Family }) {
                             name={`phoneNumber_${guest.id}`}
                             defaultValue={guest.phoneNumber || ''}
                             onBlur={(e) => {
-                              e.target.value = normalizePhoneInput(e.target.value)
+                              e.target.value = formatPhoneNumber(e.target.value)
                               handleAutoSave()
                             }}
                             className="w-full px-3 py-2 border border-zinc-200 rounded-md focus:border-sage focus:ring-1 focus:ring-sage font-karla outline-none"

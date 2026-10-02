@@ -6,6 +6,7 @@ import { redirect } from 'next/navigation'
 import { after } from 'next/server'
 import { db } from '@/lib/db'
 import { logAuditEvent } from '@/lib/audit'
+import { formatPhoneNumber } from '@/lib/phone'
 import { sendAdminPushNotification } from '@/lib/push'
 import { Redis } from '@upstash/redis'
 import { Ratelimit } from '@upstash/ratelimit'
@@ -384,32 +385,6 @@ export async function updateRsvp(prevState: unknown, formData: FormData) {
     return trimmed === '' ? null : trimmed
   }
 
-  const normalizePhoneNumber = (val: unknown) => {
-    if (typeof val !== 'string') return null
-    const trimmed = val.trim()
-    if (!trimmed) return null
-
-    // Extract all digits
-    const digits = trimmed.replace(/\D/g, '')
-
-    // 10-digit US/Canada number e.g. 5551234567 -> (555) 123-4567
-    if (digits.length === 10) {
-      return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`
-    }
-
-    // 11-digit US/Canada number starting with 1 e.g. 15551234567 -> +1 (555) 123-4567
-    if (digits.length === 11 && digits.startsWith('1')) {
-      return `+1 (${digits.slice(1, 4)}) ${digits.slice(4, 7)}-${digits.slice(7)}`
-    }
-
-    // If international with leading +, clean up excess whitespace
-    if (trimmed.startsWith('+')) {
-      return '+' + trimmed.slice(1).replace(/\s+/g, ' ').trim()
-    }
-
-    return trimmed
-  }
-
   const normalizeHotelName = (val: string | null) => {
     if (!val) return null
     const trimmed = val.trim()
@@ -545,7 +520,7 @@ export async function updateRsvp(prevState: unknown, formData: FormData) {
         const name = rawName && rawName.trim() ? rawName.trim() : undefined
 
         const email = normalizeEmail(formData.get(`email_${guestId}`))
-        const phoneNumber = normalizePhoneNumber(formData.get(`phoneNumber_${guestId}`))
+        const phoneNumber = formatPhoneNumber(formData.get(`phoneNumber_${guestId}`) as string | null) || null
         const dietaryRestrictions = normalizeDietaryRestrictions(formData.get(`dietaryRestrictions_${guestId}`))
         const arrivalDate = arrivalFlightNumber ? cleanString(formData.get(`arrivalDate_${guestId}`)) : null
         const departureDate = departureFlightNumber

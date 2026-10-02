@@ -13,6 +13,7 @@ import {
 function guest(overrides: Partial<AudienceGuest> = {}): AudienceGuest {
   return {
     id: 'g1',
+    title: null,
     name: 'Ana Lopez',
     phoneNumber: '(555) 123-4567',
     familyId: 'f1',
@@ -102,6 +103,10 @@ test('renderTemplate fills placeholders', () => {
     'Hi Ana & Ben! Code for The Lopez Family: sunset'
   )
   assert.equal(renderTemplate('Plain text', [ana]), 'Plain text')
+  assert.equal(
+    renderTemplate('Dear {fullName}', [guest({ title: 'Dr', name: 'Ana Lopez' }), guest({ title: 'Miss', name: 'Cleo Lopez' })]),
+    'Dear Dr. Ana Lopez & Miss Cleo Lopez'
+  )
 })
 
 test('findUnknownPlaceholders flags typos', () => {
