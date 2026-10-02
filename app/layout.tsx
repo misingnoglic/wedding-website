@@ -9,7 +9,6 @@ import VisitTracker from "./components/VisitTracker";
 import ConsoleEasterEgg from "./components/ConsoleEasterEgg";
 import { GoogleAnalytics } from '@next/third-parties/google';
 import { Analytics } from '@vercel/analytics/next';
-import { isAdminSession } from "@/lib/auth";
 
 const karla = Karla({
   subsets: ["latin"],
@@ -70,13 +69,11 @@ export const metadata: Metadata = {
   },
 };
 
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const isAdmin = await isAdminSession();
-
   return (
     <html lang="en">
       <body
@@ -84,7 +81,7 @@ export default async function RootLayout({
       >
         <VisitTracker />
         <ConsoleEasterEgg />
-        <Header isAdmin={isAdmin} />
+        <Header />
         <main className="flex-grow flex flex-col items-center w-full">
           {children}
         </main>

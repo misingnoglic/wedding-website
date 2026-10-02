@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
@@ -17,9 +17,50 @@ const links = [
     { href: "/account", label: "Account" },
 ];
 
-export default function Header({ isAdmin = false }: { isAdmin?: boolean }) {
+// Cached admin flag, deliberately vague. Not a security boundary: /admin 404s for non-admins anyway.
+const NAV_PREF_KEY = "_hv";
+const NAV_PREF_ON = "c2";
+const NAV_PREF_OFF = "b7";
+
+const readCachedAdmin = () => {
+    try {
+        return localStorage.getItem(NAV_PREF_KEY) === NAV_PREF_ON;
+    } catch {
+        return false;
+    }
+};
+const subscribeStorage = (onChange: () => void) => {
+    window.addEventListener("storage", onChange);
+    return () => window.removeEventListener("storage", onChange);
+};
+
+export default function Header() {
     const [isOpen, setIsOpen] = useState(false);
     const pathname = usePathname();
+
+    // Show the cached value right away (false during SSR), then confirm with the server
+    const cachedAdmin = useSyncExternalStore(subscribeStorage, readCachedAdmin, () => false);
+    const [fetchedAdmin, setFetchedAdmin] = useState<boolean | null>(null);
+    const isAdmin = fetchedAdmin ?? cachedAdmin;
+
+    // Re-check on navigation so logging in or out updates the nav without a reload
+    useEffect(() => {
+        let cancelled = false;
+        fetch("/api/account-status")
+            .then((res) => (res.ok ? res.json() : null))
+            .then((data: { isAdmin?: boolean } | null) => {
+                if (cancelled || !data) return;
+                setFetchedAdmin(data.isAdmin === true);
+                try {
+                    localStorage.setItem(NAV_PREF_KEY, data.isAdmin === true ? NAV_PREF_ON : NAV_PREF_OFF);
+                } catch {}
+            })
+            .catch(() => {});
+        return () => {
+            cancelled = true;
+        };
+    }, [pathname]);
+
     const navLinks = isAdmin ? [...links, { href: "/admin", label: "Admin" }] : links;
 
     return (
