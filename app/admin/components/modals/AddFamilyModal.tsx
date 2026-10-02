@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { createFamilyAdmin } from '@/app/actions/admin'
-import { TITLE_OPTIONS } from '../../types'
+import { formatTitle, TITLE_OPTIONS } from '@/lib/guestFields'
 
 interface AddFamilyModalProps {
   isOpen: boolean
@@ -176,7 +176,7 @@ export default function AddFamilyModal({
                   >
                     {TITLE_OPTIONS.map((t) => (
                       <option key={t} value={t}>
-                        {t === 'None' ? 'Title...' : t}
+                        {formatTitle(t) || 'Title...'}
                       </option>
                     ))}
                   </select>

@@ -1,7 +1,8 @@
 'use client'
 
 import { addGuestAdmin } from '@/app/actions/admin'
-import { FamilyWithGuests, TITLE_OPTIONS } from '../../types'
+import { formatTitle, TITLE_OPTIONS } from '@/lib/guestFields'
+import { FamilyWithGuests } from '../../types'
 
 interface AddGuestModalProps {
   family: FamilyWithGuests | null
@@ -65,7 +66,7 @@ export default function AddGuestModal({
               >
                 {TITLE_OPTIONS.map((t) => (
                   <option key={t} value={t}>
-                    {t}
+                    {formatTitle(t) || 'None'}
                   </option>
                 ))}
               </select>

@@ -2,7 +2,19 @@
 
 import { useState } from 'react'
 import { updateGuestAdmin } from '@/app/actions/admin'
-import { FlatGuest, TITLE_OPTIONS, DIETARY_QUICK_CHIPS, HOTEL_QUICK_CHIPS } from '../../types'
+import {
+  DIETARY_OPTIONS,
+  formatTitle,
+  HOTEL_OPTIONS,
+  joinDietary,
+  normalizeEmail,
+  normalizeFlightNumber,
+  normalizeHotelName,
+  splitDietary,
+  TITLE_OPTIONS,
+} from '@/lib/guestFields'
+import { formatPhoneNumber } from '@/lib/phone'
+import { FlatGuest } from '../../types'
 
 interface EditGuestModalProps {
   guest: FlatGuest | null
@@ -19,7 +31,8 @@ export default function EditGuestModal({
   startTransition,
   setActionFeedback,
 }: EditGuestModalProps) {
-  const [dietaryValue, setDietaryValue] = useState(guest?.dietaryRestrictions || '')
+  // Same picker as the RSVP form: one option, or 'Other' with free text
+  const [dietary, setDietary] = useState(() => splitDietary(guest?.dietaryRestrictions ?? null))
   const [hotelValue, setHotelValue] = useState(guest?.hotelName || '')
 
   if (!guest) return null
@@ -75,9 +88,10 @@ export default function EditGuestModal({
               >
                 {TITLE_OPTIONS.map((t) => (
                   <option key={t} value={t}>
-                    {t}
+                    {formatTitle(t) || 'None'}
                   </option>
                 ))}
+                {guest.title && !TITLE_OPTIONS.includes(guest.title) && <option value={guest.title}>{guest.title}</option>}
               </select>
             </div>
             <div className="sm:col-span-3">
@@ -104,6 +118,7 @@ export default function EditGuestModal({
                 type="email"
                 name="email"
                 defaultValue={guest.email || ''}
+                onBlur={(e) => (e.target.value = normalizeEmail(e.target.value) ?? '')}
                 placeholder="guest@example.com"
                 className="w-full px-3.5 py-2 bg-zinc-50 border border-zinc-200 rounded-xl focus:border-sage outline-none text-xs"
               />
@@ -116,6 +131,7 @@ export default function EditGuestModal({
                 type="tel"
                 name="phoneNumber"
                 defaultValue={guest.phoneNumber || ''}
+                onBlur={(e) => (e.target.value = formatPhoneNumber(e.target.value))}
                 placeholder="+1 (555) 000-0000"
                 className="w-full px-3.5 py-2 bg-zinc-50 border border-zinc-200 rounded-xl focus:border-sage outline-none text-xs"
               />
@@ -129,9 +145,7 @@ export default function EditGuestModal({
             </h4>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs text-zinc-600 mb-1">
-                  Wedding Ceremony & Reception (Dec 12)
-                </label>
+                <label className="block text-xs text-zinc-600 mb-1">Wedding Day (Dec 12)</label>
                 <select
                   name="isAttendingWedding"
                   defaultValue={
@@ -140,13 +154,13 @@ export default function EditGuestModal({
                   className="w-full px-3 py-2 bg-white border border-zinc-200 rounded-lg text-xs outline-none focus:border-sage font-medium"
                 >
                   <option value="">Pending / Not Answered</option>
-                  <option value="true">✓ Joyfully Accepts</option>
-                  <option value="false">✕ Regretfully Declines</option>
+                  <option value="true">Joyfully Accepts</option>
+                  <option value="false">Regretfully Declines</option>
                 </select>
               </div>
 
               <div>
-                <label className="block text-xs text-zinc-600 mb-1">Welcome Fiesta (Dec 11)</label>
+                <label className="block text-xs text-zinc-600 mb-1">Welcome Party (Dec 11)</label>
                 <select
                   name="isAttendingWelcome"
                   defaultValue={
@@ -155,8 +169,8 @@ export default function EditGuestModal({
                   className="w-full px-3 py-2 bg-white border border-zinc-200 rounded-lg text-xs outline-none focus:border-sage font-medium"
                 >
                   <option value="">Pending / Not Answered</option>
-                  <option value="true">✓ Attending</option>
-                  <option value="false">✕ Declines</option>
+                  <option value="true">Joyfully Accepts</option>
+                  <option value="false">Regretfully Declines</option>
                 </select>
               </div>
 
@@ -171,8 +185,8 @@ export default function EditGuestModal({
                     className="w-full px-3 py-2 bg-white border border-zinc-200 rounded-lg text-xs outline-none focus:border-sage font-medium"
                   >
                     <option value="">Pending / Not Answered</option>
-                    <option value="true">✓ Attending</option>
-                    <option value="false">✕ Declines</option>
+                    <option value="true">Joyfully Accepts</option>
+                    <option value="false">Regretfully Declines</option>
                   </select>
                 </div>
               )}
@@ -181,39 +195,35 @@ export default function EditGuestModal({
 
           {/* Dietary Restrictions */}
           <div>
-            <div className="flex justify-between items-center mb-1">
-              <label className="block text-xs font-sans uppercase tracking-wider text-zinc-500">
-                Dietary Restrictions & Allergies
-              </label>
-            </div>
-            <input
-              type="text"
-              name="dietaryRestrictions"
-              value={dietaryValue}
-              onChange={(e) => setDietaryValue(e.target.value)}
-              placeholder="e.g. Vegetarian, Severe Peanut Allergy, Gluten Free"
-              className="w-full px-3.5 py-2.5 bg-zinc-50 border border-zinc-200 rounded-xl focus:border-sage outline-none text-xs"
-            />
-            <div className="flex flex-wrap gap-1.5 mt-2">
-              {DIETARY_QUICK_CHIPS.map((chip) => (
+            <label className="block text-xs font-sans uppercase tracking-wider text-zinc-500 mb-2">
+              Dietary Restrictions & Allergies
+            </label>
+            <div className="flex flex-wrap gap-1.5">
+              {[...DIETARY_OPTIONS, 'Other'].map((opt) => (
                 <button
-                  key={chip}
+                  key={opt}
                   type="button"
-                  onClick={() => {
-                    if (chip === 'None') {
-                      setDietaryValue('')
-                    } else if (dietaryValue) {
-                      setDietaryValue(`${dietaryValue}, ${chip}`)
-                    } else {
-                      setDietaryValue(chip)
-                    }
-                  }}
-                  className="px-2.5 py-1 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 rounded-md text-[11px] font-karla transition-colors cursor-pointer"
+                  onClick={() => setDietary((prev) => ({ ...prev, type: opt }))}
+                  className={`px-3 py-1.5 rounded-full border text-[11px] font-karla transition-colors cursor-pointer ${
+                    dietary.type === opt
+                      ? 'bg-black text-white border-black'
+                      : 'bg-white text-zinc-600 border-zinc-200 hover:border-sage hover:text-black'
+                  }`}
                 >
-                  +{chip}
+                  {opt}
                 </button>
               ))}
             </div>
+            {dietary.type === 'Other' && (
+              <input
+                type="text"
+                value={dietary.text}
+                onChange={(e) => setDietary((prev) => ({ ...prev, text: e.target.value }))}
+                placeholder="Please specify..."
+                className="mt-2 w-full px-3.5 py-2.5 bg-zinc-50 border border-zinc-200 rounded-xl focus:border-sage outline-none text-xs"
+              />
+            )}
+            <input type="hidden" name="dietaryRestrictions" value={joinDietary(dietary.type, dietary.text)} />
           </div>
 
           {/* Accommodation */}
@@ -226,11 +236,12 @@ export default function EditGuestModal({
               name="hotelName"
               value={hotelValue}
               onChange={(e) => setHotelValue(e.target.value)}
+              onBlur={(e) => setHotelValue(normalizeHotelName(e.target.value) ?? '')}
               placeholder="e.g. The Cape, A Thompson Hotel"
               className="w-full px-3.5 py-2.5 bg-zinc-50 border border-zinc-200 rounded-xl focus:border-sage outline-none text-xs"
             />
             <div className="flex flex-wrap gap-1.5 mt-2">
-              {HOTEL_QUICK_CHIPS.map((hotel) => (
+              {HOTEL_OPTIONS.map((hotel) => (
                 <button
                   key={hotel}
                   type="button"
@@ -255,6 +266,7 @@ export default function EditGuestModal({
                   type="text"
                   name="arrivalFlightNumber"
                   defaultValue={guest.arrivalFlightNumber || ''}
+                  onBlur={(e) => (e.target.value = normalizeFlightNumber(e.target.value) ?? '')}
                   placeholder="AA 1234"
                   className="w-full px-3 py-1.5 bg-white border border-zinc-200 rounded-lg text-xs font-mono uppercase focus:border-sage outline-none"
                 />
@@ -274,6 +286,7 @@ export default function EditGuestModal({
                   type="text"
                   name="departureFlightNumber"
                   defaultValue={guest.departureFlightNumber || ''}
+                  onBlur={(e) => (e.target.value = normalizeFlightNumber(e.target.value) ?? '')}
                   placeholder="UA 5678"
                   className="w-full px-3 py-1.5 bg-white border border-zinc-200 rounded-lg text-xs font-mono uppercase focus:border-sage outline-none"
                 />

@@ -7,6 +7,16 @@ import { db } from '@/lib/db'
 import { getAuthenticatedAdmin } from '@/lib/auth'
 import { logAuditEvent } from '@/lib/audit'
 import { formatPhoneNumber } from '@/lib/phone'
+import {
+  normalizeDietaryRestrictions,
+  normalizeEmail,
+  normalizeFlightDate,
+  normalizeFlightNumber,
+  normalizeHotelName,
+  normalizeSongRequests,
+  normalizeTitle,
+  parseRsvpAnswer,
+} from '@/lib/guestFields'
 import { Redis } from '@upstash/redis'
 
 export async function clearRedisCache() {
@@ -75,9 +85,9 @@ export async function createFamilyAdmin(prevState: unknown, formData: FormData) 
         if (Array.isArray(parsed)) {
           guestsToCreate = parsed
             .map((g: { title?: string; name?: string; email?: string; phoneNumber?: string }) => ({
-              title: g.title && g.title.trim() !== 'None' ? g.title.trim() : null,
+              title: normalizeTitle(g.title),
               name: (g.name || '').trim(),
-              email: g.email && g.email.trim() ? g.email.trim() : null,
+              email: normalizeEmail(g.email),
               phoneNumber: formatPhoneNumber(g.phoneNumber) || null,
             }))
             .filter((g) => g.name.length > 0)
@@ -244,11 +254,10 @@ export async function addGuestAdmin(prevState: unknown, formData: FormData) {
   const admin = await getAuthenticatedAdmin()
 
   const familyId = formData.get('familyId') as string
-  const rawTitle = formData.get('title') as string | null
-  const title = (!rawTitle || rawTitle.trim() === '' || rawTitle.trim() === 'None') ? null : rawTitle.trim()
+  const title = normalizeTitle(formData.get('title'))
   const rawName = formData.get('name') as string || ''
   const name = rawName.trim()
-  const email = (formData.get('email') as string || '').trim() || null
+  const email = normalizeEmail(formData.get('email'))
   const phoneNumber = formatPhoneNumber(formData.get('phoneNumber') as string | null) || null
 
   if (!familyId) {
@@ -307,8 +316,7 @@ export async function updateGuestAdmin(prevState: unknown, formData: FormData) {
     return { error: 'Missing guest ID.' }
   }
 
-  const rawTitle = formData.get('title') as string | null
-  const title = (!rawTitle || rawTitle.trim() === '' || rawTitle.trim() === 'None') ? null : rawTitle.trim()
+  const title = normalizeTitle(formData.get('title'))
   const rawName = formData.get('name') as string || ''
   const name = rawName.trim()
 
@@ -316,41 +324,28 @@ export async function updateGuestAdmin(prevState: unknown, formData: FormData) {
     return { error: 'Guest name cannot be empty.' }
   }
 
-  const formatFlightNumber = (fn: string | null) => {
-    if (!fn) return null
-    return fn.trim().toUpperCase().replace(/\s+/g, ' ')
-  }
-
-  const attendingWeddingStr = formData.get('isAttendingWedding') as string
-  const isAttendingWedding = attendingWeddingStr === 'true' ? true : attendingWeddingStr === 'false' ? false : null
-
-  const attendingWelcomeStr = formData.get('isAttendingWelcome') as string
-  const isAttendingWelcome = attendingWelcomeStr === 'true' ? true : attendingWelcomeStr === 'false' ? false : null
-
-  const attendingRehearsalStr = formData.get('isAttendingRehearsalDinner') as string
-  const isAttendingRehearsalDinner = attendingRehearsalStr === 'true' ? true : attendingRehearsalStr === 'false' ? false : null
+  const isAttendingWedding = parseRsvpAnswer(formData.get('isAttendingWedding'))
+  const isAttendingWelcome = parseRsvpAnswer(formData.get('isAttendingWelcome'))
+  const isAttendingRehearsalDinner = parseRsvpAnswer(formData.get('isAttendingRehearsalDinner'))
 
   // Predictions are edited on the Predictions tab; only touch them if this form actually sent them
   const parsePrediction = (field: string) => {
     if (!formData.has(field)) return undefined
-    const val = formData.get(field)
-    return val === 'true' ? true : val === 'false' ? false : null
+    return parseRsvpAnswer(formData.get(field))
   }
   const predictedIsAttendingWedding = parsePrediction('predictedIsAttendingWedding')
   const predictedIsAttendingWelcome = parsePrediction('predictedIsAttendingWelcome')
   const predictedIsAttendingRehearsalDinner = parsePrediction('predictedIsAttendingRehearsalDinner')
 
-  const arrivalFlightNumber = formatFlightNumber(formData.get('arrivalFlightNumber') as string)
-  const arrivalDate = arrivalFlightNumber ? ((formData.get('arrivalDate') as string || '').trim() || null) : null
+  const arrivalFlightNumber = normalizeFlightNumber(formData.get('arrivalFlightNumber'))
+  const arrivalDate = normalizeFlightDate(formData.get('arrivalDate'), arrivalFlightNumber)
+  const departureFlightNumber = normalizeFlightNumber(formData.get('departureFlightNumber'))
+  const departureDate = normalizeFlightDate(formData.get('departureDate'), departureFlightNumber)
 
-  const departureFlightNumber = formatFlightNumber(formData.get('departureFlightNumber') as string)
-  const departureDate = departureFlightNumber ? ((formData.get('departureDate') as string || '').trim() || null) : null
-
-  const dietaryRestrictions = (formData.get('dietaryRestrictions') as string || '').trim() || null
-  const rawHotelName = (formData.get('hotelName') as string || '').trim() || null
-  const hotelName = rawHotelName && /\bcape\b/i.test(rawHotelName) ? 'The Cape' : rawHotelName
-  const songRequests = (formData.get('songRequests') as string || '').trim() || null
-  const email = (formData.get('email') as string || '').trim() || null
+  const dietaryRestrictions = normalizeDietaryRestrictions(formData.get('dietaryRestrictions'))
+  const hotelName = normalizeHotelName(formData.get('hotelName'))
+  const songRequests = normalizeSongRequests(formData.get('songRequests'))
+  const email = normalizeEmail(formData.get('email'))
   const phoneNumber = formatPhoneNumber(formData.get('phoneNumber') as string | null) || null
 
   try {

@@ -7,6 +7,16 @@ import { after } from 'next/server'
 import { db } from '@/lib/db'
 import { logAuditEvent } from '@/lib/audit'
 import { formatPhoneNumber } from '@/lib/phone'
+import {
+  normalizeDietaryRestrictions,
+  normalizeEmail,
+  normalizeFlightDate,
+  normalizeFlightNumber,
+  normalizeHotelName,
+  normalizeSongRequests,
+  normalizeTitle,
+  parseRsvpAnswer,
+} from '@/lib/guestFields'
 import { sendAdminPushNotification } from '@/lib/push'
 import { Redis } from '@upstash/redis'
 import { Ratelimit } from '@upstash/ratelimit'
@@ -328,151 +338,6 @@ export async function updateRsvp(prevState: unknown, formData: FormData) {
     return { error: 'Not authenticated' }
   }
 
-  const formatFlightNumber = (fn: string | null) => {
-    if (!fn) return null
-    let val = fn.trim().toUpperCase()
-    if (!val) return null
-
-    // Strip leading words/symbols like "FLIGHT", "FLT", "#", "NO."
-    val = val.replace(/^(?:FLIGHT|FLT|NO\.?)\s*/i, '')
-    val = val.replace(/#/g, '')
-    val = val.trim()
-
-    // Airline mappings for common names spelled out
-    const airlineMap: [RegExp, string][] = [
-      [/^(?:AMERICAN\s*AIRLINES|AMERICAN)\s*/i, 'AA '],
-      [/^(?:DELTA\s*AIR\s*LINES|DELTA\s*AIRLINES|DELTA)\s*/i, 'DL '],
-      [/^(?:UNITED\s*AIRLINES|UNITED)\s*/i, 'UA '],
-      [/^(?:SOUTHWEST\s*AIRLINES|SOUTHWEST)\s*/i, 'WN '],
-      [/^(?:ALASKA\s*AIRLINES|ALASKA)\s*/i, 'AS '],
-      [/^(?:JETBLUE\s*AIRWAYS|JET\s*BLUE|JETBLUE)\s*/i, 'B6 '],
-      [/^(?:SPIRIT\s*AIRLINES|SPIRIT)\s*/i, 'NK '],
-      [/^(?:FRONTIER\s*AIRLINES|FRONTIER)\s*/i, 'F9 '],
-      [/^(?:AEROMEXICO|AERO\s*MEXICO)\s*/i, 'AM '],
-      [/^(?:VOLARIS)\s*/i, 'Y4 '],
-      [/^(?:VIVA\s*AEROBUS|VIVAAEROBUS|VIVA)\s*/i, 'VB '],
-      [/^(?:AIR\s*CANADA)\s*/i, 'AC '],
-      [/^(?:WESTJET|WEST\s*JET)\s*/i, 'WS '],
-    ]
-
-    for (const [regex, code] of airlineMap) {
-      if (regex.test(val)) {
-        val = val.replace(regex, code)
-        break
-      }
-    }
-
-    // Format standard airline code + number: e.g. "AA1234" -> "AA 1234"
-    const match = val.match(/^([A-Z0-9]{2,3})\s*(\d+)$/i)
-    if (match) {
-      val = `${match[1].toUpperCase()} ${match[2]}`
-    } else {
-      val = val.replace(/\s+/g, ' ')
-    }
-
-    return val === '' ? null : val
-  }
-
-  const cleanString = (val: unknown) => {
-    if (typeof val !== 'string') return null
-    const trimmed = val.trim()
-    return trimmed === '' ? null : trimmed
-  }
-
-  const normalizeEmail = (val: unknown) => {
-    if (typeof val !== 'string') return null
-    const trimmed = val.trim().toLowerCase()
-    return trimmed === '' ? null : trimmed
-  }
-
-  const normalizeHotelName = (val: string | null) => {
-    if (!val) return null
-    const trimmed = val.trim()
-    if (!trimmed) return null
-
-    // The Cape
-    if (/\bcape\b/i.test(trimmed)) {
-      return 'The Cape'
-    }
-    // Sunrock Hotel
-    if (/\bsun\s*rock\b/i.test(trimmed)) {
-      return 'Sunrock Hotel'
-    }
-    // Pueblo Bonito Rosé
-    if (/\bpueblo\s*bonito\b/i.test(trimmed) || /\bpb\s*ros[eé]\b/i.test(trimmed)) {
-      return 'Pueblo Bonito Rosé'
-    }
-    // Airbnb / Villa
-    if (/\b(?:airbnb|air\s*bnb|vrbo)\b/i.test(trimmed)) {
-      return 'Airbnb / Villa'
-    }
-    // Grand Velas
-    if (/\bgrand\s*velas\b/i.test(trimmed)) {
-      return 'Grand Velas'
-    }
-    // Hacienda Beach Club
-    if (/\bhacienda\b/i.test(trimmed)) {
-      return 'Hacienda Beach Club'
-    }
-
-    return trimmed
-  }
-
-  const normalizeDietaryRestrictions = (val: unknown) => {
-    if (typeof val !== 'string') return null
-    const trimmed = val.trim()
-    if (!trimmed) return null
-
-    const lower = trimmed.toLowerCase()
-
-    // Nullify negative / non-answers
-    const noneMatches = [
-      'none',
-      'n/a',
-      'na',
-      'no',
-      'nothing',
-      'nil',
-      'none!',
-      'no restrictions',
-      'no allergies',
-      'n / a',
-      'none.',
-      'none known',
-    ]
-    if (noneMatches.includes(lower)) {
-      return null
-    }
-
-    // Common aliases
-    if (/^(?:gf|celiac|gluten[\s-]*free)$/i.test(lower)) {
-      return 'Gluten Free (Celiac)'
-    }
-    if (/^(?:dairy[\s-]*free|lactose|lactose[\s-]*intolerant|no[\s-]*dairy)$/i.test(lower)) {
-      return 'Dairy Free'
-    }
-    if (/^(?:nut[\s-]*allergy|peanut[\s-]*allergy|tree[\s-]*nuts|peanuts?|nuts?)$/i.test(lower)) {
-      return 'Nut Allergy'
-    }
-    if (/^(?:veg|vegetarian)$/i.test(lower)) {
-      return 'Vegetarian'
-    }
-    if (/^(?:vegan)$/i.test(lower)) {
-      return 'Vegan'
-    }
-    if (/^(?:kosher)$/i.test(lower)) {
-      return 'Kosher (Certified)'
-    }
-
-    return trimmed
-  }
-
-  const normalizeSongRequests = (val: unknown) => {
-    if (typeof val !== 'string') return null
-    const trimmed = val.trim().replace(/^["'`]|["'`]$/g, '').trim()
-    return trimmed === '' ? null : trimmed
-  }
-
   try {
     // Collect guest IDs from submission
     const guestIds = formData.getAll('guestId') as string[]
@@ -493,28 +358,14 @@ export async function updateRsvp(prevState: unknown, formData: FormData) {
         if (!prev) continue // Skip if guest does not belong to this family
 
         // Parse boolean values
-        const attendingWelcomeStr = formData.get(`isAttendingWelcome_${guestId}`) as string
-        const isAttendingWelcome =
-          attendingWelcomeStr === 'true' ? true : attendingWelcomeStr === 'false' ? false : null
+        const isAttendingWelcome = parseRsvpAnswer(formData.get(`isAttendingWelcome_${guestId}`))
+        const isAttendingRehearsalDinner = parseRsvpAnswer(formData.get(`isAttendingRehearsalDinner_${guestId}`))
+        const isAttendingWedding = parseRsvpAnswer(formData.get(`isAttendingWedding_${guestId}`))
 
-        const attendingRehearsalStr = formData.get(`isAttendingRehearsalDinner_${guestId}`) as string
-        const isAttendingRehearsalDinner =
-          attendingRehearsalStr === 'true' ? true : attendingRehearsalStr === 'false' ? false : null
+        const arrivalFlightNumber = normalizeFlightNumber(formData.get(`arrivalFlightNumber_${guestId}`))
+        const departureFlightNumber = normalizeFlightNumber(formData.get(`departureFlightNumber_${guestId}`))
 
-        const attendingWeddingStr = formData.get(`isAttendingWedding_${guestId}`) as string
-        const isAttendingWedding =
-          attendingWeddingStr === 'true' ? true : attendingWeddingStr === 'false' ? false : null
-
-        const arrivalFlightNumber = formatFlightNumber(formData.get(`arrivalFlightNumber_${guestId}`) as string)
-        const departureFlightNumber = formatFlightNumber(
-          formData.get(`departureFlightNumber_${guestId}`) as string
-        )
-
-        const rawTitle = formData.get(`title_${guestId}`) as string | null
-        const title =
-          !rawTitle || rawTitle.trim() === '' || rawTitle.trim().toLowerCase() === 'none'
-            ? null
-            : rawTitle.trim()
+        const title = normalizeTitle(formData.get(`title_${guestId}`))
 
         const rawName = formData.get(`name_${guestId}`) as string | null
         const name = rawName && rawName.trim() ? rawName.trim() : undefined
@@ -522,12 +373,9 @@ export async function updateRsvp(prevState: unknown, formData: FormData) {
         const email = normalizeEmail(formData.get(`email_${guestId}`))
         const phoneNumber = formatPhoneNumber(formData.get(`phoneNumber_${guestId}`) as string | null) || null
         const dietaryRestrictions = normalizeDietaryRestrictions(formData.get(`dietaryRestrictions_${guestId}`))
-        const arrivalDate = arrivalFlightNumber ? cleanString(formData.get(`arrivalDate_${guestId}`)) : null
-        const departureDate = departureFlightNumber
-          ? cleanString(formData.get(`departureDate_${guestId}`))
-          : null
-        const rawHotelName = cleanString(formData.get(`hotelName_${guestId}`))
-        const hotelName = normalizeHotelName(rawHotelName)
+        const arrivalDate = normalizeFlightDate(formData.get(`arrivalDate_${guestId}`), arrivalFlightNumber)
+        const departureDate = normalizeFlightDate(formData.get(`departureDate_${guestId}`), departureFlightNumber)
+        const hotelName = normalizeHotelName(formData.get(`hotelName_${guestId}`))
         const songRequests = normalizeSongRequests(formData.get(`songRequests_${guestId}`))
 
         // Compute field-level diffs for this guest

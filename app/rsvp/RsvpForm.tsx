@@ -5,6 +5,16 @@ import { updateRsvp, logoutFamily } from '@/app/actions/rsvp'
 import { recordSqlInjectionEasterEgg } from '@/app/actions/easterEgg'
 import PushNotificationManager from '@/app/admin/components/PushNotificationManager'
 import { formatPhoneNumber } from '@/lib/phone'
+import {
+  DIETARY_OPTIONS,
+  formatTitle,
+  joinDietary,
+  normalizeEmail,
+  normalizeFlightNumber,
+  normalizeHotelName,
+  splitDietary,
+  TITLE_OPTIONS,
+} from '@/lib/guestFields'
 
 type Guest = {
   id: string
@@ -31,51 +41,6 @@ type Family = {
   guests: Guest[]
 }
 
-const TITLE_OPTIONS = ['None', 'Mr', 'Mrs', 'Ms', 'Dr']
-const DIETARY_OPTIONS = ['None', 'Vegetarian', 'Vegan', 'Gluten Free (Celiac)', 'Kosher (Certified)', 'Kids']
-
-const normalizeFlightInput = (fn: string): string => {
-  if (!fn) return ''
-  let val = fn.trim().toUpperCase()
-  if (!val) return ''
-
-  val = val.replace(/^(?:FLIGHT|FLT|NO\.?)\s*/i, '')
-  val = val.replace(/#/g, '')
-  val = val.trim()
-
-  const airlineMap: [RegExp, string][] = [
-    [/^(?:AMERICAN\s*AIRLINES|AMERICAN)\s*/i, 'AA '],
-    [/^(?:DELTA\s*AIR\s*LINES|DELTA\s*AIRLINES|DELTA)\s*/i, 'DL '],
-    [/^(?:UNITED\s*AIRLINES|UNITED)\s*/i, 'UA '],
-    [/^(?:SOUTHWEST\s*AIRLINES|SOUTHWEST)\s*/i, 'WN '],
-    [/^(?:ALASKA\s*AIRLINES|ALASKA)\s*/i, 'AS '],
-    [/^(?:JETBLUE\s*AIRWAYS|JET\s*BLUE|JETBLUE)\s*/i, 'B6 '],
-    [/^(?:SPIRIT\s*AIRLINES|SPIRIT)\s*/i, 'NK '],
-    [/^(?:FRONTIER\s*AIRLINES|FRONTIER)\s*/i, 'F9 '],
-    [/^(?:AEROMEXICO|AERO\s*MEXICO)\s*/i, 'AM '],
-    [/^(?:VOLARIS)\s*/i, 'Y4 '],
-    [/^(?:VIVA\s*AEROBUS|VIVAAEROBUS|VIVA)\s*/i, 'VB '],
-    [/^(?:AIR\s*CANADA)\s*/i, 'AC '],
-    [/^(?:WESTJET|WEST\s*JET)\s*/i, 'WS '],
-  ]
-
-  for (const [regex, code] of airlineMap) {
-    if (regex.test(val)) {
-      val = val.replace(regex, code)
-      break
-    }
-  }
-
-  const match = val.match(/^([A-Z]{2,3}|[A-Z][0-9]|[0-9][A-Z])\s*(\d+)$/i)
-  if (match) {
-    val = `${match[1].toUpperCase()} ${match[2]}`
-  } else {
-    val = val.replace(/\s+/g, ' ')
-  }
-
-  return val
-}
-
 const checkSqlInjection = (val: string): boolean => {
   if (!val) return false
   const sqlPatterns = [
@@ -93,24 +58,6 @@ const checkSqlInjection = (val: string): boolean => {
     /\bEXECUTE\s*\(/i,
   ]
   return sqlPatterns.some((pattern) => pattern.test(val))
-}
-
-const normalizeEmailInput = (val: string): string => {
-  return val.trim().toLowerCase()
-}
-
-const normalizeHotelInput = (val: string): string => {
-  const trimmed = val.trim()
-  if (!trimmed) return ''
-
-  if (/\bcape\b/i.test(trimmed)) return 'The Cape'
-  if (/\bsun\s*rock\b/i.test(trimmed)) return 'Sunrock Hotel'
-  if (/\bpueblo\s*bonito\b/i.test(trimmed) || /\bpb\s*ros[eé]\b/i.test(trimmed)) return 'Pueblo Bonito Rosé'
-  if (/\b(?:airbnb|air\s*bnb|vrbo)\b/i.test(trimmed)) return 'Airbnb / Villa'
-  if (/\bgrand\s*velas\b/i.test(trimmed)) return 'Grand Velas'
-  if (/\bhacienda\b/i.test(trimmed)) return 'Hacienda Beach Club'
-
-  return trimmed
 }
 
 type TravelFields = {
@@ -191,18 +138,7 @@ export default function RsvpForm({ family }: { family: Family }) {
     }> = {}
 
     family.guests.forEach(g => {
-      let dType = 'None'
-      let dText = ''
-      if (g.dietaryRestrictions) {
-        const d = g.dietaryRestrictions.trim()
-        const matched = DIETARY_OPTIONS.find(opt => opt.toLowerCase() === d.toLowerCase())
-        if (matched) {
-          dType = matched
-        } else if (d.toLowerCase() !== 'none' && d !== '') {
-          dType = 'Other'
-          dText = d
-        }
-      }
+      const dietary = splitDietary(g.dietaryRestrictions)
 
       initialState[g.id] = {
         isAttendingWelcome: g.isAttendingWelcome,
@@ -213,8 +149,8 @@ export default function RsvpForm({ family }: { family: Family }) {
         departureFlightNumber: g.departureFlightNumber || '',
         departureDate: g.departureDate || '2026-12-13',
         hotelName: g.hotelName || '',
-        dietaryType: dType,
-        dietaryText: dText,
+        dietaryType: dietary.type,
+        dietaryText: dietary.text,
         hasBookedTravel: (g.arrivalFlightNumber || g.departureFlightNumber || g.hotelName) ? true : null,
       }
     })
@@ -303,11 +239,11 @@ export default function RsvpForm({ family }: { family: Family }) {
   const copyTravelInfo = (sourceGuestId: string, targetGuestIds: string[]) => {
     const src = guestState[sourceGuestId]
     const values = {
-      arrivalFlightNumber: normalizeFlightInput(src.arrivalFlightNumber),
+      arrivalFlightNumber: normalizeFlightNumber(src.arrivalFlightNumber) ?? '',
       arrivalDate: src.arrivalDate,
-      departureFlightNumber: normalizeFlightInput(src.departureFlightNumber),
+      departureFlightNumber: normalizeFlightNumber(src.departureFlightNumber) ?? '',
       departureDate: src.departureDate,
-      hotelName: normalizeHotelInput(src.hotelName),
+      hotelName: normalizeHotelName(src.hotelName) ?? '',
     }
 
     setGuestState(prev => {
@@ -409,7 +345,7 @@ export default function RsvpForm({ family }: { family: Family }) {
                       >
                         {TITLE_OPTIONS.map((opt) => (
                           <option key={opt} value={opt}>
-                            {opt === 'None' ? 'None' : `${opt}.`}
+                            {formatTitle(opt) || 'None'}
                           </option>
                         ))}
                         {guest.title && !TITLE_OPTIONS.includes(guest.title) && (
@@ -475,12 +411,7 @@ export default function RsvpForm({ family }: { family: Family }) {
                 ) : (
                   <div className="flex items-center gap-3 flex-wrap">
                     <h3 className="text-2xl font-sans text-black">
-                      {guestTitles[guest.id] && guestTitles[guest.id] !== 'None'
-                        ? `${guestTitles[guest.id].endsWith('.') ? guestTitles[guest.id] : `${guestTitles[guest.id]}.`} `
-                        : guest.title && guest.title !== 'None'
-                          ? `${guest.title.endsWith('.') ? guest.title : `${guest.title}.`} `
-                          : ''}
-                      {guestNames[guest.id] || guest.name}
+                      {[formatTitle(guestTitles[guest.id] ?? guest.title), guestNames[guest.id] || guest.name].filter(Boolean).join(' ')}
                     </h3>
                     <div className="flex items-center gap-1.5">
                       <button
@@ -630,7 +561,7 @@ export default function RsvpForm({ family }: { family: Family }) {
                                 e.target.value = ''
                                 return
                               }
-                              e.target.value = normalizeEmailInput(e.target.value)
+                              e.target.value = normalizeEmail(e.target.value) ?? ''
                               handleAutoSave()
                             }}
                             className="w-full px-3 py-2 border border-zinc-200 rounded-md focus:border-sage focus:ring-1 focus:ring-sage font-karla outline-none"
@@ -694,9 +625,7 @@ export default function RsvpForm({ family }: { family: Family }) {
                       <input
                         type="hidden"
                         name={`dietaryRestrictions_${guest.id}`}
-                        value={guestState[guest.id].dietaryType === 'Other'
-                          ? guestState[guest.id].dietaryText
-                          : (guestState[guest.id].dietaryType === 'None' ? '' : guestState[guest.id].dietaryType)}
+                        value={joinDietary(guestState[guest.id].dietaryType, guestState[guest.id].dietaryText)}
                       />
                     </div>
 
@@ -797,7 +726,7 @@ export default function RsvpForm({ family }: { family: Family }) {
                             onChange={(e) => setTravelField(guest.id, 'arrivalFlightNumber', e.target.value)}
                             placeholder="e.g. AA 1234"
                             onBlur={(e) => {
-                              setTravelField(guest.id, 'arrivalFlightNumber', normalizeFlightInput(e.target.value))
+                              setTravelField(guest.id, 'arrivalFlightNumber', normalizeFlightNumber(e.target.value) ?? '')
                               handleAutoSave()
                             }}
                             className="w-full px-3 py-2 border border-zinc-200 rounded-md focus:border-sage font-karla outline-none"
@@ -826,7 +755,7 @@ export default function RsvpForm({ family }: { family: Family }) {
                             onChange={(e) => setTravelField(guest.id, 'departureFlightNumber', e.target.value)}
                             placeholder="e.g. DL 567"
                             onBlur={(e) => {
-                              setTravelField(guest.id, 'departureFlightNumber', normalizeFlightInput(e.target.value))
+                              setTravelField(guest.id, 'departureFlightNumber', normalizeFlightNumber(e.target.value) ?? '')
                               handleAutoSave()
                             }}
                             className="w-full px-3 py-2 border border-zinc-200 rounded-md focus:border-sage font-karla outline-none"
@@ -855,7 +784,7 @@ export default function RsvpForm({ family }: { family: Family }) {
                             onChange={(e) => setTravelField(guest.id, 'hotelName', e.target.value)}
                             placeholder="Where are you staying?"
                             onBlur={(e) => {
-                              setTravelField(guest.id, 'hotelName', normalizeHotelInput(e.target.value))
+                              setTravelField(guest.id, 'hotelName', normalizeHotelName(e.target.value) ?? '')
                               handleAutoSave()
                             }}
                             className="w-full px-3 py-2 border border-zinc-200 rounded-md focus:border-sage font-karla outline-none"

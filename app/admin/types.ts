@@ -98,6 +98,3 @@ export const rsvpAnswers = (guest: Guest, isRehearsalDinnerInvited: boolean) => 
   ...(isRehearsalDinnerInvited ? [guest.isAttendingRehearsalDinner] : []),
 ]
 
-export const TITLE_OPTIONS = ['None', 'Mr', 'Mrs', 'Ms', 'Miss', 'Dr', 'Prof', 'Rev']
-export const DIETARY_QUICK_CHIPS = ['None', 'Vegetarian', 'Vegan', 'Gluten Free', 'Nut Allergy', 'Dairy Free', 'Kosher', 'Kids Meal']
-export const HOTEL_QUICK_CHIPS = ['The Cape', 'Sunrock Hotel', 'Pueblo Bonito Rosé', 'Grand Velas', 'Hacienda Beach Club', 'Airbnb / Villa']
