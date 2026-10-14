@@ -32,8 +32,16 @@ export function getSegmentInfo(text: string): SegmentInfo {
   return { length: gsmLength, segments: gsmLength <= 160 ? 1 : Math.ceil(gsmLength / 153), isUnicode }
 }
 
+/** Guests whose first name is more than one word, keyed by their full stored name */
+const FIRST_NAME_OVERRIDES: Record<string, string> = {
+  'Mary Clare Caggiano': 'Mary Clare',
+}
+
 export function firstName(fullName: string): string {
-  return fullName.trim().split(/\s+/)[0] || fullName
+  const trimmed = fullName.trim()
+  const override = FIRST_NAME_OVERRIDES[trimmed.replace(/\s+/g, ' ')]
+  if (override) return override
+  return trimmed.split(/\s+/)[0] || fullName
 }
 
 /**

@@ -26,6 +26,9 @@ test('empty text', () => {
 test('firstName', () => {
   assert.equal(firstName('Ana Maria Lopez'), 'Ana')
   assert.equal(firstName('  Ben  '), 'Ben')
+  assert.equal(firstName('Mary Clare Caggiano'), 'Mary Clare')
+  assert.equal(firstName('  Mary  Clare Caggiano '), 'Mary Clare')
+  assert.equal(firstName('Mary Clare Smith'), 'Mary')
 })
 
 test('fullName', () => {
