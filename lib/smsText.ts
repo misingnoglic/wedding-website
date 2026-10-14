@@ -32,6 +32,16 @@ export function getSegmentInfo(text: string): SegmentInfo {
   return { length: gsmLength, segments: gsmLength <= 160 ? 1 : Math.ceil(gsmLength / 153), isUnicode }
 }
 
+// Twilio's US price per outbound segment ($0.0083) plus carrier pass-through fees (~$0.0045), per Oct 2026 usage
+const COST_PER_SEGMENT_USD = 0.0128
+
+/**
+ * Rough Twilio cost of sending this many segments, e.g. "$12.29"
+ */
+export function estimateSmsCost(segments: number): string {
+  return `$${(segments * COST_PER_SEGMENT_USD).toFixed(2)}`
+}
+
 /** Guests whose first name is more than one word, keyed by their full stored name */
 const FIRST_NAME_OVERRIDES: Record<string, string> = {
   'Mary Clare Caggiano': 'Mary Clare',

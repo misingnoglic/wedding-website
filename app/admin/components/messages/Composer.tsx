@@ -9,7 +9,7 @@ import {
 } from '@/app/actions/sms'
 import { formatPhoneNumber } from '@/lib/phone'
 import { findUnknownPlaceholders, groupRecipients, PLACEHOLDERS, Recipient, renderTemplate } from '@/lib/smsAudience'
-import { getSegmentInfo } from '@/lib/smsText'
+import { estimateSmsCost, getSegmentInfo } from '@/lib/smsText'
 import { FlatGuest } from '../../types'
 import AudienceBuilder from './AudienceBuilder'
 import GuestSearch from './GuestSearch'
@@ -67,6 +67,11 @@ export default function Composer({
   const previewRecipient = recipients[Math.min(previewIndex, recipients.length - 1)]
   const preview = previewRecipient ? renderTemplate(body, previewRecipient.guests) : body
   const segments = getSegmentInfo(preview)
+  // Placeholders like {firstName} change the length, so count each recipient's actual text
+  const totalSegments = useMemo(
+    () => recipients.reduce((sum, r) => sum + getSegmentInfo(renderTemplate(body, r.guests)).segments, 0),
+    [recipients, body]
+  )
   const unknownPlaceholders = findUnknownPlaceholders(body)
   const isBulk = recipients.length > 1
   const sentCount = Object.keys(results).length
@@ -287,7 +292,8 @@ export default function Composer({
               )}
               {body && (
                 <p className="text-[11px] font-karla text-zinc-400">
-                  {segments.segments} SMS per text{isBulk && ` · about ${segments.segments * recipients.length} total`}
+                  {segments.segments} SMS per text
+                  {isBulk ? ` · ${totalSegments} total (~${estimateSmsCost(totalSegments)})` : ` (~${estimateSmsCost(segments.segments)})`}
                   {segments.isUnicode && ' · emoji or special characters use 70 characters per SMS'}
                 </p>
               )}
@@ -344,6 +350,9 @@ export default function Composer({
                 <strong className="font-sans text-black">{recipients.length} people</strong> will each get their own text. Replies
                 go to their individual conversations.
                 <div className="mt-1 text-xs text-zinc-500">{audienceLabel()}</div>
+                <div className="mt-1 text-xs text-zinc-500">
+                  {totalSegments} SMS · about {estimateSmsCost(totalSegments)}
+                </div>
               </div>
             )}
 
