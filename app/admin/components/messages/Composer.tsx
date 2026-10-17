@@ -365,14 +365,10 @@ export default function Composer({
                 <strong className="font-sans text-black">{recipients.length} people</strong> will each get their own text. Replies
                 go to their individual conversations.
                 <div className="mt-1 text-xs text-zinc-500">{audienceLabel()}</div>
-                <div className="mt-1 text-xs text-zinc-500">
+                <div className={`mt-1 text-xs ${isTooLong ? 'font-semibold text-red-700' : 'text-zinc-500'}`}>
                   {totalSegments} SMS · about {estimateSmsCost(totalSegments)}
+                  {isTooLong && ' · Above recommended length'}
                 </div>
-                {isTooLong && (
-                  <p className="mt-2 text-xs font-semibold text-red-700">
-                    Each text is up to {longestSegments} SMS. Some carriers reject anything over {MAX_RECOMMENDED_SEGMENTS}, so go back and shorten it.
-                  </p>
-                )}
                 {!isTooLong && unicodeChars.length > 0 && (
                   <p className="mt-2 text-xs text-amber-800">
                     Special characters ({unicodeChars.join(' ')}) are making this cost more. Go back to fix them.
