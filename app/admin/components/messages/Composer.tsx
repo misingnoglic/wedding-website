@@ -22,7 +22,7 @@ import {
 import { FlatGuest } from '../../types'
 import AudienceBuilder from './AudienceBuilder'
 import GuestSearch from './GuestSearch'
-import { Icon, ICONS, Spinner } from './ui'
+import { Icon, ICONS, PhoneProblemBadge, Spinner } from './ui'
 import { contactName, retrySummary } from './utils'
 
 interface ComposerProps {
@@ -491,6 +491,7 @@ export default function Composer({
                           <div className="flex items-center gap-2">
                             <span className="truncate text-sm font-sans text-black">{contactName(r.guests, r.phone)}</span>
                             {declined && <span className="shrink-0 rounded-full bg-red-50 px-2 py-0.5 text-[10px] font-karla text-red-700">Declined</span>}
+                            <PhoneProblemBadge reason={r.guests.find((g) => g.phoneProblem)?.phoneProblem} />
                           </div>
                           <div className="text-[11px] font-karla text-zinc-500">
                             {r.guests[0].familyName} · {formatPhoneNumber(r.phone) || r.phone}

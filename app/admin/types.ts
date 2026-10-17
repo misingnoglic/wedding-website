@@ -18,6 +18,7 @@ export type Guest = {
   departureDate: string | null
   hotelName: string | null
   songRequests: string | null
+  phoneProblem?: string | null // Why texts to this number fail (e.g. a landline); filled in by the admin page
   createdAt: Date | string
   updatedAt: Date | string
 }

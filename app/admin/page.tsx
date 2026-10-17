@@ -2,6 +2,8 @@ import { Metadata } from 'next'
 import { getAuthenticatedAdmin } from '@/lib/auth'
 import { db } from '@/lib/db'
 import { getInboxThreads } from '@/lib/inbox'
+import { getPhoneKey } from '@/lib/phone'
+import { getPhoneProblems } from '@/lib/sms'
 import AdminDashboard from './AdminDashboard'
 
 export const metadata: Metadata = {
@@ -22,7 +24,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
   const adminFamily = await getAuthenticatedAdmin()
 
   // Fetch all families and their guests
-  const families = await db.family.findMany({
+  const familyRows = await db.family.findMany({
     include: {
       guests: {
         orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
@@ -30,6 +32,16 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
     },
     orderBy: { name: 'asc' },
   })
+
+  // Flag guests whose number keeps failing so we know to ask for a new one
+  const phoneProblems = await getPhoneProblems()
+  const families = familyRows.map((f) => ({
+    ...f,
+    guests: f.guests.map((g) => ({
+      ...g,
+      phoneProblem: (g.phoneNumber && phoneProblems.get(getPhoneKey(g.phoneNumber))) || null,
+    })),
+  }))
 
   // Fetch recent activity audit logs
   const auditEvents = await db.auditEvent.findMany({

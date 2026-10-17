@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { formatPhoneNumber, getPhoneKey } from '@/lib/phone'
 import { FlatGuest } from '../../types'
 import GuestSearch from './GuestSearch'
-import { Icon, ICONS, Spinner } from './ui'
+import { Icon, ICONS, PhoneProblemBadge, Spinner } from './ui'
 
 interface GuestPanelProps {
   phone: string
@@ -121,6 +121,11 @@ export default function GuestPanel({ phone, guests, allGuests, onClose, onEditGu
                   <div className="min-w-0">
                     <div className="text-base font-sans text-black">{guest.title ? `${guest.title} ` : ''}{guest.name}</div>
                     <div className="text-xs font-karla text-zinc-500">{guest.hasLoggedIn ? 'Has logged in' : 'Never logged in'}</div>
+                    {guest.phoneProblem && (
+                      <div className="mt-1 flex flex-wrap items-center gap-1.5 text-xs font-karla text-red-700">
+                        <PhoneProblemBadge reason={guest.phoneProblem} /> {guest.phoneProblem}
+                      </div>
+                    )}
                   </div>
                   <button type="button" onClick={() => onEditGuest(guest)} className="shrink-0 rounded-full border border-zinc-200 px-3 py-1 text-xs font-karla text-zinc-600 hover:border-sage hover:text-black cursor-pointer">
                     Edit
@@ -169,8 +174,9 @@ export default function GuestPanel({ phone, guests, allGuests, onClose, onEditGu
                 <li key={member.id} className="flex items-center gap-2 py-1">
                   <div className="flex-1 min-w-0">
                     <div className="truncate text-sm font-sans text-black">{member.name}</div>
-                    <div className="text-[11px] font-karla text-zinc-500">
+                    <div className="flex items-center gap-1.5 text-[11px] font-karla text-zinc-500">
                       {member.phoneNumber ? formatPhoneNumber(member.phoneNumber) : 'No phone'}
+                      <PhoneProblemBadge reason={member.phoneProblem} />
                     </div>
                   </div>
                   <Rsvp value={member.isAttendingWedding} />

@@ -39,6 +39,16 @@ export const ICONS = {
   alert: 'M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z',
 }
 
+/** Flags a guest whose texts fail because of the number itself; hover for the reason */
+export function PhoneProblemBadge({ reason }: { reason: string | null | undefined }) {
+  if (!reason) return null
+  return (
+    <span title={reason} className="inline-flex shrink-0 rounded-full bg-red-50 px-2 py-0.5 text-[10px] font-karla font-medium text-red-700">
+      Needs new number
+    </span>
+  )
+}
+
 export function Spinner({ className = 'w-4 h-4' }: { className?: string }) {
   return <div className={`${className} border-2 border-current border-t-transparent rounded-full animate-spin`} />
 }

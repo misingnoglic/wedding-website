@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { describeSmsError, isAccountError, isFailedStatus, isPendingStatus, isRetryableError, shouldUpdateStatus } from './smsStatus'
+import { describeSmsError, isAccountError, isBadNumberError, isFailedStatus, isPendingStatus, isRetryableError, shouldUpdateStatus } from './smsStatus'
 
 test('shouldUpdateStatus only moves forward', () => {
   assert.ok(shouldUpdateStatus(null, 'queued'))
@@ -38,6 +38,13 @@ test('isAccountError', () => {
   assert.ok(isAccountError(70051))
   assert.ok(!isAccountError(30006))
   assert.ok(!isAccountError(null))
+})
+
+test('isBadNumberError', () => {
+  assert.ok(isBadNumberError(30006))
+  assert.ok(isBadNumberError(30005))
+  assert.ok(!isBadNumberError(30019)) // The message was the problem, not the number
+  assert.ok(!isBadNumberError(null))
 })
 
 test('isRetryableError', () => {

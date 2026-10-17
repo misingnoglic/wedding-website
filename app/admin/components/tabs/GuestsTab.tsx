@@ -1,6 +1,7 @@
 'use client'
 
 import { FlatGuest } from '../../types'
+import { PhoneProblemBadge } from '../messages/ui'
 
 interface GuestsTabProps {
   guests: FlatGuest[]
@@ -48,6 +49,7 @@ export default function GuestsTab({
                   <div className="text-zinc-400 text-[11px]">
                     {g.email && <span>{g.email}</span>}
                     {g.phoneNumber && <span className="ml-2">{g.phoneNumber}</span>}
+                    {g.phoneProblem && <span className="ml-2"><PhoneProblemBadge reason={g.phoneProblem} /></span>}
                   </div>
                 </td>
                 <td className="py-3 px-4 font-medium text-zinc-700">{g.familyName}</td>

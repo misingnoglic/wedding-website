@@ -3,7 +3,7 @@ import type { NextRequest } from 'next/server'
 import { headers } from 'next/headers'
 import { db } from '@/lib/db'
 import { doPhoneNumbersMatch, getComparablePhone, getPhoneKey } from '@/lib/phone'
-import { describeSmsError, isPendingStatus, shouldUpdateStatus } from '@/lib/smsStatus'
+import { describeSmsError, isBadNumberError, isFailedStatus, isPendingStatus, shouldUpdateStatus } from '@/lib/smsStatus'
 
 /**
  * Finds a matching guest in the database by phone number using best-effort digit comparison.
@@ -36,6 +36,24 @@ export async function findMatchingGuestForPhone(rawPhone: string) {
     console.error('Failed to match guest for phone:', error)
     return null
   }
+}
+
+/**
+ * Phones whose most recent text failed because of the number itself (e.g. a landline), keyed by
+ * phone key with the reason. A later delivered text clears it.
+ */
+export async function getPhoneProblems(): Promise<Map<string, string>> {
+  const outbound = await db.smsMessage.findMany({
+    where: { direction: 'outbound', status: { not: null } },
+    orderBy: { createdAt: 'asc' },
+    select: { phoneKey: true, status: true, errorCode: true },
+  })
+  const latest = new Map(outbound.map((m) => [m.phoneKey, m]))
+  const problems = new Map<string, string>()
+  for (const [phoneKey, m] of latest) {
+    if (isFailedStatus(m.status) && isBadNumberError(m.errorCode)) problems.set(phoneKey, describeSmsError(m.errorCode))
+  }
+  return problems
 }
 
 /**

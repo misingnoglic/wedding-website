@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { impersonateFamilyAdmin } from '@/app/actions/admin'
 import { FamilyWithGuests, FlatGuest } from '../../types'
+import { PhoneProblemBadge } from '../messages/ui'
 
 interface FamiliesTabProps {
   families: FamilyWithGuests[]
@@ -303,6 +304,7 @@ export default function FamiliesTab({
                             <div className="text-xs font-karla text-zinc-500 flex flex-wrap gap-x-2 mt-0.5">
                               {guest.email && <span>{guest.email}</span>}
                               {guest.phoneNumber && <span>{guest.phoneNumber}</span>}
+                              <PhoneProblemBadge reason={guest.phoneProblem} />
                             </div>
                           </div>
 

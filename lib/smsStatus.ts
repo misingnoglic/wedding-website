@@ -61,6 +61,13 @@ export function isAccountError(code: number | null | undefined): boolean {
   return !!code && ACCOUNT_ERRORS.has(code)
 }
 
+// The number itself can't get texts (wrong, inactive, or a landline); only a new number fixes these
+const BAD_NUMBER_ERRORS = new Set([21211, 21612, 21614, 30005, 30006])
+
+export function isBadNumberError(code: number | null | undefined): boolean {
+  return !!code && BAD_NUMBER_ERRORS.has(code)
+}
+
 // Retries resend the same text to the same number, so these would just fail again
 const NO_RETRY_ERRORS = new Set([21211, 21408, 21610, 21612, 21614, 30004, 30005, 30006, 30007, 30019])
 
