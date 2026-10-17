@@ -3,7 +3,7 @@ import type { NextRequest } from 'next/server'
 import { headers } from 'next/headers'
 import { db } from '@/lib/db'
 import { doPhoneNumbersMatch, getComparablePhone, getPhoneKey } from '@/lib/phone'
-import { isPendingStatus, shouldUpdateStatus } from '@/lib/smsStatus'
+import { describeSmsError, isPendingStatus, shouldUpdateStatus } from '@/lib/smsStatus'
 
 /**
  * Finds a matching guest in the database by phone number using best-effort digit comparison.
@@ -153,7 +153,7 @@ export async function sendSms({ to, body, sentByName, broadcastId }: SendSmsPara
     return {
       success: false,
       messageId: row?.id || null,
-      error: err.message || 'Failed to send SMS',
+      error: describeSmsError(errorCode, err.message || 'Failed to send SMS'),
       errorCode,
     }
   }

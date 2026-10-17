@@ -30,20 +30,32 @@ export function isFailedStatus(status: string | null | undefined): boolean {
   return status === 'failed' || status === 'undelivered'
 }
 
+// Twilio error codes: https://www.twilio.com/docs/api/errors
 const ERROR_DESCRIPTIONS: Record<number, string> = {
+  20003: 'Twilio rejected our credentials (check the account)',
   21211: 'Invalid phone number',
   21408: 'Country not enabled for texting',
   21610: 'Guest opted out (replied STOP)',
+  21612: 'Number can’t receive texts from us',
   21614: 'Not a mobile number',
+  30001: 'Twilio was too busy (sending too fast)',
+  30002: 'Twilio account suspended (check the balance)',
   30003: 'Phone unreachable or off',
   30004: 'Blocked by the recipient',
   30005: 'Unknown or inactive number',
   30006: 'Landline or unreachable carrier',
-  30007: 'Filtered by the carrier',
+  30007: 'Filtered by the carrier as spam',
   30008: 'Unknown delivery error',
+  30019: 'Message too long for their carrier',
+  30034: 'Our number isn’t registered for texting',
+  70051: 'Twilio rejected our credentials (check the account)',
 }
 
-export function describeSmsError(code: number | null | undefined): string {
-  if (!code) return 'Not delivered'
-  return ERROR_DESCRIPTIONS[code] || `Not delivered (error ${code})`
+/**
+ * Plain-English reason a text failed. Unrecognized codes use the fallback, or show the code to look up.
+ */
+export function describeSmsError(code: number | null | undefined, fallback?: string): string {
+  if (code && ERROR_DESCRIPTIONS[code]) return ERROR_DESCRIPTIONS[code]
+  if (fallback) return fallback
+  return code ? `Not delivered (error ${code})` : 'Not delivered'
 }

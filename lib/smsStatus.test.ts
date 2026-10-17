@@ -37,4 +37,11 @@ test('describeSmsError', () => {
   assert.equal(describeSmsError(21610), 'Guest opted out (replied STOP)')
   assert.equal(describeSmsError(99999), 'Not delivered (error 99999)')
   assert.equal(describeSmsError(null), 'Not delivered')
+  assert.equal(describeSmsError(30019), 'Message too long for their carrier')
+})
+
+test('describeSmsError prefers the known description over the fallback', () => {
+  assert.equal(describeSmsError(30002, 'Account suspended'), 'Twilio account suspended (check the balance)')
+  assert.equal(describeSmsError(99999, 'Something odd'), 'Something odd')
+  assert.equal(describeSmsError(null, 'Network error'), 'Network error')
 })
