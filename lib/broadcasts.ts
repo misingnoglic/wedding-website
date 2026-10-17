@@ -2,7 +2,7 @@ import { db } from '@/lib/db'
 import { getPhoneKey } from '@/lib/phone'
 import { sendSms } from '@/lib/sms'
 import { renderTemplate } from '@/lib/smsAudience'
-import { isFailedStatus } from '@/lib/smsStatus'
+import { describeSmsError, isFailedStatus, isRetryableError } from '@/lib/smsStatus'
 
 export interface BroadcastSummary {
   id: string
@@ -20,7 +20,13 @@ export interface BroadcastRecipientResult {
   error?: string
 }
 
-// Opted-out numbers will fail again, so retries skip them
+export interface RetryResult {
+  retried: number
+  failed: number
+  skipped: { reason: string; count: number }[] // Failures that would happen again, grouped by reason
+}
+
+// Opted-out guests count as reached so they aren't texted again
 const OPTED_OUT_ERROR = 21610
 
 /**
@@ -64,22 +70,33 @@ export async function sendBroadcastBatch(
 }
 
 /**
- * Resends the exact text to recipients whose latest attempt in this broadcast failed.
+ * Resends the exact text to recipients whose latest attempt in this broadcast failed,
+ * skipping errors that resending can't fix (bad numbers, landlines, too long, etc.).
  */
-export async function retryBroadcastFailures(broadcastId: string, sentByName: string) {
+export async function retryBroadcastFailures(broadcastId: string, sentByName: string): Promise<RetryResult> {
   const messages = await db.smsMessage.findMany({
     where: { broadcastId },
     orderBy: { createdAt: 'asc' },
   })
   const latestByPhone = new Map(messages.map((m) => [m.phoneKey, m]))
-  const toRetry = [...latestByPhone.values()].filter(
-    (m) => isFailedStatus(m.status) && m.errorCode !== OPTED_OUT_ERROR && m.toPhone
-  )
+  const failures = [...latestByPhone.values()].filter((m) => isFailedStatus(m.status) && m.toPhone)
+  const toRetry = failures.filter((m) => isRetryableError(m.errorCode))
+
+  const skippedCounts = new Map<string, number>()
+  for (const m of failures) {
+    if (isRetryableError(m.errorCode)) continue
+    const reason = describeSmsError(m.errorCode)
+    skippedCounts.set(reason, (skippedCounts.get(reason) ?? 0) + 1)
+  }
 
   const results = await Promise.all(
     toRetry.map((m) => sendSms({ to: m.toPhone!, body: m.body, sentByName, broadcastId }))
   )
-  return { retried: results.length, failed: results.filter((r) => !r.success).length }
+  return {
+    retried: results.length,
+    failed: results.filter((r) => !r.success).length,
+    skipped: [...skippedCounts].map(([reason, count]) => ({ reason, count })),
+  }
 }
 
 export async function getBroadcasts(): Promise<BroadcastSummary[]> {

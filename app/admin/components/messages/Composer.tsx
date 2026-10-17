@@ -14,7 +14,7 @@ import { FlatGuest } from '../../types'
 import AudienceBuilder from './AudienceBuilder'
 import GuestSearch from './GuestSearch'
 import { Icon, ICONS, Spinner } from './ui'
-import { contactName } from './utils'
+import { contactName, retrySummary } from './utils'
 
 interface ComposerProps {
   allGuests: FlatGuest[]
@@ -173,8 +173,7 @@ export default function Composer({
   const retryFailed = async () => {
     if (!broadcastId) return
     setRetryState('retrying')
-    const { retried, failed: stillFailed } = await retryBroadcastFailuresAction(broadcastId)
-    setRetryState(stillFailed === 0 ? `Resent ${retried}.` : `Resent ${retried}; ${stillFailed} still failed.`)
+    setRetryState(retrySummary(await retryBroadcastFailuresAction(broadcastId)))
     onSent()
   }
 

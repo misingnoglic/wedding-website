@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { describeSmsError, isFailedStatus, isPendingStatus, shouldUpdateStatus } from './smsStatus'
+import { describeSmsError, isFailedStatus, isPendingStatus, isRetryableError, shouldUpdateStatus } from './smsStatus'
 
 test('shouldUpdateStatus only moves forward', () => {
   assert.ok(shouldUpdateStatus(null, 'queued'))
@@ -31,6 +31,15 @@ test('isFailedStatus', () => {
   assert.ok(isFailedStatus('undelivered'))
   assert.ok(!isFailedStatus('delivered'))
   assert.ok(!isFailedStatus(null))
+})
+
+test('isRetryableError', () => {
+  assert.ok(isRetryableError(null))
+  assert.ok(isRetryableError(30002)) // Account suspended: fine once it's topped up
+  assert.ok(isRetryableError(30003))
+  assert.ok(!isRetryableError(21610))
+  assert.ok(!isRetryableError(30006))
+  assert.ok(!isRetryableError(30019))
 })
 
 test('describeSmsError', () => {

@@ -51,6 +51,17 @@ const ERROR_DESCRIPTIONS: Record<number, string> = {
   70051: 'Twilio rejected our credentials (check the account)',
 }
 
+// Retries resend the same text to the same number, so these would just fail again
+const NO_RETRY_ERRORS = new Set([21211, 21408, 21610, 21612, 21614, 30004, 30005, 30006, 30007, 30019])
+
+/**
+ * Whether resending could help. Account problems (e.g. 30002) and flaky phones are worth retrying;
+ * bad numbers, opt-outs, and content the carrier rejected are not.
+ */
+export function isRetryableError(code: number | null | undefined): boolean {
+  return !code || !NO_RETRY_ERRORS.has(code)
+}
+
 /**
  * Plain-English reason a text failed. Unrecognized codes use the fallback, or show the code to look up.
  */

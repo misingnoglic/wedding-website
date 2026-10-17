@@ -4,10 +4,10 @@ import { useEffect, useState } from 'react'
 import type { BroadcastSummary } from '@/lib/broadcasts'
 import { getBroadcastMessagesAction, retryBroadcastFailuresAction } from '@/app/actions/sms'
 import { formatPhoneNumber } from '@/lib/phone'
-import { isFailedStatus } from '@/lib/smsStatus'
+import { isFailedStatus, isRetryableError } from '@/lib/smsStatus'
 import { FlatGuest } from '../../types'
 import { Icon, ICONS, Spinner } from './ui'
-import { contactName, formatListTime, statusLabel } from './utils'
+import { contactName, formatListTime, retrySummary, statusLabel } from './utils'
 
 type BroadcastMessage = Awaited<ReturnType<typeof getBroadcastMessagesAction>>[number]
 
@@ -92,12 +92,13 @@ export function BroadcastView({
 
   // Latest attempt per recipient (retries add rows)
   const latest = messages ? [...new Map(messages.map((m) => [m.phoneKey, m])).values()] : []
-  const failedCount = latest.filter((m) => isFailedStatus(m.status)).length
+  const failedLatest = latest.filter((m) => isFailedStatus(m.status))
+  const retryableCount = failedLatest.filter((m) => isRetryableError(m.errorCode)).length
+  const unretryableCount = failedLatest.length - retryableCount
 
   const retry = async () => {
     setRetryState('Retrying…')
-    const { retried, failed } = await retryBroadcastFailuresAction(broadcast.id)
-    setRetryState(retried === 0 ? 'Nothing to retry (opted-out numbers are skipped).' : `Resent ${retried}${failed ? `; ${failed} still failed` : ''}.`)
+    setRetryState(retrySummary(await retryBroadcastFailuresAction(broadcast.id)))
     onChanged()
   }
 
@@ -122,12 +123,22 @@ export function BroadcastView({
           <Counts counts={broadcast.counts} />
         </div>
 
-        {failedCount > 0 && (
+        {failedLatest.length > 0 && (
           <div className="flex flex-wrap items-center gap-2">
-            <button type="button" onClick={retry} disabled={retryState === 'Retrying…'} className="rounded-full bg-black px-4 py-2 text-xs font-karla text-white cursor-pointer disabled:opacity-50">
-              Retry failed
-            </button>
-            {retryState && <span className="text-xs font-karla text-zinc-500">{retryState}</span>}
+            {retryableCount > 0 && (
+              <button type="button" onClick={retry} disabled={retryState === 'Retrying…'} className="rounded-full bg-black px-4 py-2 text-xs font-karla text-white cursor-pointer disabled:opacity-50">
+                Retry {retryableCount} failed
+              </button>
+            )}
+            {retryState ? (
+              <span className="text-xs font-karla text-zinc-500">{retryState}</span>
+            ) : (
+              unretryableCount > 0 && (
+                <span className="text-xs font-karla text-zinc-500">
+                  {unretryableCount} won&apos;t be retried since {unretryableCount === 1 ? 'it' : 'they'} would fail again (reasons below)
+                </span>
+              )
+            )}
           </div>
         )}
 

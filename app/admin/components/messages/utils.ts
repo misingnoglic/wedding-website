@@ -3,6 +3,7 @@ import { FlatGuest } from '../../types'
 import { formatPhoneNumber } from '@/lib/phone'
 import { firstName, joinNames } from '@/lib/smsText'
 import { describeSmsError, isFailedStatus } from '@/lib/smsStatus'
+import type { RetryResult } from '@/lib/broadcasts'
 
 const isSameDay = (a: Date, b: Date) => a.toDateString() === b.toDateString()
 
@@ -72,6 +73,17 @@ export function statusLabel(status: string | null, errorCode: number | null) {
     default:
       return null
   }
+}
+
+/** e.g. "Resent 2. Skipped 7 that would fail again: Message too long for their carrier (5), Landline or unreachable carrier (2)." */
+export function retrySummary({ retried, failed, skipped }: RetryResult) {
+  const skippedTotal = skipped.reduce((sum, s) => sum + s.count, 0)
+  const parts = []
+  if (retried > 0) parts.push(`Resent ${retried}${failed ? `; ${failed} still failed` : ''}.`)
+  if (skippedTotal > 0) {
+    parts.push(`Skipped ${skippedTotal} that would fail again: ${skipped.map((s) => `${s.reason} (${s.count})`).join(', ')}.`)
+  }
+  return parts.join(' ') || 'Nothing to retry.'
 }
 
 export function useMediaQuery(query: string) {
