@@ -2,7 +2,7 @@ import { db } from '@/lib/db'
 import { getPhoneKey } from '@/lib/phone'
 import { sendSms } from '@/lib/sms'
 import { renderTemplate } from '@/lib/smsAudience'
-import { describeSmsError, isFailedStatus, isRetryableError } from '@/lib/smsStatus'
+import { describeSmsError, isFailedStatus, isQueuedStatus, isRetryableError } from '@/lib/smsStatus'
 
 export interface BroadcastSummary {
   id: string
@@ -11,7 +11,7 @@ export interface BroadcastSummary {
   recipientCount: number
   sentByName: string
   createdAt: Date
-  counts: { sent: number; delivered: number; failed: number }
+  counts: { queued: number; sent: number; delivered: number; failed: number } // queued: still waiting at Twilio
 }
 
 export interface BroadcastRecipientResult {
@@ -117,11 +117,12 @@ export async function getBroadcasts(): Promise<BroadcastSummary[]> {
   for (const m of messages) latest.set(`${m.broadcastId}:${m.phoneKey}`, { broadcastId: m.broadcastId!, status: m.status })
 
   return broadcasts.map((b) => {
-    const counts = { sent: 0, delivered: 0, failed: 0 }
+    const counts = { queued: 0, sent: 0, delivered: 0, failed: 0 }
     for (const m of latest.values()) {
       if (m.broadcastId !== b.id) continue
       if (m.status === 'delivered') counts.delivered++
       else if (isFailedStatus(m.status)) counts.failed++
+      else if (isQueuedStatus(m.status)) counts.queued++
       else counts.sent++
     }
     return { ...b, counts }

@@ -65,8 +65,9 @@ export function statusLabel(status: string | null, errorCode: number | null) {
     case 'sending': // Local optimistic state before the server responds
       return 'Sending…'
     case 'accepted':
-    case 'queued': // Twilio has it; delivery updates follow
-    case 'sent':
+    case 'queued': // Waiting in Twilio's queue; long group texts can sit here for minutes
+      return 'Still sending'
+    case 'sent': // A carrier has it; delivery updates follow
       return 'Sent'
     case 'delivered':
       return 'Delivered'

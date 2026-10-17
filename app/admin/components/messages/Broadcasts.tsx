@@ -5,18 +5,22 @@ import type { BroadcastSummary } from '@/lib/broadcasts'
 import type { TwilioStats } from '@/lib/sms'
 import { getBroadcastMessagesAction, retryBroadcastFailuresAction } from '@/app/actions/sms'
 import { formatPhoneNumber } from '@/lib/phone'
-import { describeSmsError, isAccountError, isFailedStatus, isRetryableError } from '@/lib/smsStatus'
-import { formatUsd, LOW_BALANCE_USD } from '@/lib/smsText'
+import { describeSmsError, isAccountError, isFailedStatus, isQueuedStatus, isRetryableError } from '@/lib/smsStatus'
+import { formatUsd, getSegmentInfo, LOW_BALANCE_USD } from '@/lib/smsText'
 import { FlatGuest } from '../../types'
 import { Icon, ICONS, Spinner } from './ui'
 import { contactName, formatListTime, retrySummary, statusLabel } from './utils'
 
 type BroadcastMessage = Awaited<ReturnType<typeof getBroadcastMessagesAction>>[number]
 
+// Roughly what our number pushes through Twilio's queue (Oct 2026: 960 SMS took ~15 minutes)
+const SMS_PER_MINUTE = 60
+
 function Counts({ counts }: { counts: BroadcastSummary['counts'] }) {
   return (
     <span className="text-[11px] font-karla text-zinc-500">
       {counts.delivered} delivered
+      {counts.queued > 0 && ` · ${counts.queued} still sending`}
       {counts.sent > 0 && ` · ${counts.sent} sent`}
       {counts.failed > 0 && <span className="text-red-600"> · {counts.failed} failed</span>}
     </span>
@@ -154,6 +158,8 @@ export function BroadcastView({
   const retryableCount = failedLatest.filter((m) => isRetryableError(m.errorCode)).length
   const unretryableCount = failedLatest.length - retryableCount
   const accountFailure = failedLatest.find((m) => isAccountError(m.errorCode))
+  const queued = latest.filter((m) => isQueuedStatus(m.status))
+  const queuedMinutes = Math.ceil(queued.reduce((sum, m) => sum + getSegmentInfo(m.body).segments, 0) / SMS_PER_MINUTE)
 
   const retry = async () => {
     setRetryState('Retrying…')
@@ -181,6 +187,13 @@ export function BroadcastView({
           <p className="text-xs font-karla text-zinc-500">{broadcast.audience}</p>
           <Counts counts={broadcast.counts} />
         </div>
+
+        {queued.length > 0 && (
+          <p className="rounded-2xl bg-zinc-50 px-4 py-3 text-xs font-karla text-zinc-600">
+            {queued.length} {queued.length === 1 ? 'text is' : 'texts are'} still waiting in Twilio&apos;s queue, about{' '}
+            {queuedMinutes} min left. Twilio sends about {SMS_PER_MINUTE} SMS a minute, so long group texts take a while. Nothing&apos;s wrong.
+          </p>
+        )}
 
         {accountFailure && (
           <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm font-karla text-red-900">

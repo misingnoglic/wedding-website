@@ -26,6 +26,13 @@ export function isPendingStatus(status: string | null | undefined): boolean {
   return !!status && status in STATUS_RANK && STATUS_RANK[status] < 4
 }
 
+/**
+ * Still waiting in Twilio's queue, before any carrier has it. Big group texts sit here for minutes.
+ */
+export function isQueuedStatus(status: string | null | undefined): boolean {
+  return !!status && status in STATUS_RANK && STATUS_RANK[status] < STATUS_RANK.sent
+}
+
 export function isFailedStatus(status: string | null | undefined): boolean {
   return status === 'failed' || status === 'undelivered'
 }

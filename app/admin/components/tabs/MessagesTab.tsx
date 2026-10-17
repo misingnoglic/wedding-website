@@ -154,7 +154,7 @@ export default function MessagesTab({
     () =>
       fetchedThreads.some((t) => t.lastMessage.direction === 'outbound' && isPendingStatus(t.lastMessage.status)) ||
       Object.values(messagesByKey).some((msgs) => msgs.some((m) => m.direction === 'outbound' && isPendingStatus(m.status))) ||
-      !!broadcasts?.some((b) => b.counts.sent > 0),
+      !!broadcasts?.some((b) => b.counts.queued > 0 || b.counts.sent > 0),
     [fetchedThreads, messagesByKey, broadcasts]
   )
   const hasPendingStatusRef = useRef(hasPendingStatus)
