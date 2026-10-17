@@ -9,7 +9,7 @@ import {
 } from '@/app/actions/sms'
 import { formatPhoneNumber } from '@/lib/phone'
 import { findUnknownPlaceholders, groupRecipients, PLACEHOLDERS, Recipient, renderTemplate } from '@/lib/smsAudience'
-import { estimateSmsCost, getSegmentInfo } from '@/lib/smsText'
+import { estimateSmsCost, findUnicodeChars, getSegmentInfo, MAX_RECOMMENDED_SEGMENTS, toGsmText } from '@/lib/smsText'
 import { FlatGuest } from '../../types'
 import AudienceBuilder from './AudienceBuilder'
 import GuestSearch from './GuestSearch'
@@ -68,10 +68,14 @@ export default function Composer({
   const preview = previewRecipient ? renderTemplate(body, previewRecipient.guests) : body
   const segments = getSegmentInfo(preview)
   // Placeholders like {firstName} change the length, so count each recipient's actual text
-  const totalSegments = useMemo(
-    () => recipients.reduce((sum, r) => sum + getSegmentInfo(renderTemplate(body, r.guests)).segments, 0),
-    [recipients, body]
-  )
+  const { totalSegments, maxSegments } = useMemo(() => {
+    const counts = recipients.map((r) => getSegmentInfo(renderTemplate(body, r.guests)).segments)
+    return { totalSegments: counts.reduce((a, b) => a + b, 0), maxSegments: Math.max(0, ...counts) }
+  }, [recipients, body])
+  const longestSegments = Math.max(maxSegments, segments.segments)
+  const isTooLong = longestSegments > MAX_RECOMMENDED_SEGMENTS
+  const unicodeChars = findUnicodeChars(body)
+  const fixedSegments = getSegmentInfo(previewRecipient ? renderTemplate(toGsmText(body), previewRecipient.guests) : toGsmText(body)).segments
   const unknownPlaceholders = findUnknownPlaceholders(body)
   const isBulk = recipients.length > 1
   const sentCount = Object.keys(results).length
@@ -291,11 +295,23 @@ export default function Composer({
                 </p>
               )}
               {body && (
-                <p className="text-[11px] font-karla text-zinc-400">
+                <p className={`text-xs font-karla ${isTooLong ? 'font-semibold text-red-700' : 'text-zinc-500'}`}>
                   {segments.segments} SMS per text
                   {isBulk ? ` · ${totalSegments} total (~${estimateSmsCost(totalSegments)})` : ` (~${estimateSmsCost(segments.segments)})`}
-                  {segments.isUnicode && ' · emoji or special characters use 70 characters per SMS'}
+                  {isTooLong && ' · Above recommended length'}
                 </p>
+              )}
+              {unicodeChars.length > 0 && (
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-karla text-amber-900">
+                  <p className="flex-1 min-w-48">
+                    <span className="font-sans font-semibold">{unicodeChars.join(' ')}</span> {unicodeChars.length === 1 ? 'shrinks' : 'shrink'} each
+                    SMS from 153 characters to 67.
+                    {fixedSegments < segments.segments && ` Replacing ${unicodeChars.length === 1 ? 'it' : 'them'} brings this to ${fixedSegments} SMS per text.`}
+                  </p>
+                  <button type="button" onClick={() => setBody(toGsmText(body))} className="shrink-0 rounded-full bg-amber-900 px-3 py-1.5 text-xs font-karla text-white hover:bg-black cursor-pointer">
+                    Fix special characters
+                  </button>
+                </div>
               )}
             </section>
 
@@ -353,6 +369,16 @@ export default function Composer({
                 <div className="mt-1 text-xs text-zinc-500">
                   {totalSegments} SMS · about {estimateSmsCost(totalSegments)}
                 </div>
+                {isTooLong && (
+                  <p className="mt-2 text-xs font-semibold text-red-700">
+                    Each text is up to {longestSegments} SMS. Some carriers reject anything over {MAX_RECOMMENDED_SEGMENTS}, so go back and shorten it.
+                  </p>
+                )}
+                {!isTooLong && unicodeChars.length > 0 && (
+                  <p className="mt-2 text-xs text-amber-800">
+                    Special characters ({unicodeChars.join(' ')}) are making this cost more. Go back to fix them.
+                  </p>
+                )}
               </div>
             )}
 

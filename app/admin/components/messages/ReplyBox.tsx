@@ -1,7 +1,7 @@
 'use client'
 
 import { useLayoutEffect, useRef } from 'react'
-import { getSegmentInfo } from '@/lib/smsText'
+import { estimateSmsCost, getSegmentInfo, MAX_RECOMMENDED_SEGMENTS } from '@/lib/smsText'
 import { Icon, ICONS, Spinner } from './ui'
 import { useMediaQuery } from './utils'
 
@@ -20,6 +20,7 @@ export default function ReplyBox({ value, onChange, onSubmit, placeholder, isSen
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const isTouch = useMediaQuery('(pointer: coarse)')
   const segments = getSegmentInfo(value)
+  const isTooLong = segments.segments > MAX_RECOMMENDED_SEGMENTS
   const canSend = value.trim().length > 0 && !isSending
 
   // Grow with content up to a cap, then scroll
@@ -70,8 +71,9 @@ export default function ReplyBox({ value, onChange, onSubmit, placeholder, isSen
         </button>
       </div>
       {(segments.segments > 1 || segments.isUnicode) && (
-        <p className="mt-1.5 px-2 text-[11px] font-karla text-zinc-400">
-          {segments.length} characters · {segments.segments} SMS
+        <p className={`mt-1.5 px-2 text-[11px] font-karla ${isTooLong ? 'font-semibold text-red-700' : 'text-zinc-400'}`}>
+          {segments.length} characters · {segments.segments} SMS (~{estimateSmsCost(segments.segments)})
+          {isTooLong && ' · Above recommended length'}
           {segments.isUnicode && ' · emoji or special characters use 70 per SMS'}
         </p>
       )}

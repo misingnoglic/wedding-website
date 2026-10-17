@@ -32,6 +32,45 @@ export function getSegmentInfo(text: string): SegmentInfo {
   return { length: gsmLength, segments: gsmLength <= 160 ? 1 : Math.ceil(gsmLength / 153), isUnicode }
 }
 
+// Some carriers reject longer messages (Twilio error 30019)
+export const MAX_RECOMMENDED_SEGMENTS = 10
+
+function isGsmChar(char: string): boolean {
+  return GSM_BASIC.includes(char) || GSM_EXTENDED.includes(char)
+}
+
+/**
+ * The distinct characters that force a message into unicode, e.g. ["’", "🌴"]
+ */
+export function findUnicodeChars(text: string): string[] {
+  return [...new Set([...text].filter((char) => !isGsmChar(char)))]
+}
+
+const GSM_REPLACEMENTS: Record<string, string> = {
+  '‘': "'", '’': "'", '‚': "'", '‛': "'", '′': "'",
+  '“': '"', '”': '"', '„': '"', '″': '"',
+  '–': '-', '—': '-', '―': '-', '‐': '-', '‑': '-', '•': '-',
+  '…': '...',
+  ' ': ' ', ' ': ' ', ' ': ' ',
+}
+
+/**
+ * Swaps curly quotes, dashes, and accents for plain equivalents and drops emoji, so the
+ * message uses the GSM alphabet and fits 153 characters per segment instead of 67.
+ */
+export function toGsmText(text: string): string {
+  const converted = [...text]
+    .map((char) => {
+      if (isGsmChar(char)) return char
+      if (char in GSM_REPLACEMENTS) return GSM_REPLACEMENTS[char]
+      const unaccented = char.normalize('NFD').replace(/[̀-ͯ]/g, '') // á → a
+      return [...unaccented].every(isGsmChar) ? unaccented : ''
+    })
+    .join('')
+  // Tidy up the gaps a removed emoji leaves behind
+  return converted.replace(/ {2,}/g, ' ').replace(/ +$/gm, '').trim()
+}
+
 // Twilio's US price per outbound segment ($0.0083) plus carrier pass-through fees (~$0.0045), per Oct 2026 usage
 const COST_PER_SEGMENT_USD = 0.0128
 
