@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import type { BroadcastSummary } from '@/lib/broadcasts'
 import type { TwilioStats } from '@/lib/sms'
+import type { ReactionVerb } from '@/lib/smsReactions'
 import type { InboxThread, ThreadMessage } from '@/lib/inbox'
 import { getPhoneKey } from '@/lib/phone'
 import { isPendingStatus } from '@/lib/smsStatus'
@@ -15,6 +16,7 @@ import {
   getThreadMessagesAction,
   getTwilioStatsAction,
   markThreadReadAction,
+  sendReactionAction,
   sendSmsAction,
   syncSmsStatusesAction,
 } from '@/app/actions/sms'
@@ -78,6 +80,7 @@ export default function MessagesTab({
   const [drafts, setDrafts] = useState<Record<string, string>>({})
   const [sendingKey, setSendingKey] = useState<string | null>(null)
   const [sendError, setSendError] = useState<string | null>(null)
+  const [reactingId, setReactingId] = useState<string | null>(null)
   // Phone for a conversation that has no messages yet (e.g. texting a guest for the first time)
   const [newConversationPhone, setNewConversationPhone] = useState<string | null>(
     initialTarget && 'phone' in initialTarget ? initialTarget.phone : null
@@ -320,6 +323,17 @@ export default function MessagesTab({
     setSendingKey(null)
   }
 
+  const handleReact = async (messageId: string, verb: ReactionVerb) => {
+    if (!activeThread) return
+    const phoneKey = activeThread.phoneKey
+    setReactingId(messageId)
+    setSendError(null)
+    const result = await sendReactionAction(messageId, verb)
+    if (!result.success) setSendError(result.error)
+    await Promise.all([loadMessages(phoneKey), refreshThreads()])
+    setReactingId(null)
+  }
+
   const handleDismiss = async () => {
     if (!activeThread) return
     const phoneKey = activeThread.phoneKey
@@ -392,6 +406,8 @@ export default function MessagesTab({
               sendError={sendError}
               onBack={closePane}
               onDismiss={handleDismiss}
+              onReact={handleReact}
+              reactingId={reactingId}
               headerActions={
                 <button
                   type="button"

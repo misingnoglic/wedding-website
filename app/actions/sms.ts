@@ -8,6 +8,7 @@ import { getBroadcastMessages, getBroadcastReach, getBroadcasts, retryBroadcastF
 import { dismissThread, getInboxThreads, getThreadMessages, markThreadRead } from '@/lib/inbox'
 import { formatPhoneNumber, getPhoneKey } from '@/lib/phone'
 import { getTwilioStats, sendSms, syncPendingStatuses } from '@/lib/sms'
+import { buildReactionText, ReactionVerb, SENDABLE_REACTIONS } from '@/lib/smsReactions'
 
 export async function sendSmsAction(toPhone: string, body: string) {
   const admin = await getAuthenticatedAdmin()
@@ -23,6 +24,32 @@ export async function sendSmsAction(toPhone: string, body: string) {
     })
   }
 
+  return result
+}
+
+/**
+ * Reacts to a guest's text the way phones do: a short text quoting it, e.g. Loved “See you there”.
+ */
+export async function sendReactionAction(messageId: string, verb: ReactionVerb) {
+  const admin = await getAuthenticatedAdmin()
+  const reaction = SENDABLE_REACTIONS.find((r) => r.verb === verb)
+  const target = await db.smsMessage.findUnique({ where: { id: messageId } })
+  if (!reaction || !target || target.direction !== 'inbound') {
+    return { success: false as const, messageId: null, error: 'Can only react to a guest’s text.', errorCode: null }
+  }
+
+  const body = buildReactionText(reaction.verb, target.body)
+  const result = await sendSms({ to: target.fromPhone, body, sentByName: admin.name })
+  if (result.success) {
+    await logAuditEvent({
+      familyId: target.familyId,
+      actorType: 'ADMIN',
+      actorName: `${admin.name} (Admin)`,
+      eventType: 'SMS_SENT',
+      description: `Reacted ${reaction.emoji} to a text from ${target.fromPhone}: "${target.body.slice(0, 100)}${target.body.length > 100 ? '...' : ''}"`,
+      details: { to: target.fromPhone, body, reactedToMessageId: target.id },
+    })
+  }
   return result
 }
 

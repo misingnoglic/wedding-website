@@ -1,4 +1,5 @@
 import { db } from '@/lib/db'
+import { describeReaction, parseReaction, resolveReactions } from '@/lib/smsReactions'
 
 export type SmsDirection = 'inbound' | 'outbound'
 
@@ -11,6 +12,7 @@ export interface InboxThread {
     createdAt: Date
     direction: SmsDirection
     status: string | null
+    reaction?: string | null // Preview like "❤️ to “See you there”" when the last text is a reaction
   }
   messageCount: number
   unreadCount: number
@@ -69,6 +71,8 @@ export async function getInboxThreads(): Promise<InboxThread[]> {
     ORDER BY l."createdAt" DESC
   `
 
+  const reactionThreads = await getReactionThreadInfo(rows)
+
   return rows.map((row) => ({
     phoneKey: row.phoneKey,
     phone: row.direction === 'inbound' ? row.fromPhone : row.toPhone || row.phoneKey,
@@ -78,11 +82,40 @@ export async function getInboxThreads(): Promise<InboxThread[]> {
       createdAt: row.createdAt,
       direction: row.direction,
       status: row.status,
+      reaction: reactionThreads.get(row.phoneKey)?.preview ?? null,
     },
     messageCount: row.messageCount,
     unreadCount: row.unreadCount,
-    needsReply: row.direction === 'inbound' && (!row.dismissedAt || row.createdAt > row.dismissedAt),
+    needsReply: needsReply(reactionThreads.get(row.phoneKey)?.latestText ?? row, row.dismissedAt),
   }))
+}
+
+// A guest's text needs a reply until we answer or dismiss it
+function needsReply(latest: { direction: string; createdAt: Date } | null, dismissedAt: Date | null): boolean {
+  return !!latest && latest.direction === 'inbound' && (!dismissedAt || latest.createdAt > dismissedAt)
+}
+
+/**
+ * For threads whose latest message looks like a reaction, confirm it against the thread and find
+ * the latest real text, since a ❤️ on our message doesn't need a reply.
+ */
+async function getReactionThreadInfo(rows: ThreadRow[]) {
+  const info = new Map<string, { preview: string; latestText: { direction: string; createdAt: Date } | null }>()
+  const candidates = rows.filter((row) => parseReaction(row.body))
+  await Promise.all(
+    candidates.map(async (row) => {
+      const messages = await db.smsMessage.findMany({
+        where: { phoneKey: row.phoneKey },
+        orderBy: { createdAt: 'asc' },
+        select: { id: true, body: true, direction: true, status: true, createdAt: true },
+      })
+      const { reactionIds } = resolveReactions(messages)
+      if (!reactionIds.has(row.id)) return
+      const latestText = messages.findLast((m) => !reactionIds.has(m.id)) ?? null
+      info.set(row.phoneKey, { preview: describeReaction(parseReaction(row.body)!), latestText })
+    })
+  )
+  return info
 }
 
 export async function getThreadMessages(phoneKey: string): Promise<ThreadMessage[]> {

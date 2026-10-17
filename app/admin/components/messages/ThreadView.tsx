@@ -1,8 +1,9 @@
 'use client'
 
-import { Fragment, useLayoutEffect, useRef } from 'react'
+import { Fragment, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import type { InboxThread, ThreadMessage } from '@/lib/inbox'
 import { formatPhoneNumber } from '@/lib/phone'
+import { Reaction, ReactionVerb, resolveReactions, SENDABLE_REACTIONS } from '@/lib/smsReactions'
 import { isFailedStatus } from '@/lib/smsStatus'
 import { FlatGuest } from '../../types'
 import ReplyBox from './ReplyBox'
@@ -20,10 +21,30 @@ interface ThreadViewProps {
   sendError: string | null
   onBack: () => void
   onDismiss: () => void
+  onReact: (messageId: string, verb: ReactionVerb) => void
+  reactingId: string | null // Message we're sending a reaction to
   headerActions?: React.ReactNode
 }
 
 const GROUP_GAP_MS = 5 * 60 * 1000
+
+function ReactionBadges({ reactions, guestName, alignRight }: { reactions: Reaction[]; guestName: string; alignRight: boolean }) {
+  return (
+    <div className={`absolute -top-3 flex gap-0.5 ${alignRight ? '-right-2' : '-left-2'}`}>
+      {reactions.map((r) => (
+        <span
+          key={r.messageId}
+          title={`${r.direction === 'outbound' ? 'You' : guestName}: ${r.phrase}`}
+          className={`rounded-full border bg-white px-1.5 py-0.5 text-xs leading-none shadow-sm ${
+            r.direction === 'outbound' ? 'border-sage' : 'border-zinc-200'
+          } ${r.emoji ? '' : 'font-karla text-[10px] text-zinc-600'}`}
+        >
+          {r.emoji ?? r.phrase}
+        </span>
+      ))}
+    </div>
+  )
+}
 
 export default function ThreadView({
   thread,
@@ -36,13 +57,21 @@ export default function ThreadView({
   sendError,
   onBack,
   onDismiss,
+  onReact,
+  reactingId,
   headerActions,
 }: ThreadViewProps) {
+  const [pickerFor, setPickerFor] = useState<string | null>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
   const name = contactName(guests, thread.phone)
   const phone = formatPhoneNumber(thread.phone) || thread.phone
   const subtitle = guests.length > 0 ? `${guests[0].familyName} · ${phone}` : phone
   const lastMessageId = messages?.[messages.length - 1]?.id
+  const guestName = guests.length === 1 ? guests[0].name.split(' ')[0] : name
+
+  // Reaction texts show as badges on the message they quote rather than as their own bubbles
+  const { byTarget, reactionIds } = useMemo(() => resolveReactions(messages ?? []), [messages])
+  const visible = useMemo(() => (messages ?? []).filter((m) => !reactionIds.has(m.id)), [messages, reactionIds])
 
   // Jump to the newest message when opening a thread or when a new one arrives
   useLayoutEffect(() => {
@@ -87,14 +116,14 @@ export default function ThreadView({
           <div className="h-full flex items-center justify-center text-zinc-400">
             <Spinner className="w-6 h-6" />
           </div>
-        ) : messages.length === 0 ? (
+        ) : visible.length === 0 ? (
           <div className="h-full flex items-center justify-center text-sm font-karla text-zinc-400">
             No messages yet
           </div>
         ) : (
-          messages.map((msg, i) => {
-            const prev = messages[i - 1]
-            const next = messages[i + 1]
+          visible.map((msg, i) => {
+            const prev = visible[i - 1]
+            const next = visible[i + 1]
             const showDivider = !prev || new Date(prev.createdAt).toDateString() !== new Date(msg.createdAt).toDateString()
             const endsGroup =
               !next ||
@@ -103,6 +132,9 @@ export default function ThreadView({
             const outbound = msg.direction === 'outbound'
             const failed = outbound && isFailedStatus(msg.status)
             const status = outbound ? statusLabel(msg.status, msg.errorCode) : null
+            const reactions = byTarget.get(msg.id) ?? []
+            // One reaction per message from us, and only on guests' texts that were saved
+            const canReact = !outbound && !msg.id.startsWith('pending-') && !reactions.some((r) => r.direction === 'outbound')
             const meta = [
               outbound && msg.sentByName,
               formatTime(msg.createdAt),
@@ -117,10 +149,14 @@ export default function ThreadView({
                     {formatDateDivider(msg.createdAt)}
                   </div>
                 )}
-                <div className={`flex ${outbound ? 'justify-end' : 'justify-start'} ${endsGroup ? 'mb-3' : 'mb-0.5'}`}>
+                <div
+                  className={`group flex items-center gap-1.5 ${outbound ? 'justify-end' : 'justify-start'} ${endsGroup ? 'mb-3' : 'mb-0.5'} ${
+                    reactions.length > 0 ? 'mt-4' : ''
+                  }`}
+                >
                   <div className={`max-w-[80%] lg:max-w-[65%] flex flex-col ${outbound ? 'items-end' : 'items-start'}`}>
                     <div
-                      className={`rounded-2xl px-3.5 py-2 text-[15px] leading-snug font-karla whitespace-pre-wrap break-words ${
+                      className={`relative rounded-2xl px-3.5 py-2 text-[15px] leading-snug font-karla whitespace-pre-wrap break-words ${
                         failed
                           ? 'bg-red-50 text-red-900 border border-red-200'
                           : outbound
@@ -129,6 +165,7 @@ export default function ThreadView({
                       } ${endsGroup ? (outbound ? 'rounded-br-md' : 'rounded-bl-md') : ''}`}
                     >
                       {msg.body}
+                      {reactions.length > 0 && <ReactionBadges reactions={reactions} guestName={guestName} alignRight={!outbound} />}
                     </div>
                     {(endsGroup || failed) && (
                       <div className={`mt-1 px-1 text-[11px] font-karla ${failed ? 'text-red-600' : 'text-zinc-400'}`}>
@@ -136,6 +173,42 @@ export default function ThreadView({
                       </div>
                     )}
                   </div>
+                  {canReact && (
+                    <div className="relative shrink-0 self-start mt-1.5">
+                      {reactingId === msg.id ? (
+                        <Spinner className="w-4 h-4 text-zinc-400" />
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => setPickerFor(pickerFor === msg.id ? null : msg.id)}
+                          aria-label="React"
+                          className={`h-7 w-7 flex items-center justify-center rounded-full text-zinc-400 hover:bg-zinc-200/70 hover:text-zinc-700 transition-opacity cursor-pointer ${
+                            pickerFor === msg.id ? 'opacity-100' : 'opacity-0 group-hover:opacity-100 focus:opacity-100 pointer-coarse:opacity-60'
+                          }`}
+                        >
+                          <Icon path={ICONS.react} className="w-4 h-4" />
+                        </button>
+                      )}
+                      {pickerFor === msg.id && (
+                        <div className="absolute bottom-full left-0 z-10 mb-1 flex gap-0.5 rounded-full border border-zinc-200 bg-white p-1 shadow-lg">
+                          {SENDABLE_REACTIONS.map((r) => (
+                            <button
+                              key={r.verb}
+                              type="button"
+                              title={`${r.verb} (sends a 1-SMS text, about $0.01)`}
+                              onClick={() => {
+                                setPickerFor(null)
+                                onReact(msg.id, r.verb)
+                              }}
+                              className="h-8 w-8 flex items-center justify-center rounded-full text-lg hover:bg-zinc-100 cursor-pointer"
+                            >
+                              {r.emoji}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               </Fragment>
             )
@@ -155,7 +228,7 @@ export default function ThreadView({
         onChange={onDraftChange}
         onSubmit={onSend}
         isSending={isSending}
-        placeholder={`Text ${guests.length === 1 ? guests[0].name.split(' ')[0] : name}`}
+        placeholder={`Text ${guestName}`}
       />
     </div>
   )

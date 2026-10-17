@@ -71,7 +71,7 @@ function ConversationRow({
           <p className={`flex-1 truncate text-[13px] font-karla ${isUnread ? 'text-zinc-800' : 'text-zinc-500'}`}>
             {failed && <span className="text-red-600">Failed · </span>}
             {lastMessage.direction === 'outbound' && 'You: '}
-            {lastMessage.body}
+            {lastMessage.reaction ?? lastMessage.body}
           </p>
           {thread.needsReply && (
             <span className="shrink-0 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-karla font-semibold text-amber-800">

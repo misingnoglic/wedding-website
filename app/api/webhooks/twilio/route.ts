@@ -5,6 +5,7 @@ import { logAuditEvent } from '@/lib/audit'
 import { formatPhoneNumber, getPhoneKey } from '@/lib/phone'
 import { sendAdminPushNotification } from '@/lib/push'
 import { findMatchingGuestForPhone, isValidTwilioSignature } from '@/lib/sms'
+import { parseReaction, resolveReactions } from '@/lib/smsReactions'
 
 export const dynamic = 'force-dynamic'
 
@@ -19,6 +20,20 @@ export async function GET() {
     endpoint: '/api/webhooks/twilio',
     timestamp: new Date().toISOString(),
   })
+}
+
+/**
+ * The parsed reaction if this text is one, confirmed by finding the message it quotes in the thread.
+ */
+async function getConfirmedReaction(messageId: string, phoneKey: string, body: string) {
+  const parsed = parseReaction(body)
+  if (!parsed) return null
+  const messages = await db.smsMessage.findMany({
+    where: { phoneKey },
+    orderBy: { createdAt: 'asc' },
+    select: { id: true, body: true, direction: true, status: true },
+  })
+  return resolveReactions(messages).reactionIds.has(messageId) ? parsed : null
 }
 
 /**
@@ -65,15 +80,13 @@ export async function POST(request: NextRequest) {
       familyId,
       rawPayload: JSON.stringify(rawPayload),
     }
-    if (messageSid) {
-      await db.smsMessage.upsert({
-        where: { messageSid },
-        create: { ...data, messageSid },
-        update: data,
-      })
-    } else {
-      await db.smsMessage.create({ data })
-    }
+    const saved = messageSid
+      ? await db.smsMessage.upsert({
+          where: { messageSid },
+          create: { ...data, messageSid },
+          update: data,
+        })
+      : await db.smsMessage.create({ data })
 
     // Log audit event for tracking in live activity log
     const formattedSender = formatPhoneNumber(fromPhone) || fromPhone || 'Unknown'
@@ -98,13 +111,20 @@ export async function POST(request: NextRequest) {
       },
     })
 
-    after(() =>
-      sendAdminPushNotification(
-        `Text from ${matchedGuest ? matchedGuest.name : formattedSender}`,
+    after(async () => {
+      const senderName = matchedGuest ? matchedGuest.name : formattedSender
+      const reaction = await getConfirmedReaction(saved.id, data.phoneKey, body)
+      const title = !reaction
+        ? `Text from ${senderName}`
+        : reaction.isRemoval
+          ? `${senderName} removed a reaction from your text`
+          : `${senderName} reacted ${reaction.emoji ?? `“${reaction.phrase}”`} to your text`
+      await sendAdminPushNotification(
+        title,
         body || '(empty message)',
         `/admin?tab=messages&phone=${encodeURIComponent(data.phoneKey)}`
       )
-    )
+    })
 
     revalidatePath('/admin')
 
