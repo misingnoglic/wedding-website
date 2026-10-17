@@ -2,9 +2,11 @@
 
 import { useEffect, useState } from 'react'
 import type { BroadcastSummary } from '@/lib/broadcasts'
+import type { TwilioStats } from '@/lib/sms'
 import { getBroadcastMessagesAction, retryBroadcastFailuresAction } from '@/app/actions/sms'
 import { formatPhoneNumber } from '@/lib/phone'
 import { describeSmsError, isAccountError, isFailedStatus, isRetryableError } from '@/lib/smsStatus'
+import { formatUsd, LOW_BALANCE_USD } from '@/lib/smsText'
 import { FlatGuest } from '../../types'
 import { Icon, ICONS, Spinner } from './ui'
 import { contactName, formatListTime, retrySummary, statusLabel } from './utils'
@@ -21,7 +23,63 @@ function Counts({ counts }: { counts: BroadcastSummary['counts'] }) {
   )
 }
 
+function Stat({ label, value, warn }: { label: string; value: string; warn?: boolean }) {
+  return (
+    <div className="min-w-0">
+      <div className={`truncate text-sm font-sans font-semibold ${warn ? 'text-red-700' : 'text-black'}`}>{value}</div>
+      <div className="truncate text-[10px] font-karla uppercase tracking-wider text-zinc-400">{label}</div>
+    </div>
+  )
+}
+
+/**
+ * Balance and spend at a glance. Undefined while loading; null when Twilio couldn't be reached.
+ */
+function TwilioStatsCard({ stats }: { stats: TwilioStats | null | undefined }) {
+  if (stats === undefined) return null
+  if (stats === null) {
+    return (
+      <p className="mx-4 mt-3 rounded-2xl border border-red-200 bg-red-50 px-3 py-2 text-xs font-karla text-red-800">
+        Couldn&apos;t reach Twilio. The account may be suspended or out of funds. Check the Twilio console.
+      </p>
+    )
+  }
+  const isLow = stats.balance < LOW_BALANCE_USD
+  return (
+    <div className="mx-4 mt-3 rounded-2xl bg-zinc-50 p-3 space-y-2">
+      <div className="grid grid-cols-4 gap-2">
+        <Stat label="Balance" value={formatUsd(stats.balance)} warn={isLow} />
+        <Stat label="Today" value={formatUsd(stats.todaySpend)} />
+        <Stat label="This month" value={formatUsd(stats.monthSpend)} />
+        <Stat label="SMS this month" value={stats.monthSegments.toLocaleString()} />
+      </div>
+      {isLow && (
+        <p className="text-xs font-karla text-red-700">Low balance. Top up in the Twilio console before the next group text.</p>
+      )}
+    </div>
+  )
+}
+
 export function BroadcastList({
+  broadcasts,
+  stats,
+  selectedId,
+  onSelect,
+}: {
+  broadcasts: BroadcastSummary[] | null
+  stats: TwilioStats | null | undefined
+  selectedId: string | null
+  onSelect: (id: string) => void
+}) {
+  return (
+    <>
+      <TwilioStatsCard stats={stats} />
+      <BroadcastItems broadcasts={broadcasts} selectedId={selectedId} onSelect={onSelect} />
+    </>
+  )
+}
+
+function BroadcastItems({
   broadcasts,
   selectedId,
   onSelect,
@@ -41,7 +99,7 @@ export function BroadcastList({
     return <p className="px-6 py-16 text-center text-sm font-karla text-zinc-400">No group texts yet.</p>
   }
   return (
-    <ul>
+    <ul className="mt-2">
       {broadcasts.map((b) => (
         <li key={b.id}>
           <button

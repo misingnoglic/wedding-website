@@ -98,6 +98,29 @@ export async function syncPendingStatuses(): Promise<number> {
   return updated.filter(Boolean).length
 }
 
+export interface TwilioStats {
+  balance: number
+  todaySpend: number // Twilio's "today" is in UTC
+  monthSpend: number
+  monthSegments: number // Outbound SMS segments billed this month
+}
+
+export async function getTwilioStats(): Promise<TwilioStats> {
+  const client = getTwilioClient()
+  const [balance, today, month, monthSms] = await Promise.all([
+    client.balance.fetch(),
+    client.usage.records.today.list({ category: 'totalprice' }),
+    client.usage.records.thisMonth.list({ category: 'totalprice' }),
+    client.usage.records.thisMonth.list({ category: 'sms-outbound' }),
+  ])
+  return {
+    balance: Number(balance.balance),
+    todaySpend: Number(today[0]?.price ?? 0),
+    monthSpend: Number(month[0]?.price ?? 0),
+    monthSegments: Number(monthSms[0]?.usage ?? 0),
+  }
+}
+
 export interface SendSmsParams {
   to: string
   body: string

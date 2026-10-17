@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import type { BroadcastSummary } from '@/lib/broadcasts'
+import type { TwilioStats } from '@/lib/sms'
 import type { InboxThread, ThreadMessage } from '@/lib/inbox'
 import { getPhoneKey } from '@/lib/phone'
 import { isPendingStatus } from '@/lib/smsStatus'
@@ -12,6 +13,7 @@ import {
   getBroadcastsAction,
   getInboxThreadsAction,
   getThreadMessagesAction,
+  getTwilioStatsAction,
   markThreadReadAction,
   sendSmsAction,
   syncSmsStatusesAction,
@@ -63,6 +65,7 @@ export default function MessagesTab({
   const router = useRouter()
   const [fetchedThreads, setThreads] = useState(initialThreads)
   const [broadcasts, setBroadcasts] = useState<BroadcastSummary[] | null>(null)
+  const [twilioStats, setTwilioStats] = useState<TwilioStats | null | undefined>(undefined)
   const [messagesByKey, setMessagesByKey] = useState<Record<string, ThreadMessage[]>>({})
   const [pane, setPane] = useState<Pane>(() => {
     if (!initialTarget) return { kind: 'none' }
@@ -117,6 +120,21 @@ export default function MessagesTab({
 
   const refreshBroadcasts = useCallback(async () => {
     setBroadcasts(await getBroadcastsAction())
+  }, [])
+
+  const refreshTwilioStats = useCallback(async () => {
+    setTwilioStats(await getTwilioStatsAction())
+  }, [])
+
+  // Not part of the regular poll: these are several Twilio API calls and only change when we send
+  useEffect(() => {
+    let cancelled = false
+    getTwilioStatsAction().then((stats) => {
+      if (!cancelled) setTwilioStats(stats)
+    })
+    return () => {
+      cancelled = true
+    }
   }, [])
 
   const loadMessages = useCallback(async (phoneKey: string) => {
@@ -232,7 +250,10 @@ export default function MessagesTab({
 
   const changeListView = (view: ListView) => {
     setListView(view)
-    if (view === 'broadcasts') refreshBroadcasts()
+    if (view === 'broadcasts') {
+      refreshBroadcasts()
+      refreshTwilioStats()
+    }
   }
 
   const handleAssign = async (guest: FlatGuest) => {
@@ -334,6 +355,7 @@ export default function MessagesTab({
           onSent={() => {
             refreshThreads()
             refreshBroadcasts()
+            refreshTwilioStats()
           }}
         />
       )
@@ -417,7 +439,7 @@ export default function MessagesTab({
           view={listView}
           onViewChange={changeListView}
           broadcastList={
-            <BroadcastList broadcasts={broadcasts} selectedId={pane.kind === 'broadcast' ? pane.id : null} onSelect={openBroadcast} />
+            <BroadcastList broadcasts={broadcasts} stats={twilioStats} selectedId={pane.kind === 'broadcast' ? pane.id : null} onSelect={openBroadcast} />
           }
           headerActions={
             <button

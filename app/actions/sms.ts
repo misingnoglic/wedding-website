@@ -7,7 +7,7 @@ import { getAuthenticatedAdmin } from '@/lib/auth'
 import { getBroadcastMessages, getBroadcastReach, getBroadcasts, retryBroadcastFailures, sendBroadcastBatch } from '@/lib/broadcasts'
 import { dismissThread, getInboxThreads, getThreadMessages, markThreadRead } from '@/lib/inbox'
 import { formatPhoneNumber, getPhoneKey } from '@/lib/phone'
-import { sendSms, syncPendingStatuses } from '@/lib/sms'
+import { getTwilioStats, sendSms, syncPendingStatuses } from '@/lib/sms'
 
 export async function sendSmsAction(toPhone: string, body: string) {
   const admin = await getAuthenticatedAdmin()
@@ -103,6 +103,19 @@ export async function retryBroadcastFailuresAction(broadcastId: string) {
 export async function syncSmsStatusesAction() {
   await getAuthenticatedAdmin()
   return syncPendingStatuses()
+}
+
+/**
+ * Null when Twilio can't be reached, which usually means the account is suspended or the credentials were rejected.
+ */
+export async function getTwilioStatsAction() {
+  await getAuthenticatedAdmin()
+  try {
+    return await getTwilioStats()
+  } catch (error) {
+    console.error('Failed to load Twilio stats:', error)
+    return null
+  }
 }
 
 export async function getBroadcastsAction() {

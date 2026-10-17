@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { estimateSmsCost, findUnicodeChars, firstName, fullName, getSegmentInfo, joinNames, toGsmText } from './smsText'
+import { estimateSmsCost, formatUsd, findUnicodeChars, firstName, fullName, getSegmentInfo, joinNames, toGsmText } from './smsText'
 
 test('plain text fits 160 characters in one segment', () => {
   assert.deepEqual(getSegmentInfo('a'.repeat(160)), { length: 160, segments: 1, isUnicode: false })
@@ -39,6 +39,7 @@ test('toGsmText swaps punctuation, strips accents, and drops emoji', () => {
 test('estimateSmsCost', () => {
   assert.equal(estimateSmsCost(0), '$0.00')
   assert.equal(estimateSmsCost(960), '$12.29')
+  assert.equal(formatUsd(18.6394), '$18.64')
 })
 
 test('firstName', () => {
