@@ -18,6 +18,7 @@ export interface BroadcastRecipientResult {
   phoneKey: string
   success: boolean
   error?: string
+  errorCode?: number | null
 }
 
 export interface RetryResult {
@@ -64,7 +65,9 @@ export async function sendBroadcastBatch(
         }))
       )
       const result = await sendSms({ to: phone, body, sentByName, broadcastId })
-      return result.success ? { phoneKey, success: true } : { phoneKey, success: false, error: result.error }
+      return result.success
+        ? { phoneKey, success: true }
+        : { phoneKey, success: false, error: result.error, errorCode: result.errorCode }
     })
   )
 }

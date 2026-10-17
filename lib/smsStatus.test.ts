@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { describeSmsError, isFailedStatus, isPendingStatus, isRetryableError, shouldUpdateStatus } from './smsStatus'
+import { describeSmsError, isAccountError, isFailedStatus, isPendingStatus, isRetryableError, shouldUpdateStatus } from './smsStatus'
 
 test('shouldUpdateStatus only moves forward', () => {
   assert.ok(shouldUpdateStatus(null, 'queued'))
@@ -31,6 +31,13 @@ test('isFailedStatus', () => {
   assert.ok(isFailedStatus('undelivered'))
   assert.ok(!isFailedStatus('delivered'))
   assert.ok(!isFailedStatus(null))
+})
+
+test('isAccountError', () => {
+  assert.ok(isAccountError(30002))
+  assert.ok(isAccountError(70051))
+  assert.ok(!isAccountError(30006))
+  assert.ok(!isAccountError(null))
 })
 
 test('isRetryableError', () => {

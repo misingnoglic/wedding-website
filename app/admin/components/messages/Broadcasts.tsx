@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import type { BroadcastSummary } from '@/lib/broadcasts'
 import { getBroadcastMessagesAction, retryBroadcastFailuresAction } from '@/app/actions/sms'
 import { formatPhoneNumber } from '@/lib/phone'
-import { isFailedStatus, isRetryableError } from '@/lib/smsStatus'
+import { describeSmsError, isAccountError, isFailedStatus, isRetryableError } from '@/lib/smsStatus'
 import { FlatGuest } from '../../types'
 import { Icon, ICONS, Spinner } from './ui'
 import { contactName, formatListTime, retrySummary, statusLabel } from './utils'
@@ -95,6 +95,7 @@ export function BroadcastView({
   const failedLatest = latest.filter((m) => isFailedStatus(m.status))
   const retryableCount = failedLatest.filter((m) => isRetryableError(m.errorCode)).length
   const unretryableCount = failedLatest.length - retryableCount
+  const accountFailure = failedLatest.find((m) => isAccountError(m.errorCode))
 
   const retry = async () => {
     setRetryState('Retrying…')
@@ -122,6 +123,13 @@ export function BroadcastView({
           <p className="text-xs font-karla text-zinc-500">{broadcast.audience}</p>
           <Counts counts={broadcast.counts} />
         </div>
+
+        {accountFailure && (
+          <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm font-karla text-red-900">
+            <strong className="font-sans">Some texts failed because of our Twilio account: {describeSmsError(accountFailure.errorCode)}.</strong>{' '}
+            Fix it in the Twilio console, then retry.
+          </div>
+        )}
 
         {failedLatest.length > 0 && (
           <div className="flex flex-wrap items-center gap-2">

@@ -51,6 +51,16 @@ const ERROR_DESCRIPTIONS: Record<number, string> = {
   70051: 'Twilio rejected our credentials (check the account)',
 }
 
+// Problems with our Twilio account (out of funds, bad credentials) rather than with the recipient
+const ACCOUNT_ERRORS = new Set([20003, 30002, 70051])
+
+/**
+ * Every remaining text will fail the same way until the account is fixed, so stop sending.
+ */
+export function isAccountError(code: number | null | undefined): boolean {
+  return !!code && ACCOUNT_ERRORS.has(code)
+}
+
 // Retries resend the same text to the same number, so these would just fail again
 const NO_RETRY_ERRORS = new Set([21211, 21408, 21610, 21612, 21614, 30004, 30005, 30006, 30007, 30019])
 

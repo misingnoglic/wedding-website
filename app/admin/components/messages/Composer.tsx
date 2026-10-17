@@ -8,6 +8,7 @@ import {
   sendSmsAction,
 } from '@/app/actions/sms'
 import { formatPhoneNumber } from '@/lib/phone'
+import { describeSmsError, isAccountError } from '@/lib/smsStatus'
 import { findUnknownPlaceholders, groupRecipients, PLACEHOLDERS, Recipient, renderTemplate } from '@/lib/smsAudience'
 import { estimateSmsCost, findUnicodeChars, getSegmentInfo, MAX_RECOMMENDED_SEGMENTS, toGsmText } from '@/lib/smsText'
 import { FlatGuest } from '../../types'
@@ -56,6 +57,8 @@ export default function Composer({
   const [testTargetId, setTestTargetId] = useState(adminGuests[0]?.id || '')
   const [testState, setTestState] = useState<'idle' | 'sending' | 'sent' | 'failed'>('idle')
   const [retryState, setRetryState] = useState<'idle' | 'retrying' | string>('idle')
+  const [accountError, setAccountError] = useState<string | null>(null)
+  const [resumeIndex, setResumeIndex] = useState<number | null>(null) // First recipient not sent after stopping
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
   const selectedGuests = useMemo(() => {
@@ -143,6 +146,30 @@ export default function Composer({
     }
   }
 
+  const sendBatches = async (id: string, from: number) => {
+    setResumeIndex(null)
+    // Small batches keep each server call short and let progress update as we go
+    for (let i = from; i < recipients.length; i += BATCH_SIZE) {
+      const batch = recipients.slice(i, i + BATCH_SIZE)
+      const batchResults = await sendBroadcastBatchAction(
+        id,
+        batch.map((r) => r.guests.map((g) => g.id))
+      )
+      setResults((prev) => {
+        const next = { ...prev }
+        batch.forEach((r, j) => (next[r.phoneKey] = { success: batchResults[j].success, error: batchResults[j].error }))
+        return next
+      })
+      // An account problem fails every text after it, so stop and let the admin fix it first
+      const accountFailure = batchResults.find((r) => isAccountError(r.errorCode))
+      if (accountFailure) {
+        setAccountError(describeSmsError(accountFailure.errorCode))
+        if (i + BATCH_SIZE < recipients.length) setResumeIndex(i + BATCH_SIZE)
+        return
+      }
+    }
+  }
+
   const sendBulk = async () => {
     setStage('sending')
     setError(null)
@@ -150,19 +177,21 @@ export default function Composer({
     try {
       const id = await createBroadcastAction(body, audienceLabel(), recipients.length)
       setBroadcastId(id)
-      // Small batches keep each server call short and let progress update as we go
-      for (let i = 0; i < recipients.length; i += BATCH_SIZE) {
-        const batch = recipients.slice(i, i + BATCH_SIZE)
-        const batchResults = await sendBroadcastBatchAction(
-          id,
-          batch.map((r) => r.guests.map((g) => g.id))
-        )
-        setResults((prev) => {
-          const next = { ...prev }
-          batch.forEach((r, j) => (next[r.phoneKey] = { success: batchResults[j].success, error: batchResults[j].error }))
-          return next
-        })
-      }
+      await sendBatches(id, 0)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Sending stopped unexpectedly')
+    }
+    setStage('done')
+    onSent()
+  }
+
+  const resumeSending = async () => {
+    if (!broadcastId || resumeIndex === null) return
+    setStage('sending')
+    setError(null)
+    setAccountError(null)
+    try {
+      await sendBatches(broadcastId, resumeIndex)
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Sending stopped unexpectedly')
     }
@@ -399,8 +428,23 @@ export default function Composer({
 
             {error && <p className="text-sm font-karla text-red-600">{error}</p>}
 
+            {stage === 'done' && accountError && (
+              <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm font-karla text-red-900">
+                <strong className="font-sans">Stopped sending: {accountError}.</strong>{' '}
+                {resumeIndex !== null
+                  ? `${recipients.length - resumeIndex} texts weren't sent. `
+                  : ''}
+                Fix it in the Twilio console, then {resumeIndex !== null ? 'send the rest and retry the failures' : 'retry the failures'}.
+              </div>
+            )}
+
             {stage === 'done' && (
               <div className="flex flex-wrap gap-2">
+                {resumeIndex !== null && broadcastId && (
+                  <button type="button" onClick={resumeSending} className="rounded-full bg-black px-4 py-2 text-xs font-karla text-white cursor-pointer">
+                    Send to the remaining {recipients.length - resumeIndex}
+                  </button>
+                )}
                 {failed.length > 0 && broadcastId && (
                   <button type="button" onClick={retryFailed} disabled={retryState === 'retrying'} className="rounded-full bg-black px-4 py-2 text-xs font-karla text-white cursor-pointer disabled:opacity-50">
                     {retryState === 'retrying' ? 'Retrying…' : `Retry ${failed.length} failed`}
@@ -444,6 +488,8 @@ export default function Composer({
                             ) : (
                               <span className="shrink-0 text-[11px] font-karla text-red-600">Failed</span>
                             )
+                          ) : stage === 'done' ? (
+                            <span className="shrink-0 text-[11px] font-karla text-zinc-400">Not sent</span>
                           ) : (
                             <Spinner className="w-3.5 h-3.5 text-zinc-300" />
                           ))}
