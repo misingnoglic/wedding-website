@@ -10,7 +10,15 @@ import {
 import { formatPhoneNumber } from '@/lib/phone'
 import { describeSmsError, isAccountError } from '@/lib/smsStatus'
 import { findUnknownPlaceholders, groupRecipients, PLACEHOLDERS, Recipient, renderTemplate } from '@/lib/smsAudience'
-import { estimateSmsCost, findUnicodeChars, getSegmentInfo, MAX_RECOMMENDED_SEGMENTS, toGsmText } from '@/lib/smsText'
+import {
+  estimateSmsCost,
+  findUnicodeChars,
+  getBalanceWarning,
+  getSegmentInfo,
+  MAX_RECOMMENDED_SEGMENTS,
+  smsCost,
+  toGsmText,
+} from '@/lib/smsText'
 import { FlatGuest } from '../../types'
 import AudienceBuilder from './AudienceBuilder'
 import GuestSearch from './GuestSearch'
@@ -20,6 +28,7 @@ import { contactName, retrySummary } from './utils'
 interface ComposerProps {
   allGuests: FlatGuest[]
   adminGuests: FlatGuest[] // Test messages go to one of these
+  twilioBalance?: number | null // Undefined while loading, null if Twilio couldn't be reached
   initialGuestIds?: string[]
   initialLabel?: string
   onClose: () => void
@@ -37,6 +46,7 @@ const CHIP_LIMIT = 12
 export default function Composer({
   allGuests,
   adminGuests,
+  twilioBalance,
   initialGuestIds = [],
   initialLabel,
   onClose,
@@ -78,6 +88,10 @@ export default function Composer({
   const longestSegments = Math.max(maxSegments, segments.segments)
   const isTooLong = longestSegments > MAX_RECOMMENDED_SEGMENTS
   const unicodeChars = findUnicodeChars(body)
+  // Before any recipients are picked, warn based on the cost of one text
+  const balanceWarning = getBalanceWarning(twilioBalance, smsCost(Math.max(totalSegments, segments.segments)))
+  const balanceWarningClass =
+    balanceWarning?.level === 'insufficient' ? 'border-red-200 bg-red-50 text-red-800' : 'border-amber-200 bg-amber-50 text-amber-900'
   const fixedSegments = getSegmentInfo(previewRecipient ? renderTemplate(toGsmText(body), previewRecipient.guests) : toGsmText(body)).segments
   const unknownPlaceholders = findUnknownPlaceholders(body)
   const isBulk = recipients.length > 1
@@ -329,6 +343,9 @@ export default function Composer({
                   {isTooLong && ' · Above recommended length'}
                 </p>
               )}
+              {body && balanceWarning && (
+                <p className={`rounded-xl border px-3 py-2 text-xs font-karla ${balanceWarningClass}`}>{balanceWarning.message}</p>
+              )}
               {unicodeChars.length > 0 && (
                 <div className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-karla text-amber-900">
                   <p className="flex-1 min-w-48">
@@ -398,6 +415,9 @@ export default function Composer({
                   {totalSegments} SMS · about {estimateSmsCost(totalSegments)}
                   {isTooLong && ' · Above recommended length'}
                 </div>
+                {balanceWarning && (
+                  <p className={`mt-2 rounded-xl border px-3 py-2 text-xs ${balanceWarningClass}`}>{balanceWarning.message}</p>
+                )}
                 {!isTooLong && unicodeChars.length > 0 && (
                   <p className="mt-2 text-xs text-amber-800">
                     Special characters ({unicodeChars.join(' ')}) are making this cost more. Go back to fix them.

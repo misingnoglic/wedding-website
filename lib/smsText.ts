@@ -92,6 +92,29 @@ export function estimateSmsCost(segments: number): string {
   return formatUsd(smsCost(segments))
 }
 
+export interface BalanceWarning {
+  level: 'insufficient' | 'low'
+  message: string
+}
+
+/**
+ * Warns when a send would overdraw the Twilio balance (texts start failing partway) or leave it low.
+ */
+export function getBalanceWarning(balance: number | null | undefined, cost: number): BalanceWarning | null {
+  if (balance === null || balance === undefined) return null
+  const remaining = balance - cost
+  if (remaining < 0) {
+    return {
+      level: 'insufficient',
+      message: `This costs about ${formatUsd(cost)} but the Twilio balance is ${formatUsd(balance)}, so texts will start failing partway through. Top up first.`,
+    }
+  }
+  if (remaining < LOW_BALANCE_USD) {
+    return { level: 'low', message: `This leaves about ${formatUsd(remaining)} in Twilio. Top up soon.` }
+  }
+  return null
+}
+
 /** Guests whose first name is more than one word, keyed by their full stored name */
 const FIRST_NAME_OVERRIDES: Record<string, string> = {
   'Mary Clare Caggiano': 'Mary Clare',

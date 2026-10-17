@@ -347,6 +347,7 @@ export default function MessagesTab({
           key={pane.id}
           allGuests={allGuests}
           adminGuests={adminGuests}
+          twilioBalance={twilioStats === undefined ? undefined : (twilioStats?.balance ?? null)}
           initialGuestIds={pane.request?.guestIds}
           initialLabel={pane.request?.label}
           onClose={closePane}

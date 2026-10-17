@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { estimateSmsCost, formatUsd, findUnicodeChars, firstName, fullName, getSegmentInfo, joinNames, toGsmText } from './smsText'
+import { estimateSmsCost, formatUsd, getBalanceWarning, findUnicodeChars, firstName, fullName, getSegmentInfo, joinNames, toGsmText } from './smsText'
 
 test('plain text fits 160 characters in one segment', () => {
   assert.deepEqual(getSegmentInfo('a'.repeat(160)), { length: 160, segments: 1, isUnicode: false })
@@ -40,6 +40,14 @@ test('estimateSmsCost', () => {
   assert.equal(estimateSmsCost(0), '$0.00')
   assert.equal(estimateSmsCost(960), '$12.29')
   assert.equal(formatUsd(18.6394), '$18.64')
+})
+
+test('getBalanceWarning', () => {
+  assert.equal(getBalanceWarning(undefined, 5), null)
+  assert.equal(getBalanceWarning(20, 5), null)
+  assert.equal(getBalanceWarning(8, 5)?.level, 'low')
+  assert.equal(getBalanceWarning(8, 5)?.message, 'This leaves about $3.00 in Twilio. Top up soon.')
+  assert.equal(getBalanceWarning(4, 12.29)?.level, 'insufficient')
 })
 
 test('firstName', () => {
