@@ -1,12 +1,14 @@
 'use client'
 
 import { useState, useMemo, useTransition } from 'react'
+import { isInSeatingPool } from '@/lib/seating'
 import type { InboxThread } from '@/lib/inbox'
 import {
   FamilyWithGuests,
   FlatGuest,
   AuditEventItem,
   TabType,
+  SeatingData,
   RsvpFilter,
   TravelFilter,
   SortOption,
@@ -27,6 +29,7 @@ import SongsTab from './components/tabs/SongsTab'
 import MessagesTab, { MessagesTarget } from './components/tabs/MessagesTab'
 import ActivityLogTab from './components/tabs/ActivityLogTab'
 import PredictionsTab from './components/tabs/PredictionsTab'
+import SeatingTab from './components/tabs/SeatingTab'
 
 import AddFamilyModal from './components/modals/AddFamilyModal'
 import EditFamilyModal from './components/modals/EditFamilyModal'
@@ -39,6 +42,7 @@ interface AdminDashboardProps {
   initialFamilies: FamilyWithGuests[]
   initialAuditEvents: AuditEventItem[]
   initialThreads: InboxThread[]
+  seating: SeatingData
   initialTab?: TabType
   initialPhone?: string
   currentAdmin: {
@@ -52,6 +56,7 @@ export default function AdminDashboard({
   initialFamilies,
   initialAuditEvents,
   initialThreads,
+  seating,
   initialTab,
   initialPhone,
   currentAdmin,
@@ -339,6 +344,7 @@ export default function AdminDashboard({
     travel: stats.hasFlightsCount + stats.hasHotelCount,
     songs: stats.songRequestsCount,
     activity: initialAuditEvents.length,
+    seating: allGuests.filter((g) => isInSeatingPool(g)).length,
   }
 
   const isMessagesTab = activeTab === 'messages'
@@ -479,6 +485,8 @@ export default function AdminDashboard({
       {activeTab === 'songs' && <SongsTab guests={allGuests} />}
 
       {activeTab === 'predictions' && <PredictionsTab guests={allGuests} />}
+
+      {activeTab === 'seating' && <SeatingTab guests={allGuests} seating={seating} />}
 
       {activeTab === 'activity' && <ActivityLogTab auditEvents={initialAuditEvents} />}
 

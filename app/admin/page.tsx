@@ -4,6 +4,7 @@ import { db } from '@/lib/db'
 import { getInboxThreads } from '@/lib/inbox'
 import { getPhoneKey } from '@/lib/phone'
 import { getPhoneProblems } from '@/lib/sms'
+import { endpointFromColumns } from '@/lib/seating'
 import AdminDashboard from './AdminDashboard'
 
 export const metadata: Metadata = {
@@ -56,6 +57,26 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
 
   const inboxThreads = await getInboxThreads()
 
+  const [seatingGroups, linkRows, relationships] = await Promise.all([
+    db.seatingGroup.findMany({
+      include: { members: { select: { guestId: true } } },
+      orderBy: { name: 'asc' },
+    }),
+    db.seatingLink.findMany(),
+    db.guestRelationship.findMany({
+      select: { guestAId: true, guestBId: true, affinity: true, constraint: true, note: true },
+    }),
+  ])
+  const seating = {
+    groups: seatingGroups.map(({ members, ...g }) => ({ ...g, memberIds: members.map((m) => m.guestId) })),
+    links: linkRows.flatMap((l) => {
+      const a = endpointFromColumns(l.aGroupId, l.aFamilyId, l.aGuestId)
+      const b = endpointFromColumns(l.bGroupId, l.bFamilyId, l.bGuestId)
+      return a && b ? [{ a, b, affinity: l.affinity }] : []
+    }),
+    relationships,
+  }
+
   return (
     <div className="w-full flex-grow flex flex-col animate-fade-in">
       <AdminDashboard
@@ -63,7 +84,8 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
         currentAdmin={adminFamily}
         initialAuditEvents={auditEvents}
         initialThreads={inboxThreads}
-        initialTab={tab === 'messages' ? 'messages' : undefined}
+        seating={seating}
+        initialTab={tab === 'messages' || tab === 'seating' ? tab : undefined}
         initialPhone={phone}
       />
     </div>

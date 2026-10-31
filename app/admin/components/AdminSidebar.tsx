@@ -13,6 +13,7 @@ interface AdminSidebarProps {
     travel: number
     songs: number
     activity: number
+    seating: number
   }
   isOpen: boolean
   setIsOpen: (isOpen: boolean) => void
@@ -29,6 +30,7 @@ export default function AdminSidebar({ activeTab, setActiveTab, counts, isOpen, 
     { id: 'travel', label: 'Flights & Hotel', count: counts.travel, icon: 'M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z' },
     { id: 'songs', label: 'Song Requests', count: counts.songs, icon: 'M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3' },
     { id: 'predictions', label: 'Predictions', count: counts.guests, icon: 'M13 10V3L4 14h7v7l9-11h-7z' },
+    { id: 'seating', label: 'Seating Chart', count: counts.seating, icon: 'M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z' },
     { id: 'activity', label: 'Activity Log', count: counts.activity, icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01' },
   ]
 
