@@ -19,6 +19,8 @@ model Family {
   smsMessages              SmsMessage[]
   auditEvents              AuditEvent[]
   pushSubscriptions        PushSubscription[]
+  seatingLinksAsA          SeatingLink[]      @relation("LinkAFamily")
+  seatingLinksAsB          SeatingLink[]      @relation("LinkBFamily")
   createdAt                DateTime           @default(now())
   updatedAt                DateTime           @updatedAt
 }
@@ -51,6 +53,15 @@ model Guest {
   departureDate         String?
   hotelName             String?
   songRequests          String?
+
+  // Seating chart
+  excludeFromSeating Boolean              @default(false) // e.g. the couple at the sweetheart table
+  seatingGroups      SeatingGroupMember[]
+  relationshipsAsA   GuestRelationship[]  @relation("RelationshipGuestA")
+  relationshipsAsB   GuestRelationship[]  @relation("RelationshipGuestB")
+  seatAssignments    SeatAssignment[]
+  seatingLinksAsA    SeatingLink[]        @relation("LinkAGuest")
+  seatingLinksAsB    SeatingLink[]        @relation("LinkBGuest")
 
   smsMessages SmsMessage[]
 
@@ -140,4 +151,106 @@ model PushSubscription {
   createdAt DateTime @default(now())
 
   @@index([familyId])
+}
+
+// ---------------------------------------------------------------------------
+// Seating chart
+// ---------------------------------------------------------------------------
+
+// A named cluster of guests (e.g. "Arya college") whose pairs share a baseline affinity
+model SeatingGroup {
+  id        String               @id @default(cuid())
+  name      String
+  color     String?
+  affinity  Int                  @default(1) // -3..+3 baseline for every pair inside the group
+  members   SeatingGroupMember[]
+  linksAsA  SeatingLink[]        @relation("LinkAGroup")
+  linksAsB  SeatingLink[]        @relation("LinkBGroup")
+  createdAt DateTime             @default(now())
+  updatedAt DateTime             @updatedAt
+}
+
+model SeatingGroupMember {
+  groupId String
+  group   SeatingGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  guestId String
+  guest   Guest        @relation(fields: [guestId], references: [id], onDelete: Cascade)
+
+  @@id([groupId, guestId])
+  @@index([guestId])
+}
+
+// Baseline affinity for every pair with one guest on each side. Each side is exactly one of a
+// group, a party (Family), or a guest; guest↔guest pairs are ratings (GuestRelationship) instead.
+model SeatingLink {
+  id        String        @id @default(cuid())
+  key       String        @unique // Normalized "type:id|type:id" (see linkKey), sides ordered so A < B
+  aGroupId  String?
+  aGroup    SeatingGroup? @relation("LinkAGroup", fields: [aGroupId], references: [id], onDelete: Cascade)
+  aFamilyId String?
+  aFamily   Family?       @relation("LinkAFamily", fields: [aFamilyId], references: [id], onDelete: Cascade)
+  aGuestId  String?
+  aGuest    Guest?        @relation("LinkAGuest", fields: [aGuestId], references: [id], onDelete: Cascade)
+  bGroupId  String?
+  bGroup    SeatingGroup? @relation("LinkBGroup", fields: [bGroupId], references: [id], onDelete: Cascade)
+  bFamilyId String?
+  bFamily   Family?       @relation("LinkBFamily", fields: [bFamilyId], references: [id], onDelete: Cascade)
+  bGuestId  String?
+  bGuest    Guest?        @relation("LinkBGuest", fields: [bGuestId], references: [id], onDelete: Cascade)
+  affinity  Int // -3..+3
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+}
+
+// Undirected edge between two guests; guestAId < guestBId (see normalizePair)
+model GuestRelationship {
+  id         String   @id @default(cuid())
+  guestAId   String
+  guestA     Guest    @relation("RelationshipGuestA", fields: [guestAId], references: [id], onDelete: Cascade)
+  guestBId   String
+  guestB     Guest    @relation("RelationshipGuestB", fields: [guestBId], references: [id], onDelete: Cascade)
+  affinity   Int? // -3..+3; null = fall back to group / family baseline
+  constraint String? // 'ADJACENT' | 'SAME_TABLE' | 'DIFFERENT_TABLE' | 'NOT_ADJACENT'
+  note       String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([guestAId, guestBId])
+  @@index([guestBId])
+}
+
+// Singleton row (id = "default") holding the default scoring config and layout
+model SeatingSettings {
+  id        String   @id @default("default")
+  config    Json // { proximity, familyAffinity, fairness, minHappiness, minPenalty, layout }
+  updatedAt DateTime @updatedAt
+}
+
+model SeatingPlan {
+  id          String           @id @default(cuid())
+  name        String
+  source      String // 'MANUAL' | 'ANNEALING' | 'TABU' | 'GA' | 'TWO_STAGE' | 'MIP'
+  config      Json // Snapshot of SeatingSettings.config when the plan was created
+  params      Json? // Algorithm parameters (iterations, seed, time limit...)
+  score       Float?
+  lowerBound  Float? // Exact solver's proven bound, for an optimality gap
+  parentId    String?
+  parent      SeatingPlan?     @relation("SeatingPlanFork", fields: [parentId], references: [id], onDelete: SetNull)
+  children    SeatingPlan[]    @relation("SeatingPlanFork")
+  assignments SeatAssignment[]
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+}
+
+model SeatAssignment {
+  planId   String
+  plan     SeatingPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+  seatKey  String // e.g. 'T1-L-03', 'T1-HEAD-N'
+  guestId  String
+  guest    Guest       @relation(fields: [guestId], references: [id], onDelete: Cascade)
+  isLocked Boolean     @default(false) // Solvers must not move this guest
+
+  @@id([planId, seatKey])
+  @@unique([planId, guestId])
+  @@index([guestId])
 }
