@@ -23,6 +23,17 @@ export const STRONG_AFFINITY = 2
 // Side seats have two neighbors, so more than two must-sit-next-to constraints can never be satisfied
 export const MAX_ADJACENT = 2
 
+// Two tables, each with a head seat at both ends
+export const HEAD_SEATS = 4
+
+// Per-guest seat rules (Guest.seatRequirement)
+export const SEAT_REQUIREMENTS = ['HEAD'] as const
+export type SeatRequirement = (typeof SEAT_REQUIREMENTS)[number]
+
+export function isSeatRequirement(value: unknown): value is SeatRequirement {
+  return SEAT_REQUIREMENTS.includes(value as SeatRequirement)
+}
+
 export const SEATING_CONSTRAINTS = ['ADJACENT', 'SAME_TABLE', 'DIFFERENT_TABLE', 'NOT_ADJACENT'] as const
 export type SeatingConstraint = (typeof SEATING_CONSTRAINTS)[number]
 
@@ -188,12 +199,15 @@ export function getAffinity(map: Map<string, EffectiveAffinity>, a: string, b: s
  * Data problems worth fixing before running a solver.
  * - isolated: no partner rated STRONG_AFFINITY or higher, so they'll score ~0 wherever they sit
  * - overConstrained: more must-sit-next-to constraints than a seat has neighbors
+ * - headConflicts: more must-sit-at-a-head guests than head seats, or two of them who must sit
+ *   next to each other (heads only neighbor the corner seats, never another head)
  */
 export function findSeatingWarnings(
   guestIds: string[],
   map: Map<string, EffectiveAffinity>,
-  relationships: RelationshipInput[]
-): { isolated: Set<string>; overConstrained: Set<string> } {
+  relationships: RelationshipInput[],
+  headIds: string[] = []
+): { isolated: Set<string>; overConstrained: Set<string>; headConflicts: Set<string> } {
   const included = new Set(guestIds)
   const strong = new Set<string>()
   for (const [key, value] of map) {
@@ -209,8 +223,18 @@ export function findSeatingWarnings(
     for (const id of [r.guestAId, r.guestBId]) adjacentCounts.set(id, (adjacentCounts.get(id) || 0) + 1)
   }
 
+  const heads = new Set(headIds.filter((id) => included.has(id)))
+  const headConflicts = new Set(heads.size > HEAD_SEATS ? heads : [])
+  for (const r of relationships) {
+    if (r.constraint === 'ADJACENT' && heads.has(r.guestAId) && heads.has(r.guestBId)) {
+      headConflicts.add(r.guestAId)
+      headConflicts.add(r.guestBId)
+    }
+  }
+
   return {
     isolated: new Set(guestIds.filter((id) => !strong.has(id))),
     overConstrained: new Set(guestIds.filter((id) => (adjacentCounts.get(id) || 0) > MAX_ADJACENT)),
+    headConflicts,
   }
 }

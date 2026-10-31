@@ -7,6 +7,7 @@ import {
   getAffinity,
   isInSeatingPool,
   isSeatingConstraint,
+  isSeatRequirement,
   isValidAffinity,
   linkKey,
   linkProblem,
@@ -156,4 +157,24 @@ test('findSeatingWarnings flags isolated and over-constrained guests', () => {
   const { isolated, overConstrained } = findSeatingWarnings(['a', 'b', 'c', 'd'], map, relationships)
   assert.deepEqual([...isolated].sort(), ['c', 'd'])
   assert.deepEqual([...overConstrained], ['a'])
+})
+
+test('findSeatingWarnings flags impossible head requirements', () => {
+  const adjacent = [{ guestAId: 'a', guestBId: 'b', affinity: null, constraint: 'ADJACENT' }]
+  const map = buildAffinityMap(guests, [], adjacent)
+  // Two must-sit-next-to guests can't both take heads
+  assert.deepEqual([...findSeatingWarnings(['a', 'b', 'c', 'd'], map, adjacent, ['a', 'b']).headConflicts].sort(), ['a', 'b'])
+  assert.equal(findSeatingWarnings(['a', 'b', 'c', 'd'], map, adjacent, ['a', 'c']).headConflicts.size, 0)
+  // More head guests than head seats
+  const pool = ['a', 'b', 'c', 'd', 'e']
+  assert.equal(findSeatingWarnings(pool, map, [], ['a', 'b', 'c', 'd']).headConflicts.size, 0)
+  assert.equal(findSeatingWarnings(pool, map, [], pool).headConflicts.size, 5)
+  // Guests outside the pool don't count
+  assert.equal(findSeatingWarnings(['a', 'b', 'c', 'd'], map, [], pool).headConflicts.size, 0)
+})
+
+test('isSeatRequirement', () => {
+  assert.ok(isSeatRequirement('HEAD'))
+  assert.ok(!isSeatRequirement('head'))
+  assert.ok(!isSeatRequirement(null))
 })

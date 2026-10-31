@@ -4,22 +4,27 @@ import { useMemo, useState } from 'react'
 import {
   CONSTRAINT_LABELS,
   EffectiveAffinity,
+  findSeatingWarnings,
+  HEAD_SEATS,
   pairKey,
   SEATING_CONSTRAINTS,
   STRONG_AFFINITY,
 } from '@/lib/seating'
-import { setExcludeFromSeating, setGuestRelationship } from '../../../actions/seating'
+import { setExcludeFromSeating, setGuestRelationship, setSeatRequirement } from '../../../actions/seating'
 import { FlatGuest, GuestRelationshipItem, SeatingGroupItem } from '../../types'
 import AffinityPicker, { formatAffinity } from './AffinityPicker'
 import { RunSeatingAction } from './state'
 
+type SeatingWarnings = ReturnType<typeof findSeatingWarnings>
+
 interface GuestRatingsProps {
   poolGuests: FlatGuest[]
   excludedGuests: FlatGuest[]
+  headIds: Set<string>
   groups: SeatingGroupItem[]
   relationships: GuestRelationshipItem[]
   affinityMap: Map<string, EffectiveAffinity>
-  warnings: { isolated: Set<string>; overConstrained: Set<string> }
+  warnings: SeatingWarnings
   run: RunSeatingAction
 }
 
@@ -29,12 +34,14 @@ type RowFilter = 'all' | 'connected'
 export default function GuestRatings({
   poolGuests,
   excludedGuests,
+  headIds,
   groups,
   relationships,
   affinityMap,
   warnings,
   run,
 }: GuestRatingsProps) {
+  const blocked = new Set([...warnings.overConstrained, ...warnings.headConflicts])
   const [selectedId, setSelectedId] = useState<string | null>(poolGuests[0]?.id ?? null)
   const [listSearch, setListSearch] = useState('')
   const [listFilter, setListFilter] = useState<ListFilter>('all')
@@ -65,7 +72,7 @@ export default function GuestRatings({
     const query = listSearch.toLowerCase().trim()
     if (query && !g.name.toLowerCase().includes(query) && !g.familyName.toLowerCase().includes(query)) return false
     if (listFilter === 'isolated') return warnings.isolated.has(g.id)
-    if (listFilter === 'overConstrained') return warnings.overConstrained.has(g.id)
+    if (listFilter === 'overConstrained') return blocked.has(g.id)
     if (listFilter === 'unrated') return guestSummary.get(g.id)?.rated === 0
     return true
   })
@@ -89,7 +96,7 @@ export default function GuestRatings({
               ['all', 'All'],
               ['unrated', 'Unrated'],
               ['isolated', `No strong tie (${warnings.isolated.size})`],
-              ['overConstrained', `Over-constrained (${warnings.overConstrained.size})`],
+              ['overConstrained', `Over-constrained (${blocked.size})`],
             ] as const
           ).map(([value, label]) => (
             <button
@@ -123,7 +130,17 @@ export default function GuestRatings({
                   <div className={`text-[11px] truncate ${isActive ? 'text-zinc-300' : 'text-zinc-400'}`}>{g.familyName}</div>
                 </div>
                 <div className="flex items-center gap-1 shrink-0">
-                  {warnings.overConstrained.has(g.id) && <span title="More must-sit-next-to than seats allow">⛔</span>}
+                  {headIds.has(g.id) && (
+                    <span
+                      title="Must sit at a head"
+                      className={`text-[9px] font-semibold uppercase tracking-wider px-1 rounded ${
+                        isActive ? 'bg-white/20 text-white' : 'bg-amber-100 text-amber-800'
+                      }`}
+                    >
+                      Head
+                    </span>
+                  )}
+                  {blocked.has(g.id) && <span title="Has constraints that can't all be satisfied">⛔</span>}
                   {warnings.isolated.has(g.id) && <span title="No one rated +2 or higher">⚠️</span>}
                   <span
                     title="Strong ties (+2 or higher)"
@@ -169,6 +186,7 @@ export default function GuestRatings({
           <GuestDetail
             guest={selected}
             isExcluded={isSelectedExcluded}
+            isHead={!!selected && headIds.has(selected.id)}
             poolGuests={poolGuests}
             groups={groups}
             relationshipsByPair={relationshipsByPair}
@@ -189,11 +207,12 @@ export default function GuestRatings({
 interface GuestDetailProps {
   guest: FlatGuest
   isExcluded: boolean
+  isHead: boolean
   poolGuests: FlatGuest[]
   groups: SeatingGroupItem[]
   relationshipsByPair: Map<string, GuestRelationshipItem>
   affinityMap: Map<string, EffectiveAffinity>
-  warnings: { isolated: Set<string>; overConstrained: Set<string> }
+  warnings: SeatingWarnings
   rowSearch: string
   setRowSearch: (value: string) => void
   rowFilter: RowFilter
@@ -204,6 +223,7 @@ interface GuestDetailProps {
 function GuestDetail({
   guest,
   isExcluded,
+  isHead,
   poolGuests,
   groups,
   relationshipsByPair,
@@ -251,21 +271,41 @@ function GuestDetail({
               {guest.isAttendingWedding === null && ' · Wedding RSVP pending'}
             </p>
           </div>
-          <button
-            type="button"
-            onClick={() =>
-              run({ type: 'exclude', guestId: guest.id, excludeFromSeating: !isExcluded }, () =>
-                setExcludeFromSeating(guest.id, !isExcluded)
-              )
-            }
-            className={`px-3 py-1.5 rounded-lg text-xs font-medium border cursor-pointer ${
-              isExcluded
-                ? 'bg-black text-white border-black'
-                : 'bg-white text-zinc-600 border-zinc-200 hover:border-black hover:text-black'
-            }`}
-          >
-            {isExcluded ? 'Excluded from seating · Include' : 'Exclude from seating'}
-          </button>
+          <div className="flex flex-wrap gap-2">
+            {!isExcluded && (
+              <button
+                type="button"
+                onClick={() => {
+                  const seatRequirement = isHead ? null : 'HEAD'
+                  run({ type: 'seatRequirement', guestId: guest.id, seatRequirement }, () =>
+                    setSeatRequirement(guest.id, seatRequirement)
+                  )
+                }}
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium border cursor-pointer ${
+                  isHead
+                    ? 'bg-amber-100 text-amber-900 border-amber-300'
+                    : 'bg-white text-zinc-600 border-zinc-200 hover:border-black hover:text-black'
+                }`}
+              >
+                {isHead ? '✓ Must sit at a head' : 'Must sit at a head'}
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={() =>
+                run({ type: 'exclude', guestId: guest.id, excludeFromSeating: !isExcluded }, () =>
+                  setExcludeFromSeating(guest.id, !isExcluded)
+                )
+              }
+              className={`px-3 py-1.5 rounded-lg text-xs font-medium border cursor-pointer ${
+                isExcluded
+                  ? 'bg-black text-white border-black'
+                  : 'bg-white text-zinc-600 border-zinc-200 hover:border-black hover:text-black'
+              }`}
+            >
+              {isExcluded ? 'Excluded from seating · Include' : 'Exclude from seating'}
+            </button>
+          </div>
         </div>
         {guestGroups.length > 0 && (
           <div className="flex flex-wrap gap-1.5">
@@ -281,6 +321,12 @@ function GuestDetail({
           <p className="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
             ⚠️ Nobody is rated +{STRONG_AFFINITY} or higher with {guest.name}, so no seat can protect them. Rate at least one
             person they&apos;d enjoy sitting with.
+          </p>
+        )}
+        {warnings.headConflicts.has(guest.id) && (
+          <p className="text-xs text-red-800 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+            ⛔ This head seat requirement can&apos;t be met: either more than {HEAD_SEATS} guests must sit at a head, or{' '}
+            {guest.name} must also sit next to another head guest (heads only neighbor the corner seats).
           </p>
         )}
         {warnings.overConstrained.has(guest.id) && (

@@ -6,6 +6,7 @@ export type SeatingState = {
   links: SeatingLinkItem[]
   relationships: GuestRelationshipItem[]
   excludedIds: Set<string>
+  headIds: Set<string> // Guests who must take a head seat
 }
 
 // Optimistic edits applied on top of server data until the action's revalidation lands
@@ -16,6 +17,7 @@ export type SeatingPatch =
   | { type: 'deleteGroup'; groupId: string }
   | { type: 'link'; a: LinkEndpoint; b: LinkEndpoint; affinity: number | null }
   | { type: 'exclude'; guestId: string; excludeFromSeating: boolean }
+  | { type: 'seatRequirement'; guestId: string; seatRequirement: string | null }
 
 export const GROUP_COLORS = ['#f43f5e', '#f59e0b', '#10b981', '#3b82f6', '#8b5cf6', '#ec4899', '#14b8a6', '#64748b']
 
@@ -79,6 +81,12 @@ export function applySeatingPatch(state: SeatingState, patch: SeatingPatch): Sea
       if (patch.excludeFromSeating) excludedIds.add(patch.guestId)
       else excludedIds.delete(patch.guestId)
       return { ...state, excludedIds }
+    }
+    case 'seatRequirement': {
+      const headIds = new Set(state.headIds)
+      if (patch.seatRequirement === 'HEAD') headIds.add(patch.guestId)
+      else headIds.delete(patch.guestId)
+      return { ...state, headIds }
     }
   }
 }

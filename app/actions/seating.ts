@@ -6,6 +6,7 @@ import { getAuthenticatedAdmin } from '@/lib/auth'
 import {
   isLinkEndpoint,
   isSeatingConstraint,
+  isSeatRequirement,
   isValidAffinity,
   LinkEndpoint,
   linkKey,
@@ -186,6 +187,19 @@ export async function setExcludeFromSeating(guestId: string, excludeFromSeating:
     return { success: true }
   } catch (error) {
     console.error('Set exclude from seating error:', error)
+    return { error: 'Failed to update guest.' }
+  }
+}
+
+export async function setSeatRequirement(guestId: string, seatRequirement: string | null): Promise<ActionResult> {
+  await getAuthenticatedAdmin()
+  if (seatRequirement !== null && !isSeatRequirement(seatRequirement)) return { error: 'Unknown seat requirement.' }
+  try {
+    await db.guest.update({ where: { id: guestId }, data: { seatRequirement } })
+    revalidatePath('/admin')
+    return { success: true }
+  } catch (error) {
+    console.error('Set seat requirement error:', error)
     return { error: 'Failed to update guest.' }
   }
 }

@@ -56,6 +56,7 @@ model Guest {
 
   // Seating chart
   excludeFromSeating Boolean              @default(false) // e.g. the couple at the sweetheart table
+  seatRequirement    String? // 'HEAD' = must take a head seat
   seatingGroups      SeatingGroupMember[]
   relationshipsAsA   GuestRelationship[]  @relation("RelationshipGuestA")
   relationshipsAsB   GuestRelationship[]  @relation("RelationshipGuestB")

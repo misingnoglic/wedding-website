@@ -1,7 +1,7 @@
 'use client'
 
 import { useMemo, useOptimistic, useState, useTransition } from 'react'
-import { buildAffinityMap, findSeatingWarnings, isInSeatingPool } from '@/lib/seating'
+import { buildAffinityMap, findSeatingWarnings, HEAD_SEATS, isInSeatingPool } from '@/lib/seating'
 import { FlatGuest, SeatingData } from '../../types'
 import { applySeatingPatch, RunSeatingAction, SeatingState } from '../seating/state'
 import GuestRatings from '../seating/GuestRatings'
@@ -25,6 +25,7 @@ export default function SeatingTab({ guests, seating }: SeatingTabProps) {
       links: seating.links,
       relationships: seating.relationships,
       excludedIds: new Set(guests.filter((g) => g.excludeFromSeating).map((g) => g.id)),
+      headIds: new Set(guests.filter((g) => g.seatRequirement === 'HEAD').map((g) => g.id)),
     }),
     [seating, guests]
   )
@@ -57,11 +58,12 @@ export default function SeatingTab({ guests, seating }: SeatingTabProps) {
     [poolGuests, state.groups, state.relationships, state.links]
   )
   const warnings = useMemo(
-    () => findSeatingWarnings(poolGuests.map((g) => g.id), affinityMap, state.relationships),
-    [poolGuests, affinityMap, state.relationships]
+    () => findSeatingWarnings(poolGuests.map((g) => g.id), affinityMap, state.relationships, [...state.headIds]),
+    [poolGuests, affinityMap, state.relationships, state.headIds]
   )
 
   const poolIds = new Set(poolGuests.map((g) => g.id))
+  const headCount = [...state.headIds].filter((id) => poolIds.has(id)).length
   const poolRelationships = state.relationships.filter((r) => poolIds.has(r.guestAId) && poolIds.has(r.guestBId))
   const stats = [
     { label: 'In seating pool', value: poolGuests.length },
@@ -72,6 +74,11 @@ export default function SeatingTab({ guests, seating }: SeatingTabProps) {
     { label: 'Hard constraints', value: poolRelationships.filter((r) => r.constraint !== null).length },
     { label: 'No strong tie', value: warnings.isolated.size, warn: warnings.isolated.size > 0 },
     { label: 'Over-constrained', value: warnings.overConstrained.size, warn: warnings.overConstrained.size > 0 },
+    {
+      label: `of ${HEAD_SEATS} head seats claimed`,
+      value: headCount,
+      warn: warnings.headConflicts.size > 0,
+    },
   ]
 
   return (
@@ -121,6 +128,7 @@ export default function SeatingTab({ guests, seating }: SeatingTabProps) {
         <GuestRatings
           poolGuests={poolGuests}
           excludedGuests={excludedGuests}
+          headIds={state.headIds}
           groups={state.groups}
           relationships={state.relationships}
           affinityMap={affinityMap}
