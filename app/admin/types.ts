@@ -1,3 +1,5 @@
+import type { LinkEndpoint } from '@/lib/seating'
+
 export type Guest = {
   id: string
   familyId: string
@@ -18,6 +20,7 @@ export type Guest = {
   departureDate: string | null
   hotelName: string | null
   songRequests: string | null
+  excludeFromSeating: boolean
   phoneProblem?: string | null // Why texts to this number fail (e.g. a landline); filled in by the admin page
   createdAt: Date | string
   updatedAt: Date | string
@@ -58,7 +61,35 @@ export type AuditEventItem = {
   } | null
 }
 
-export type TabType = 'families' | 'guests' | 'dietary' | 'travel' | 'songs' | 'messages' | 'activity' | 'predictions'
+export type SeatingGroupItem = {
+  id: string
+  name: string
+  color: string | null
+  affinity: number
+  memberIds: string[]
+}
+
+export type GuestRelationshipItem = {
+  guestAId: string
+  guestBId: string
+  affinity: number | null
+  constraint: string | null
+  note: string | null
+}
+
+export type SeatingLinkItem = {
+  a: LinkEndpoint
+  b: LinkEndpoint
+  affinity: number
+}
+
+export type SeatingData = {
+  groups: SeatingGroupItem[]
+  links: SeatingLinkItem[]
+  relationships: GuestRelationshipItem[]
+}
+
+export type TabType = 'families' | 'guests' | 'dietary' | 'travel' | 'songs' | 'messages' | 'activity' | 'predictions' | 'seating'
 export type RsvpFilter = 'all' | 'attending_wedding' | 'declined_wedding' | 'pending_wedding' | 'attending_welcome' | 'attending_rehearsal' | 'no_rsvp' | 'mixed_rsvp'
 export type TravelFilter = 'all' | 'has_flights' | 'has_hotel' | 'missing_travel'
 export type SortOption = 'name_asc' | 'name_desc' | 'guests_desc' | 'updated_desc'
