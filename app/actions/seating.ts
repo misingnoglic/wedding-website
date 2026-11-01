@@ -1,6 +1,7 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
+import { Prisma } from '@prisma/client'
 import { db } from '@/lib/db'
 import { getAuthenticatedAdmin } from '@/lib/auth'
 import {
@@ -201,5 +202,78 @@ export async function setSeatRequirement(guestId: string, seatRequirement: strin
   } catch (error) {
     console.error('Set seat requirement error:', error)
     return { error: 'Failed to update guest.' }
+  }
+}
+
+// ---------------------------------------------------------------------------------------------
+// Seating Lab: saved plans and default settings
+
+export type SavePlanInput = {
+  id?: string // Overwrite this plan instead of creating one
+  name: string
+  source: string
+  config: Prisma.InputJsonValue
+  params: Prisma.InputJsonValue
+  score: number
+  assignments: { seatKey: string; guestId: string; isLocked: boolean }[]
+}
+
+export async function saveSeatingPlan(input: SavePlanInput): Promise<{ success: true; id: string } | { error: string }> {
+  await getAuthenticatedAdmin()
+  const name = input.name.trim()
+  if (!name) return { error: 'Give the plan a name.' }
+  const seatKeys = new Set(input.assignments.map((a) => a.seatKey))
+  const guestIds = new Set(input.assignments.map((a) => a.guestId))
+  if (seatKeys.size !== input.assignments.length || guestIds.size !== input.assignments.length) {
+    return { error: 'Each seat and guest can only appear once.' }
+  }
+
+  try {
+    const data = {
+      name,
+      source: input.source,
+      config: input.config,
+      params: input.params,
+      score: Number.isFinite(input.score) ? input.score : null,
+    }
+    const id = await db.$transaction(async (tx) => {
+      if (input.id) {
+        await tx.seatAssignment.deleteMany({ where: { planId: input.id } })
+        await tx.seatingPlan.update({ where: { id: input.id }, data })
+        await tx.seatAssignment.createMany({ data: input.assignments.map((a) => ({ ...a, planId: input.id! })) })
+        return input.id
+      }
+      const plan = await tx.seatingPlan.create({ data: { ...data, assignments: { create: input.assignments } } })
+      return plan.id
+    })
+    revalidatePath('/admin/seating')
+    return { success: true, id }
+  } catch (error) {
+    console.error('Save seating plan error:', error)
+    return { error: 'Failed to save plan.' }
+  }
+}
+
+export async function deleteSeatingPlan(planId: string): Promise<ActionResult> {
+  await getAuthenticatedAdmin()
+  try {
+    await db.seatingPlan.delete({ where: { id: planId } })
+    revalidatePath('/admin/seating')
+    return { success: true }
+  } catch (error) {
+    console.error('Delete seating plan error:', error)
+    return { error: 'Failed to delete plan.' }
+  }
+}
+
+export async function saveSeatingSettings(config: Prisma.InputJsonValue): Promise<ActionResult> {
+  await getAuthenticatedAdmin()
+  try {
+    await db.seatingSettings.upsert({ where: { id: 'default' }, create: { id: 'default', config }, update: { config } })
+    revalidatePath('/admin/seating')
+    return { success: true }
+  } catch (error) {
+    console.error('Save seating settings error:', error)
+    return { error: 'Failed to save settings.' }
   }
 }
