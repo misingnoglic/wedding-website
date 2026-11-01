@@ -13,6 +13,7 @@ import {
   linkProblem,
   normalizePair,
   pairKey,
+  partyPairConstraints,
 } from './seating'
 
 const guests = [
@@ -177,4 +178,25 @@ test('isSeatRequirement', () => {
   assert.ok(isSeatRequirement('HEAD'))
   assert.ok(!isSeatRequirement('head'))
   assert.ok(!isSeatRequirement(null))
+})
+
+test('partyPairConstraints seats two-person parties together unless already constrained', () => {
+  const pool = [...guests, { id: 'e', familyId: 'f2' }, { id: 'x', familyId: 'f4' }, { id: 'y', familyId: 'f4' }, { id: 'z', familyId: 'f4' }]
+  // f1 (a, b) and f2 (c, e) are pairs; f3 is one guest and f4 is three
+  assert.deepEqual(
+    partyPairConstraints(pool, []).map((r) => [r.guestAId, r.guestBId, r.constraint]),
+    [
+      ['a', 'b', 'ADJACENT'],
+      ['c', 'e', 'ADJACENT'],
+    ]
+  )
+  // An explicit constraint on the pair wins; a rating alone doesn't
+  const explicit = [
+    { guestAId: 'a', guestBId: 'b', affinity: null, constraint: 'DIFFERENT_TABLE' },
+    { guestAId: 'c', guestBId: 'e', affinity: 3, constraint: null },
+  ]
+  assert.deepEqual(
+    partyPairConstraints(pool, explicit).map((r) => [r.guestAId, r.guestBId]),
+    [['c', 'e']]
+  )
 })

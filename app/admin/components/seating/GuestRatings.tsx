@@ -255,6 +255,9 @@ function GuestDetail({
       return aSame - bSame || a.familyName.localeCompare(b.familyName) || a.name.localeCompare(b.name)
     })
 
+  // A party of two sits together by default (partyPairConstraints), so say so in the empty option
+  const isPartyPair = poolGuests.filter((g) => g.familyId === guest.familyId).length === 2
+
   const setRelationship = (otherId: string, input: { affinity?: number | null; constraint?: string | null }) =>
     run({ type: 'relationship', guestId1: guest.id, guestId2: otherId, ...input }, () =>
       setGuestRelationship(guest.id, otherId, input)
@@ -414,7 +417,7 @@ function GuestDetail({
                       relationship?.constraint ? 'border-black bg-black text-white' : 'border-zinc-200 text-zinc-500'
                     }`}
                   >
-                    <option value="">No constraint</option>
+                    <option value="">{isPartyPair && other.familyId === guest.familyId ? 'Default: must sit next to' : 'No constraint'}</option>
                     {SEATING_CONSTRAINTS.map((c) => (
                       <option key={c} value={c}>
                         {CONSTRAINT_LABELS[c]}

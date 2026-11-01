@@ -191,6 +191,24 @@ export function buildAffinityMap(
   return map
 }
 
+/**
+ * Default rule: the two guests of a party with exactly two seated guests (usually a couple) must sit
+ * next to each other, unless the pair already has an explicit constraint. Returns those implied
+ * constraints; `guests` should be the seating pool.
+ */
+export function partyPairConstraints(guests: { id: string; familyId: string }[], relationships: RelationshipInput[]): RelationshipInput[] {
+  const families = new Map<string, string[]>()
+  for (const g of guests) families.set(g.familyId, [...(families.get(g.familyId) || []), g.id])
+  const constrained = new Set(relationships.filter((r) => r.constraint).map((r) => pairKey(r.guestAId, r.guestBId)))
+  const implied: RelationshipInput[] = []
+  for (const members of families.values()) {
+    if (members.length !== 2 || constrained.has(pairKey(members[0], members[1]))) continue
+    const [guestAId, guestBId] = normalizePair(members[0], members[1])
+    implied.push({ guestAId, guestBId, affinity: null, constraint: 'ADJACENT' })
+  }
+  return implied
+}
+
 export function getAffinity(map: Map<string, EffectiveAffinity>, a: string, b: string): number {
   return map.get(pairKey(a, b))?.affinity ?? 0
 }

@@ -1,7 +1,8 @@
 'use client'
 
+import Link from 'next/link'
 import { useMemo, useOptimistic, useState, useTransition } from 'react'
-import { buildAffinityMap, findSeatingWarnings, HEAD_SEATS, isInSeatingPool } from '@/lib/seating'
+import { buildAffinityMap, findSeatingWarnings, HEAD_SEATS, isInSeatingPool, partyPairConstraints } from '@/lib/seating'
 import { FlatGuest, SeatingData } from '../../types'
 import { applySeatingPatch, RunSeatingAction, SeatingState } from '../seating/state'
 import GuestRatings from '../seating/GuestRatings'
@@ -57,9 +58,11 @@ export default function SeatingTab({ guests, seating }: SeatingTabProps) {
     () => buildAffinityMap(poolGuests, state.groups, state.relationships, state.links),
     [poolGuests, state.groups, state.relationships, state.links]
   )
+  // Parties of two sit together by default (the Seating Lab can turn this off)
+  const impliedConstraints = useMemo(() => partyPairConstraints(poolGuests, state.relationships), [poolGuests, state.relationships])
   const warnings = useMemo(
-    () => findSeatingWarnings(poolGuests.map((g) => g.id), affinityMap, state.relationships, [...state.headIds]),
-    [poolGuests, affinityMap, state.relationships, state.headIds]
+    () => findSeatingWarnings(poolGuests.map((g) => g.id), affinityMap, [...state.relationships, ...impliedConstraints], [...state.headIds]),
+    [poolGuests, affinityMap, state.relationships, impliedConstraints, state.headIds]
   )
 
   const poolIds = new Set(poolGuests.map((g) => g.id))
@@ -71,7 +74,7 @@ export default function SeatingTab({ guests, seating }: SeatingTabProps) {
     { label: 'Groups', value: state.groups.length },
     { label: 'Links', value: state.links.length },
     { label: 'Explicit ratings', value: poolRelationships.filter((r) => r.affinity !== null).length },
-    { label: 'Hard constraints', value: poolRelationships.filter((r) => r.constraint !== null).length },
+    { label: 'Hard constraints', value: poolRelationships.filter((r) => r.constraint !== null).length + impliedConstraints.length },
     { label: 'No strong tie', value: warnings.isolated.size, warn: warnings.isolated.size > 0 },
     { label: 'Over-constrained', value: warnings.overConstrained.size, warn: warnings.overConstrained.size > 0 },
     {
@@ -97,19 +100,27 @@ export default function SeatingTab({ guests, seating }: SeatingTabProps) {
             </div>
           ))}
         </div>
-        <div className="inline-flex p-1 bg-zinc-100 rounded-xl shrink-0">
-          {(['groups', 'ratings'] as const).map((v) => (
-            <button
-              key={v}
-              type="button"
-              onClick={() => setView(v)}
-              className={`px-4 py-1.5 rounded-lg text-sm font-sans transition-all cursor-pointer ${
-                view === v ? 'bg-white text-black shadow-sm font-medium' : 'text-zinc-500 hover:text-black'
-              }`}
-            >
-              {v === 'groups' ? 'Groups & Links' : 'Guest Ratings'}
-            </button>
-          ))}
+        <div className="flex items-center gap-2 shrink-0">
+          <Link
+            href="/admin/seating"
+            className="px-4 py-2 rounded-xl bg-black text-white text-sm font-medium hover:bg-zinc-800 transition-colors"
+          >
+            Open Seating Lab →
+          </Link>
+          <div className="inline-flex p-1 bg-zinc-100 rounded-xl">
+            {(['groups', 'ratings'] as const).map((v) => (
+              <button
+                key={v}
+                type="button"
+                onClick={() => setView(v)}
+                className={`px-4 py-1.5 rounded-lg text-sm font-sans transition-all cursor-pointer ${
+                  view === v ? 'bg-white text-black shadow-sm font-medium' : 'text-zinc-500 hover:text-black'
+                }`}
+              >
+                {v === 'groups' ? 'Groups & Links' : 'Guest Ratings'}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
