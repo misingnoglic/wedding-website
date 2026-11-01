@@ -1,7 +1,7 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { EffectiveAffinity, pairKey } from '../seating'
-import { ALGORITHMS, AlgorithmId, createSolver, defaultParams, greedyAssignment, randomAssignment, scaleToEvaluations } from './algorithms'
+import { ALGORITHMS, AlgorithmId, createSolver, defaultParams, greedyAssignment, prepareAlgorithm, randomAssignment, scaleToEvaluations } from './algorithms'
 import { autoLayout, buildSeats, DEFAULT_PROXIMITY, seatCount, seatProximity, seatsAdjacent } from './layout'
 import { assignmentFromSeatKeys, buildProblem, DEFAULT_OBJECTIVE, happinessPotential, ObjectiveConfig, Problem } from './problem'
 import { mulberry32 } from './random'
@@ -130,7 +130,8 @@ test('greedy assignment is valid, keeps locks, and seats head guests at heads', 
 })
 
 for (const spec of ALGORITHMS) {
-  test(`${spec.name} improves on a random seating and never moves locked seats`, () => {
+  test(`${spec.name} improves on a random seating and never moves locked seats`, async () => {
+    await prepareAlgorithm(spec.id as AlgorithmId)
     const p = makeProblem(24)
     const locked = new Uint8Array(p.S)
     locked[3] = 1

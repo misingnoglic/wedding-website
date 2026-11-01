@@ -117,7 +117,7 @@ export default function SeatingLab({ data }: { data: LabData }) {
   const [tieMode, setTieMode] = useState<TieMode>('selected')
   const [colorBy, setColorBy] = useState<'raw' | 'share'>('raw') // Display only; scoring always uses raw happiness
   const [highlight, setHighlight] = useState('') // 'group:<id>' or 'family:<id>'
-  const [algorithm, setAlgorithm] = useState<AlgorithmId>('twoStage') // Best in tuning on the real guest list
+  const [algorithm, setAlgorithm] = useState<AlgorithmId>('kernighanLin') // Best and fastest in tuning on the real guest list
   const [paramsById, setParamsById] = useState<Record<string, Params>>(() =>
     Object.fromEntries(ALGORITHMS.map((a) => [a.id, defaultParams(a.id)]))
   )
