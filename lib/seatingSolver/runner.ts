@@ -1,7 +1,7 @@
 // Drives a solver in timed ticks and streams progress. Runs inside a Web Worker, or on the main
 // thread as a fallback, with the same messages either way.
 
-import { AlgorithmId, createSolver, greedyAssignment, Params, randomAssignment, scaleToEvaluations, Solver, SolverProgress } from './algorithms'
+import { AlgorithmId, createSolver, greedyAssignment, Params, prepareAlgorithm, randomAssignment, scaleToEvaluations, Solver, SolverProgress } from './algorithms'
 import { Problem } from './problem'
 
 export type RunnerRequest =
@@ -132,6 +132,8 @@ export function createRunner(post: (message: RunnerMessage, transfer?: Transfera
     const id = ++benchmarkId
     const { problem, locked } = request
     for (const entry of request.entries) {
+      await prepareAlgorithm(entry.algorithm)
+      if (id !== benchmarkId) return post({ type: 'benchmarkDone', cancelled: true })
       for (let run = 0; run < request.runs; run++) {
         const seed = request.seed + run
         const start =
@@ -184,6 +186,26 @@ export function createRunner(post: (message: RunnerMessage, transfer?: Transfera
     if (id === benchmarkId) post({ type: 'benchmarkDone', cancelled: false })
   }
 
+  // Starts a run once its algorithm is loaded, unless a newer start or stop came in meanwhile
+  let startId = 0
+  const start = async (request: Extract<RunnerRequest, { type: 'start' }>) => {
+    const id = ++startId
+    try {
+      await prepareAlgorithm(request.algorithm)
+      if (id !== startId) return
+      solver = createSolver(request.algorithm, request.problem, request.guestAt, request.locked, request.params, request.seed)
+    } catch (error) {
+      post({ type: 'error', message: error instanceof Error ? error.message : String(error) })
+      return
+    }
+    speed = request.speed
+    paused = false
+    history = []
+    rateWindow = { at: 0, evaluations: 0, rate: 0 }
+    send()
+    timer = setTimeout(tick, 0)
+  }
+
   return {
     handle(request: RunnerRequest) {
       switch (request.type) {
@@ -195,18 +217,7 @@ export function createRunner(post: (message: RunnerMessage, transfer?: Transfera
           break
         case 'start':
           stopTimer()
-          try {
-            solver = createSolver(request.algorithm, request.problem, request.guestAt, request.locked, request.params, request.seed)
-          } catch (error) {
-            post({ type: 'error', message: error instanceof Error ? error.message : String(error) })
-            return
-          }
-          speed = request.speed
-          paused = false
-          history = []
-          rateWindow = { at: 0, evaluations: 0, rate: 0 }
-          send()
-          timer = setTimeout(tick, 0)
+          start(request)
           break
         case 'pause':
           paused = true
@@ -224,6 +235,7 @@ export function createRunner(post: (message: RunnerMessage, transfer?: Transfera
           send()
           break
         case 'stop':
+          startId++
           stopTimer()
           if (solver) {
             paused = true
