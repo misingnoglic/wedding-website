@@ -16,6 +16,7 @@ import {
 import { autoLayout, DEFAULT_PROXIMITY, LayoutConfig, seatCount } from '@/lib/seatingSolver/layout'
 import { assignmentFromSeatKeys, buildProblem, DEFAULT_OBJECTIVE, happinessPotential, ObjectiveConfig, Problem } from '@/lib/seatingSolver/problem'
 import { HistoryPoint, RunnerMessage, SPEEDS } from '@/lib/seatingSolver/runner'
+import { moveGuest } from '@/lib/seatingSolver/moveGuest'
 import { Scorer } from '@/lib/seatingSolver/scorer'
 import { deleteSeatingPlan, saveSeatingPlan, saveSeatingSettings } from '../../actions/seating'
 import AlgorithmPanel, { RunStatus, StartFrom } from './components/AlgorithmPanel'
@@ -246,12 +247,16 @@ export default function SeatingLab({ data }: { data: LabData }) {
   }
 
   // ---- Manual edits --------------------------------------------------------------------------
+  // Moves the guest at seat a onto seat b; half of a couple brings their partner along
+  const isLockedSeat = (s: number) => lockedSeats.has(s)
   const swapSeats = (a: number, b: number) => {
     if (busy || lockedSeats.has(a) || lockedSeats.has(b)) return
     const next = Int32Array.from(guestAt)
-    const t = next[a]
-    next[a] = next[b]
-    next[b] = t
+    for (const [x, y] of moveGuest(scorer, a, b, isLockedSeat).swaps) {
+      const t = next[x]
+      next[x] = next[y]
+      next[y] = t
+    }
     setSeatByGuest(toSeatMap(problem, next))
   }
   const toggleLock = (g: number) => {
@@ -464,7 +469,7 @@ export default function SeatingLab({ data }: { data: LabData }) {
         <div className="space-y-4 min-w-0">
           <Card
             title="Tables"
-            help="Each circle is a guest, colored by happiness. Drag a guest onto another seat to swap them; the badge previews the change in objective. Click a guest to inspect them."
+            help="Each circle is a guest, colored by happiness. Drag a guest onto another seat to swap them; someone who must sit next to a partner brings the partner along. The badge previews the change in objective. Click a guest to inspect them."
             actions={
               <div className="flex flex-wrap items-center justify-end gap-3">
                 <div className="hidden md:flex items-center gap-1.5 text-[10px] text-zinc-500 font-mono">
@@ -549,7 +554,7 @@ export default function SeatingLab({ data }: { data: LabData }) {
               tieMode={tieMode}
               animationMs={busy || status === 'done' ? ANIMATION_MS[speed - 1] : 380}
               canEdit={!busy}
-              deltaFor={(a, b) => scorer.swapDelta(a, b)}
+              deltaFor={(a, b) => moveGuest(scorer, a, b, isLockedSeat).delta}
               onSelectGuest={setSelectedGuest}
               onSwapSeats={(a, b) => {
                 swapSeats(a, b)

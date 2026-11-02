@@ -1,6 +1,7 @@
 'use client'
 
 import { useMemo } from 'react'
+import { moveGuest } from '@/lib/seatingSolver/moveGuest'
 import { Scorer } from '@/lib/seatingSolver/scorer'
 import { formatScore, formatShare, formatSigned, happinessColor } from '../format'
 import { Help } from './ui'
@@ -37,13 +38,15 @@ export default function GuestInspector({
   const h = scorer.h[guest]
   const contributions = useMemo(() => scorer.contributions(guest), [scorer, guest])
 
-  // Every swap that moves this guest, best first (cheap: one O(n) delta per seat)
+  // Every move of this guest to another seat, best first; half of a couple brings their partner
+  // (cheap: a few O(n) deltas per seat)
   const bestSwaps = useMemo(() => {
     if (!interactive || isLocked) return []
-    const options: { seat: number; delta: number }[] = []
+    const blocked = (s: number) => lockedSeats.has(s)
+    const options: { seat: number; delta: number; swaps: [number, number][] }[] = []
     for (let s = 0; s < p.S; s++) {
       if (s === seat || lockedSeats.has(s)) continue
-      options.push({ seat: s, delta: scorer.swapDelta(seat, s) })
+      options.push({ seat: s, ...moveGuest(scorer, seat, s, blocked) })
     }
     return options.sort((a, b) => b.delta - a.delta).slice(0, 3)
   }, [scorer, seat, p.S, lockedSeats, interactive, isLocked])
@@ -122,7 +125,7 @@ export default function GuestInspector({
         <div>
           <div className="text-[10px] uppercase tracking-wider text-zinc-400 font-semibold mb-1 flex items-center">
             {bestSwaps[0].delta > 1e-9 ? 'Best swaps' : 'No swap helps · least costly options'}
-            <Help text="The swaps of this guest that raise the objective most, counting everyone affected, not just them. Click one to make it" />
+            <Help text="The swaps of this guest that raise the objective most, counting everyone affected, not just them. Someone who must sit next to a partner moves together with them. Click one to make it" />
           </div>
           <div className="space-y-1">
             {bestSwaps.map((option) => (
@@ -133,7 +136,10 @@ export default function GuestInspector({
                 className="w-full flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-lg border border-zinc-100 hover:border-black text-xs cursor-pointer"
               >
                 <span className="truncate text-left">
-                  Swap with {occupant(option.seat)} <span className="text-zinc-400">({p.seats[option.seat].key})</span>
+                  {option.swaps.length > 1
+                    ? `With ${occupant(option.swaps[1][0])}, swap with ${occupant(option.seat)} and ${occupant(option.swaps[1][1])}`
+                    : `Swap with ${occupant(option.seat)}`}{' '}
+                  <span className="text-zinc-400">({p.seats[option.seat].key})</span>
                 </span>
                 <span className={`font-mono font-semibold ${option.delta >= 0 ? 'text-emerald-700' : 'text-rose-700'}`}>{formatSigned(option.delta)}</span>
               </button>
