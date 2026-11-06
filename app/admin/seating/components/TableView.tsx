@@ -58,7 +58,7 @@ export default function TableView({
   const { seats, layout, n, A, guestNames, mustHead } = problem
   const px = (x: number) => PAD_X + (x + (layout.heads ? 1 : 0)) * U + R
   const py = (y: number) => PAD_Y + y * V
-  const width = px(layout.seatsPerSide - (layout.heads ? 0 : 1)) + R + PAD_X
+  const width = px(Math.max(...seats.map((s) => s.x))) + R + PAD_X
   const height = py((layout.tables - 1) * 4 + 2) + R + 44
 
   const seatOf = new Int32Array(problem.S)
@@ -178,7 +178,7 @@ export default function TableView({
         const top = py(t * 4) + R + 6
         const bottom = py(t * 4 + 2) - R - 6
         const left = px(0) - U / 2 + 6
-        const right = px(layout.seatsPerSide - 1) + U / 2 - 6
+        const right = px(Math.max(...seats.filter((s) => s.table === t && !s.isHead).map((s) => s.x))) + U / 2 - 6
         const stats = tableStats[t]
         return (
           <g key={t}>

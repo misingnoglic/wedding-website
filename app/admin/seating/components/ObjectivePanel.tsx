@@ -1,6 +1,6 @@
 'use client'
 
-import { autoLayout, DEFAULT_PROXIMITY, LayoutConfig, ProximityWeights, seatCount } from '@/lib/seatingSolver/layout'
+import { autoLayout, DEFAULT_PROXIMITY, LayoutConfig, ProximityWeights, seatCount, sideLength } from '@/lib/seatingSolver/layout'
 import { DEFAULT_OBJECTIVE, Fairness, ObjectiveConfig } from '@/lib/seatingSolver/problem'
 import { Collapsible, Label, NumberField, Segmented, Slider, Tip } from './ui'
 
@@ -69,6 +69,7 @@ export default function ObjectivePanel({
   const set = (patch: Partial<ObjectiveConfig>) => onObjectiveChange({ ...objective, ...patch })
   const setWeight = (key: keyof ProximityWeights, value: number) => set({ proximity: { ...objective.proximity, [key]: value } })
   const seats = seatCount(layout)
+  const tableSizes = Array.from({ length: layout.tables }, (_, t) => sideLength(layout, t, 'L') + sideLength(layout, t, 'R') + (layout.heads ? 2 : 0))
   const activePreset = PRESETS.find((p) => JSON.stringify(p.apply(objective)) === JSON.stringify(objective))
 
   return (
@@ -184,16 +185,25 @@ export default function ObjectivePanel({
       <Collapsible title="Tables" help="The shape of the room. Changing it stops any run; guests keep their seats where those still exist." defaultOpen={false}>
         <NumberField label="Tables" help="Long tables. Guests at different tables never affect each other" value={layout.tables} min={1} max={8} step={1} onChange={(tables) => onLayoutChange({ ...layout, tables })} />
         <NumberField label="Seats per side" help="Seats along each long side of every table, not counting heads" value={layout.seatsPerSide} min={1} max={40} step={1} onChange={(seatsPerSide) => onLayoutChange({ ...layout, seatsPerSide })} />
+        <NumberField
+          label="Squeezed-in seats"
+          help="The first this many tables fit one extra seat onto a long side, e.g. tables of 35 and 34"
+          value={layout.extraSeats ?? 0}
+          min={0}
+          max={layout.tables}
+          step={1}
+          onChange={(extraSeats) => onLayoutChange({ ...layout, extraSeats })}
+        />
         <label className="flex items-center justify-between text-xs text-zinc-600">
           <Label text="Head seats at both ends" help="One seat at each end of every table. Guests who must sit at a head need these" />
           <input type="checkbox" checked={layout.heads} onChange={(e) => onLayoutChange({ ...layout, heads: e.target.checked })} className="accent-black" />
         </label>
         <div className={`text-xs ${seats < guestCount ? 'text-red-700' : 'text-zinc-500'}`}>
-          {seats} seats for {guestCount} guests{seats < guestCount ? ' — not enough seats' : ''}
+          {seats} seats{layout.extraSeats ? ` (${tableSizes.join(' + ')})` : ''} for {guestCount} guests{seats < guestCount ? ' — not enough seats' : ''}
         </div>
         <button
           type="button"
-          title="Use the fewest seats per side that still fit everyone"
+          title="Use the fewest seats that still fit everyone, squeezing in a seat at some tables if that fits exactly"
           onClick={() => onLayoutChange(autoLayout(guestCount, layout.tables, layout.heads))}
           className="text-xs text-zinc-500 hover:text-black cursor-pointer"
         >

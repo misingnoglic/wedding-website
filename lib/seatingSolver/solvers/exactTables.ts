@@ -6,6 +6,7 @@
 
 import type { Highs, ModelData } from 'highs'
 import { AlgorithmPlugin, Moves, num, Params, proposeMove, RECOMPUTE_EVERY, Solver, SolverProgress, TwoStageSolver } from '../core'
+import { seatRelation } from '../layout'
 import { Problem } from '../problem'
 import { mulberry32, Rng, shuffleAt } from '../random'
 import { Scorer } from '../scorer'
@@ -129,20 +130,11 @@ class MilpBuilder {
 type NearKind = { key: string; extra: number; capSide: number; capHead: number; count: number; involvesHead: boolean }
 
 function nearKinds(problem: Problem): NearKind[] {
-  const { S, seats, P, tableOf, layout } = problem
+  const { S, seats, P, tableOf } = problem
   const base = problem.objective.proximity.sameTable
   const kindOf = (a: number, b: number): string | null => {
-    const sa = seats[a]
-    const sb = seats[b]
-    if (sa.isHead && sb.isHead) return null
-    if (sa.isHead || sb.isHead) {
-      const [head, seat] = sa.isHead ? [sa, sb] : [sb, sa]
-      const d = Math.abs(seat.index - (head.side === 'HN' ? 0 : layout.seatsPerSide - 1))
-      return d === 0 ? 'headCorner' : d === 1 ? 'headSecondRow' : null
-    }
-    const d = Math.abs(sa.index - sb.index)
-    if (sa.side === sb.side) return d === 1 ? 'side' : null
-    return d === 0 ? 'across' : d === 1 ? 'diagonal' : null
+    const relation = seatRelation(seats[a], seats[b])
+    return relation === 'sameTable' ? null : relation
   }
   const kinds = new Map<string, NearKind & { perSeat: Int32Array }>()
   for (let a = 0; a < S; a++) {

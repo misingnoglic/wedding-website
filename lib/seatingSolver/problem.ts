@@ -92,10 +92,10 @@ export function buildProblem(input: ProblemInput): Problem {
     }
   }
 
-  const P = buildProximityMatrix(seats, layout, objective.proximity)
+  const P = buildProximityMatrix(seats, objective.proximity)
   const adjacent = new Uint8Array(S * S)
   for (let a = 0; a < S; a++)
-    for (let b = 0; b < S; b++) adjacent[a * S + b] = seatsAdjacent(seats[a], seats[b], layout.seatsPerSide) ? 1 : 0
+    for (let b = 0; b < S; b++) adjacent[a * S + b] = seatsAdjacent(seats[a], seats[b]) ? 1 : 0
 
   const index = new Map(guests.map((g, i) => [g.id, i]))
   const pairs: PairConstraint[] = []
@@ -125,11 +125,11 @@ export function buildProblem(input: ProblemInput): Problem {
   }
 }
 
-export function buildProximityMatrix(seats: Seat[], layout: LayoutConfig, w: ProximityWeights): Float64Array {
+export function buildProximityMatrix(seats: Seat[], w: ProximityWeights): Float64Array {
   const S = seats.length
   const P = new Float64Array(S * S)
   for (let a = 0; a < S; a++)
-    for (let b = 0; b < S; b++) P[a * S + b] = seatProximity(seats[a], seats[b], w, layout.seatsPerSide)
+    for (let b = 0; b < S; b++) P[a * S + b] = seatProximity(seats[a], seats[b], w)
   return P
 }
 

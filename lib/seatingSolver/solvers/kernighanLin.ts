@@ -387,12 +387,12 @@ export class TableAnnealer implements SeatRun {
     const p = scorer.p
     const at = new Map<string, number>()
     for (let s = 0; s < p.S; s++) if (p.tableOf[s] === table) at.set(`${p.seats[s].side}${p.seats[s].index}`, s)
-    const m = p.layout.seatsPerSide
+    const m = p.layout.seatsPerSide + 1 // Room for a squeezed side's extra seat
     const ring: number[] = []
     const push = (key: string) => at.has(key) && ring.push(at.get(key)!)
     push('HN-1')
     for (let i = 0; i < m; i++) push(`L${i}`)
-    push(`HS${m}`)
+    for (let i = m - 1; i <= m; i++) push(`HS${i}`)
     for (let i = m - 1; i >= 0; i--) push(`R${i}`)
     this.ring = Int32Array.from(ring)
     this.movable = Uint8Array.from({ length: p.S }, (_, s) => (locked[s] ? 0 : 1))

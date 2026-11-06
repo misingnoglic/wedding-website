@@ -43,7 +43,7 @@ function mergeObjective(saved: Partial<ObjectiveConfig> | undefined): ObjectiveC
 function fitLayout(layout: Partial<LayoutConfig> | undefined, guestCount: number): LayoutConfig {
   const tables = layout?.tables ?? 2
   const heads = layout?.heads ?? true
-  const candidate = { ...autoLayout(guestCount, tables, heads), ...layout }
+  const candidate = { ...autoLayout(guestCount, tables, heads), extraSeats: 0, ...layout }
   return seatCount(candidate) >= guestCount ? candidate : autoLayout(guestCount, tables, heads)
 }
 

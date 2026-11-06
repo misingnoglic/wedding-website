@@ -542,7 +542,7 @@ class IteratedLocalSearchSolver implements Solver {
     const { rng } = this
     const [L, R] = this.rows[t]
     const len = Math.min(k, L.length, R.length)
-    const o = randInt(rng, L.length - len + 1)
+    const o = randInt(rng, Math.min(L.length, R.length) - len + 1) // A squeezed side is one longer
     const seats: number[] = []
     for (let i = 0; i < len; i++) for (const s of [L[o + i], R[o + i]]) if (this.isMovable[s]) seats.push(s)
     // Fisher-Yates through real swaps so the scores stay current

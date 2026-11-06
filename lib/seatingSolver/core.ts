@@ -1005,9 +1005,9 @@ export function greedyAssignment(problem: Problem, guestAt: Int32Array, locked: 
   const order = Array.from({ length: layout.tables }, (_, t) => {
     const list: number[] = []
     if (layout.heads) list.push(seatAt(t, 'HEAD-N'))
-    for (let i = 0; i < layout.seatsPerSide; i++) list.push(seatAt(t, `L-${pad(i)}`), seatAt(t, `R-${pad(i)}`))
+    for (let i = 0; i <= layout.seatsPerSide; i++) list.push(seatAt(t, `L-${pad(i)}`), seatAt(t, `R-${pad(i)}`))
     if (layout.heads) list.push(seatAt(t, 'HEAD-S'))
-    return list
+    return list.filter((s) => s !== undefined) // A squeezed side has one more seat
   })
 
   let unplaced = n - placed.reduce((sum, v) => sum + v, 0)

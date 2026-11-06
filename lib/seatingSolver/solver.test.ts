@@ -41,14 +41,16 @@ function isPermutation(guestAt: Int32Array): boolean {
   return seen.size === guestAt.length && Math.min(...guestAt) === 0 && Math.max(...guestAt) === guestAt.length - 1
 }
 
-test('autoLayout fits everyone in equal tables', () => {
+test('autoLayout fits everyone, squeezing in a seat where that fits exactly', () => {
   const layout = autoLayout(68, 2, true)
-  assert.deepEqual(layout, { tables: 2, seatsPerSide: 16, heads: true })
+  assert.deepEqual(layout, { tables: 2, seatsPerSide: 16, heads: true, extraSeats: 0 })
   assert.equal(seatCount(layout), 68)
   assert.equal(buildSeats(layout).length, 68)
-  assert.equal(seatCount(autoLayout(69, 2, true)), 72)
+  assert.deepEqual(autoLayout(69, 2, true), { tables: 2, seatsPerSide: 16, heads: true, extraSeats: 1 })
+  assert.equal(buildSeats(autoLayout(69, 2, true)).length, 69)
+  assert.equal(seatCount(autoLayout(71, 2, true)), 72) // Three extra seats would be a bigger table
   assert.equal(seatCount(autoLayout(12, 2, false)), 12)
-  assert.equal(seatCount(autoLayout(10, 2, false)), 12) // 5 per table needs 3 per side
+  assert.equal(seatCount(autoLayout(10, 2, false)), 10) // Tables of 5: two seats a side plus one squeezed in
 })
 
 test('seat proximity and adjacency follow the table geometry', () => {
@@ -56,7 +58,7 @@ test('seat proximity and adjacency follow the table geometry', () => {
   const seats = buildSeats(layout)
   const at = (key: string) => seats.find((s) => s.key === key)!
   const w = { ...DEFAULT_PROXIMITY, headSecondRow: 0.3 }
-  const prox = (a: string, b: string) => seatProximity(at(a), at(b), w, 4)
+  const prox = (a: string, b: string) => seatProximity(at(a), at(b), w)
   assert.equal(prox('T1-L-01', 'T1-L-02'), w.side)
   assert.equal(prox('T1-L-02', 'T1-R-02'), w.across)
   assert.equal(prox('T1-L-02', 'T1-R-03'), w.diagonal)
@@ -65,9 +67,29 @@ test('seat proximity and adjacency follow the table geometry', () => {
   assert.equal(prox('T1-HEAD-N', 'T1-R-02'), 0.3)
   assert.equal(prox('T1-L-01', 'T1-L-04'), w.sameTable)
   assert.equal(prox('T1-L-01', 'T2-L-01'), 0)
-  assert.ok(seatsAdjacent(at('T1-HEAD-N'), at('T1-R-01'), 4))
-  assert.ok(!seatsAdjacent(at('T1-HEAD-N'), at('T1-HEAD-S'), 4))
-  assert.ok(!seatsAdjacent(at('T1-L-01'), at('T1-R-01'), 4))
+  assert.ok(seatsAdjacent(at('T1-HEAD-N'), at('T1-R-01')))
+  assert.ok(!seatsAdjacent(at('T1-HEAD-N'), at('T1-HEAD-S')))
+  assert.ok(!seatsAdjacent(at('T1-L-01'), at('T1-R-01')))
+})
+
+test('a squeezed-in seat makes one side longer without stretching the table', () => {
+  const layout = { tables: 2, seatsPerSide: 4, heads: true, extraSeats: 1 }
+  const seats = buildSeats(layout)
+  const at = (key: string) => seats.find((s) => s.key === key)!
+  const prox = (a: string, b: string) => seatProximity(at(a), at(b), DEFAULT_PROXIMITY)
+  assert.equal(seats.filter((s) => s.table === 0).length, 11)
+  assert.equal(seats.filter((s) => s.table === 1).length, 10)
+  assert.equal(at('T1-HEAD-S').x, at('T2-HEAD-S').x)
+  // Both ends still line up across the table; the corners belong to the heads
+  assert.equal(prox('T1-L-01', 'T1-R-01'), DEFAULT_PROXIMITY.across)
+  assert.equal(prox('T1-L-05', 'T1-R-04'), DEFAULT_PROXIMITY.across)
+  assert.ok(seatsAdjacent(at('T1-HEAD-S'), at('T1-L-05')))
+  assert.ok(seatsAdjacent(at('T1-HEAD-S'), at('T1-R-04')))
+  assert.ok(!seatsAdjacent(at('T1-HEAD-S'), at('T1-L-04')))
+  assert.ok(seatsAdjacent(at('T1-L-04'), at('T1-L-05')))
+  // The middle seat of the squeezed side sits between two seats across
+  assert.equal(prox('T1-L-03', 'T1-R-02'), DEFAULT_PROXIMITY.diagonal)
+  assert.equal(prox('T1-L-03', 'T1-R-03'), DEFAULT_PROXIMITY.diagonal)
 })
 
 test('incremental swaps always match a full recompute', () => {
