@@ -9,6 +9,7 @@ import VisitTracker from "./components/VisitTracker";
 import ConsoleEasterEgg from "./components/ConsoleEasterEgg";
 import { GoogleAnalytics } from '@next/third-parties/google';
 import { Analytics } from '@vercel/analytics/next';
+import { SpeedInsights } from '@vercel/speed-insights/next';
 
 const karla = Karla({
   subsets: ["latin"],
@@ -89,6 +90,7 @@ export default function RootLayout({
         {/* <InstallPrompt /> */}
         <GoogleAnalytics gaId="G-84D8ZG5MB3" />
         <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );
