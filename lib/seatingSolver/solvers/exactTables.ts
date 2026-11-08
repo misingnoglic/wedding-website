@@ -129,12 +129,32 @@ class MilpBuilder {
 // Kinds of close seat pairs, from the table geometry
 type NearKind = { key: string; extra: number; capSide: number; capHead: number; count: number; involvesHead: boolean }
 
+/**
+ * Proximity credited to every same-table pair in the 'nearby' model; closer pairs get their extra
+ * through near kinds. Distance decay makes far pairs nearly 0, so pairs worth less than 0.05 are
+ * all credited the same, which keeps the program an upper bound.
+ */
+function tableFloor(problem: Problem): number {
+  const { S, P, tableOf } = problem
+  let low = Infinity
+  let high = 0
+  for (let a = 0; a < S; a++)
+    for (let b = 0; b < S; b++) {
+      if (a === b || tableOf[a] !== tableOf[b]) continue
+      low = Math.min(low, P[a * S + b])
+      high = Math.max(high, P[a * S + b])
+    }
+  return low === Infinity ? 0 : Math.max(low, Math.min(0.05, high))
+}
+
 function nearKinds(problem: Problem): NearKind[] {
   const { S, seats, P, tableOf } = problem
-  const base = problem.objective.proximity.sameTable
+  const base = tableFloor(problem)
+  // Farther pairs have one kind per weight, kept apart for pairs with a head
   const kindOf = (a: number, b: number): string | null => {
     const relation = seatRelation(seats[a], seats[b])
-    return relation === 'sameTable' ? null : relation
+    if (relation !== 'farther') return relation
+    return `${seats[a].isHead || seats[b].isHead ? 'head ' : ''}farther ${P[a * S + b].toFixed(6)}`
   }
   const kinds = new Map<string, NearKind & { perSeat: Int32Array }>()
   for (let a = 0; a < S; a++) {
@@ -235,24 +255,21 @@ export function solveTableSplit(h: Highs, problem: Problem, guestAt: Int32Array,
     happy[k].push(v, A[g * n + k] * coef)
   }
 
-  // y: the pair shares a table. With positive affinity only an upper limit is needed; with
-  // negative affinity, a lower one
-  const sameWeight = nearby ? o.proximity.sameTable : options.pairWeight
+  // y: the pair shares a table. Only positive ratings count here, as in tableLevelProblem: two guests
+  // who dislike each other can sit far apart at one table. With positive affinity only an upper
+  // limit is needed
+  const sameWeight = nearby ? tableFloor(problem) : options.pairWeight
   const y = new Map<number, number>()
   const known: number[][] = Array.from({ length: n }, () => [])
   for (let g = 0; g < n; g++) {
     for (let k = g + 1; k < n; k++) {
       const a = A[g * n + k]
-      if (a === 0) continue
+      if (a <= 0) continue
       const v = m.addVar(0, 1)
       y.set(g * n + k, v)
       for (let t = 0; t < T; t++) {
-        if (a > 0) {
-          m.addRow(-Infinity, 1, [v, 1, x[g * T + t], 1, x[k * T + t], -1])
-          m.addRow(-Infinity, 1, [v, 1, x[k * T + t], 1, x[g * T + t], -1])
-        } else {
-          m.addRow(-Infinity, 1, [x[g * T + t], 1, x[k * T + t], 1, v, -1])
-        }
+        m.addRow(-Infinity, 1, [v, 1, x[g * T + t], 1, x[k * T + t], -1])
+        m.addRow(-Infinity, 1, [v, 1, x[k * T + t], 1, x[g * T + t], -1])
       }
       credit(g, k, v, sameWeight)
       if (a >= 1) {

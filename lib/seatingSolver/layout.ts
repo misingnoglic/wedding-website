@@ -28,16 +28,18 @@ export type ProximityWeights = {
   diagonal: number // Across and one seat over
   headCorner: number // Head seat and the two corner seats beside it
   headSecondRow: number // Head seat and the next seat in from each corner
-  sameTable: number // Everyone else at the table
+  twoAway: number // Two seats along the table, on either side
+  falloff: number // Each seat further multiplies by this, from two away (or a head's second row) on
 }
 
 export const DEFAULT_PROXIMITY: ProximityWeights = {
   side: 1,
-  across: 0.7,
-  diagonal: 0.4,
-  headCorner: 0.8,
-  headSecondRow: 0,
-  sameTable: 0.1,
+  across: 0.9,
+  diagonal: 0.8,
+  headCorner: 1,
+  headSecondRow: 0.1,
+  twoAway: 0.4,
+  falloff: 0.5,
 }
 
 // Vertical space one table takes when drawn, in layout units
@@ -102,7 +104,7 @@ export function buildSeats(layout: LayoutConfig): Seat[] {
   return seats
 }
 
-export type SeatRelation = 'side' | 'across' | 'diagonal' | 'headCorner' | 'headSecondRow' | 'sameTable'
+export type SeatRelation = 'side' | 'across' | 'diagonal' | 'headCorner' | 'headSecondRow' | 'farther'
 
 /**
  * How two seats sit relative to each other, or null for the same seat or different tables. Across
@@ -111,21 +113,32 @@ export type SeatRelation = 'side' | 'across' | 'diagonal' | 'headCorner' | 'head
 export function seatRelation(a: Seat, b: Seat): SeatRelation | null {
   if (a === b || a.table !== b.table) return null
   if (a.isHead || b.isHead) {
-    if (a.isHead && b.isHead) return 'sameTable'
+    if (a.isHead && b.isHead) return 'farther'
     const [head, seat] = a.isHead ? [a, b] : [b, a]
     const d = Math.abs(seat.index - (head.side === 'HN' ? 0 : seat.sideSeats - 1))
-    return d === 0 ? 'headCorner' : d === 1 ? 'headSecondRow' : 'sameTable'
+    return d === 0 ? 'headCorner' : d === 1 ? 'headSecondRow' : 'farther'
   }
-  if (a.side === b.side) return Math.abs(a.index - b.index) === 1 ? 'side' : 'sameTable'
+  if (a.side === b.side) return Math.abs(a.index - b.index) === 1 ? 'side' : 'farther'
   const d = Math.round(Math.abs(a.x - b.x))
-  return d === 0 ? 'across' : d === 1 ? 'diagonal' : 'sameTable'
+  return d === 0 ? 'across' : d === 1 ? 'diagonal' : 'farther'
 }
 
+/**
+ * How much two seats count for each other. Close seats take their weight; farther along the same
+ * table it decays: two seats away counts twoAway, and each seat beyond multiplies by falloff. A
+ * head's reach decays the same way from its second row. Other tables never count.
+ */
 export function seatProximity(a: Seat, b: Seat, w: ProximityWeights): number {
   const relation = seatRelation(a, b)
   if (relation === null) return 0
-  if (relation === 'headSecondRow') return Math.max(w.headSecondRow, w.sameTable)
-  return w[relation]
+  if (relation !== 'farther') return w[relation]
+  if (a.isHead !== b.isHead) {
+    const [head, seat] = a.isHead ? [a, b] : [b, a]
+    const d = Math.abs(seat.index - (head.side === 'HN' ? 0 : seat.sideSeats - 1))
+    return w.headSecondRow * Math.pow(w.falloff, d - 1)
+  }
+  const along = a.side === b.side ? Math.abs(a.index - b.index) : Math.round(Math.abs(a.x - b.x))
+  return w.twoAway * Math.pow(w.falloff, along - 2)
 }
 
 /**

@@ -64,8 +64,8 @@ test('an insertion check matches the real change in score', () => {
     const mustHead = Uint8Array.from(p.mustHead)
     mustHead[g] = 0
     const without = { ...p, A, mustHead, pairs: p.pairs.filter((c) => c.x !== g && c.y !== g) }
-    const alone = scorer.utility(g, 0, 0, 0)
     for (let s = 0; s < p.S; s++) {
+      const alone = scorer.utility(g, 0, 0, s) // With no ties, all that's left is a head bonus
       const seating = Int32Array.from(scorer.guestAt)
       const t = scorer.seatOf[g]
       ;[seating[s], seating[t]] = [seating[t], seating[s]]

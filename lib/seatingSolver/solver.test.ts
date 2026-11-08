@@ -3,7 +3,7 @@ import assert from 'node:assert/strict'
 import { EffectiveAffinity, pairKey } from '../seating'
 import { ALGORITHMS, AlgorithmId, createSolver, defaultParams, greedyAssignment, prepareAlgorithm, randomAssignment, scaleToEvaluations } from './algorithms'
 import { autoLayout, buildSeats, DEFAULT_PROXIMITY, seatCount, seatProximity, seatsAdjacent, seatsNear } from './layout'
-import { assignmentFromSeatKeys, buildProblem, DEFAULT_OBJECTIVE, happinessPotential, ObjectiveConfig, Problem } from './problem'
+import { assignmentFromSeatKeys, buildProblem, DEFAULT_OBJECTIVE, happinessPotential, ObjectiveConfig, Problem, tableLevelProblem } from './problem'
 import { mulberry32 } from './random'
 import { Scorer } from './scorer'
 
@@ -66,7 +66,12 @@ test('seat proximity and adjacency follow the table geometry', () => {
   assert.equal(prox('T1-HEAD-N', 'T1-L-01'), w.headCorner)
   assert.equal(prox('T1-HEAD-S', 'T1-R-04'), w.headCorner)
   assert.equal(prox('T1-HEAD-N', 'T1-R-02'), 0.3)
-  assert.equal(prox('T1-L-01', 'T1-L-04'), w.sameTable)
+  // Farther along it fades: two away, then halving per seat, on either side, and from a head's second row
+  assert.equal(prox('T1-L-01', 'T1-L-03'), w.twoAway)
+  assert.equal(prox('T1-L-01', 'T1-R-03'), w.twoAway)
+  assert.equal(prox('T1-L-01', 'T1-L-04'), w.twoAway * w.falloff)
+  assert.equal(prox('T1-HEAD-N', 'T1-R-03'), 0.3 * w.falloff)
+  assert.equal(prox('T1-HEAD-N', 'T1-HEAD-S'), w.twoAway * Math.pow(w.falloff, 3))
   assert.equal(prox('T1-L-01', 'T2-L-01'), 0)
   assert.ok(seatsAdjacent(at('T1-HEAD-N'), at('T1-R-01')))
   assert.ok(!seatsAdjacent(at('T1-HEAD-N'), at('T1-HEAD-S')))
@@ -161,6 +166,14 @@ test('violations count broken constraints and head requirements', () => {
   const penalty = p.objective.constraintPenalty
   const withoutPenalty = scorer.guestScores().reduce((sum, g) => sum + g.utility, 0)
   assert.ok(Math.abs(scorer.total - (withoutPenalty - penalty * kinds.length)) < 1e-9)
+})
+
+test('the table-level view ignores negative ratings, which can sit far apart at one table', () => {
+  const p = makeProblem(20)
+  const tp = tableLevelProblem(p)
+  const n = p.n
+  assert.ok(Array.from(p.A).some((v) => v < 0))
+  for (let i = 0; i < n * n; i++) assert.equal(tp.A[i], Math.max(0, p.A[i]))
 })
 
 test('a near rule holds across and diagonal, and breaks further apart', () => {

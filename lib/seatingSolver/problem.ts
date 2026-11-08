@@ -32,7 +32,7 @@ export const DEFAULT_OBJECTIVE: ObjectiveConfig = {
   fairness: 'floor',
   minHappiness: 2,
   floorPenalty: 3,
-  headBonus: 0,
+  headBonus: 0.1,
   minKnownAtTable: 0,
   minKnownPenalty: 2,
   constraintPenalty: 50,
@@ -153,8 +153,12 @@ export function tableLevelProblem(problem: Problem): Problem {
     c.kind === 'ADJACENT' || c.kind === 'NEAR' ? [{ ...c, kind: 'SAME_TABLE' }] : c.kind === 'NOT_ADJACENT' ? [] : [c]
   )
   // Heads don't exist at this level, so the head bonus and head requirements wait for stage two
+  // Two guests who dislike each other can sit far apart at the same table, where they barely
+  // count, so only positive ratings decide who shares a table
+  const A = problem.A.map((v) => Math.max(0, v))
   return {
     ...problem,
+    A,
     P,
     pairs,
     mustHead: new Uint8Array(problem.n),

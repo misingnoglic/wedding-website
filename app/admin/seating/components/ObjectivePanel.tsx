@@ -10,8 +10,8 @@ const PRESETS: Preset[] = [
   {
     id: 'neighbors',
     label: 'Neighbors matter',
-    description: 'The default: who you sit beside and across from counts most.',
-    apply: (o) => ({ ...o, proximity: DEFAULT_PROXIMITY, headBonus: 0, minKnownAtTable: 0 }),
+    description: 'The default: who you sit beside, across from and diagonal from counts most, fading quickly further along the table.',
+    apply: (o) => ({ ...o, proximity: DEFAULT_PROXIMITY, headBonus: 0.1, minKnownAtTable: 0 }),
   },
   {
     id: 'honor',
@@ -25,7 +25,7 @@ const PRESETS: Preset[] = [
     description: 'Bellows & Peterson (2012): everyone at a table counts equally, and everyone should know at least one person there.',
     apply: (o) => ({
       ...o,
-      proximity: { side: 1, across: 1, diagonal: 1, headCorner: 1, headSecondRow: 1, sameTable: 1 },
+      proximity: { side: 1, across: 1, diagonal: 1, headCorner: 1, headSecondRow: 1, twoAway: 1, falloff: 1 },
       headBonus: 0,
       minKnownAtTable: 1,
     }),
@@ -34,17 +34,23 @@ const PRESETS: Preset[] = [
     id: 'elbows',
     label: 'Elbows only',
     description: 'Only immediate neighbors count. Conversations rarely reach past the next seat.',
-    apply: (o) => ({ ...o, proximity: { side: 1, across: 0.5, diagonal: 0, headCorner: 1, headSecondRow: 0, sameTable: 0 } }),
+    apply: (o) => ({ ...o, proximity: { side: 1, across: 0.5, diagonal: 0, headCorner: 1, headSecondRow: 0, twoAway: 0, falloff: 0 } }),
   },
 ]
 
-const WEIGHTS: { key: keyof ProximityWeights; label: string; help: string }[] = [
+const WEIGHTS: { key: keyof ProximityWeights; label: string; help: string; max?: number }[] = [
   { key: 'side', label: 'Side by side', help: 'How much the guests to your left and right count toward your happiness' },
   { key: 'across', label: 'Directly across', help: 'How much the guest facing you counts' },
   { key: 'diagonal', label: 'Diagonal', help: 'How much the guests across and one seat over count' },
   { key: 'headCorner', label: 'Head ↔ corner', help: 'How much a head seat and the two corner seats beside it count for each other' },
   { key: 'headSecondRow', label: 'Head ↔ second row', help: 'How much a head seat and the next seats in from the corners count for each other. Raise it so heads aren’t cut off from the table' },
-  { key: 'sameTable', label: 'Same table', help: 'How much everyone else at your table counts, however far away. Guests at the other table never count' },
+  { key: 'twoAway', label: 'Two seats away', help: 'How much a guest two seats along the table counts, on your side or across. Guests at the other table never count' },
+  {
+    key: 'falloff',
+    label: 'Falloff per seat',
+    help: 'Each seat further than two away multiplies by this, so 0.5 halves it per seat. A head’s reach fades the same way from its second row. 1 means everyone at the table counts alike',
+    max: 1,
+  },
 ]
 
 interface ObjectivePanelProps {
@@ -76,7 +82,7 @@ export default function ObjectivePanel({
     <>
       <Collapsible
         title="Proximity weights"
-        help="A guest's happiness is the sum, over everyone they have a rating with, of rating × the weight for where that person sits relative to them. These sliders set those weights."
+        help="A guest's happiness is the sum, over everyone they have a rating with, of rating × the weight for where that person sits relative to them. These sliders set those weights; beyond the close seats, the weight fades with distance. Negative ratings fade the same way, so someone you'd rather avoid barely matters at the far end of the table."
       >
         <div className="grid grid-cols-2 gap-1.5">
           {PRESETS.map((p, i) => (
@@ -100,7 +106,7 @@ export default function ObjectivePanel({
             help={w.help}
             value={objective.proximity[w.key]}
             min={0}
-            max={1.5}
+            max={w.max ?? 1.5}
             step={0.05}
             format={(v) => v.toFixed(2)}
             onChange={(v) => setWeight(w.key, v)}

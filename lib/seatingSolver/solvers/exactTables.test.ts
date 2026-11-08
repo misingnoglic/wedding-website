@@ -24,7 +24,7 @@ function makeProblem(guestCount: number, relationships: { guestAId: string; gues
     relationships,
     headIds: new Set(headIds),
     layout: autoLayout(guestCount + 2, 2, true), // A couple of empty seats
-    objective: DEFAULT_OBJECTIVE,
+    objective: { ...DEFAULT_OBJECTIVE, headBonus: 0 }, // The table-level score has no head bonus to compare against
   })
 }
 

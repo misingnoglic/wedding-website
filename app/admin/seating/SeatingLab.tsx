@@ -13,7 +13,7 @@ import {
   randomAssignment,
   SolverProgress,
 } from '@/lib/seatingSolver/algorithms'
-import { autoLayout, DEFAULT_PROXIMITY, LayoutConfig, seatCount } from '@/lib/seatingSolver/layout'
+import { autoLayout, DEFAULT_PROXIMITY, LayoutConfig, ProximityWeights, seatCount } from '@/lib/seatingSolver/layout'
 import { assignmentFromSeatKeys, buildProblem, DEFAULT_OBJECTIVE, happinessPotential, ObjectiveConfig, Problem } from '@/lib/seatingSolver/problem'
 import { HistoryPoint, RunnerMessage, SPEEDS } from '@/lib/seatingSolver/runner'
 import { moveGuest } from '@/lib/seatingSolver/moveGuest'
@@ -35,8 +35,14 @@ import { useSolverEngine } from './useSolverEngine'
 const HISTORY_LIMIT = 600
 const ANIMATION_MS = [380, 320, 220, 90, 0] // By speed
 
+// Saved settings over the defaults, dropping weights that no longer exist (like the old same-table weight)
 function mergeObjective(saved: Partial<ObjectiveConfig> | undefined): ObjectiveConfig {
-  return { ...DEFAULT_OBJECTIVE, ...saved, proximity: { ...DEFAULT_PROXIMITY, ...saved?.proximity } }
+  const proximity = { ...DEFAULT_PROXIMITY }
+  for (const key of Object.keys(proximity) as (keyof ProximityWeights)[]) {
+    const value = saved?.proximity?.[key]
+    if (typeof value === 'number') proximity[key] = value
+  }
+  return { ...DEFAULT_OBJECTIVE, ...saved, proximity }
 }
 
 // A layout that fits everyone, keeping the saved shape where possible

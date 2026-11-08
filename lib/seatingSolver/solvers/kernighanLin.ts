@@ -623,7 +623,8 @@ class KernighanLinSolver implements Solver {
     this.start = Int32Array.from(guestAt)
     this.rng = mulberry32(seed)
     const tableProblem = tableLevelProblem(problem)
-    this.split = new TableSplit(tableProblem, new Scorer(tableProblem, guestAt), guestAt, locked)
+    // The table-level view drops head requirements from the score, but the split still caps head guests per table
+    this.split = new TableSplit({ ...tableProblem, mustHead: problem.mustHead }, new Scorer(tableProblem, guestAt), guestAt, locked)
     this.seatScorer = new Scorer(problem, guestAt)
     const iterations = Math.max(2, num(params, 'iterations', 2_000_000))
     const share = Math.min(0.95, Math.max(0.02, num(params, 'tableShare', 0.05)))
