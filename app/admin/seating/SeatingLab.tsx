@@ -120,6 +120,7 @@ export default function SeatingLab({ data }: { data: LabData }) {
   // ---- UI state ------------------------------------------------------------------------------
   const [selectedGuest, setSelectedGuest] = useState<number | null>(null)
   const [tieMode, setTieMode] = useState<TieMode>('selected')
+  const [cleanView, setCleanView] = useState(false) // Names only, for screenshots
   const [colorBy, setColorBy] = useState<'raw' | 'share'>('raw') // Display only; scoring always uses raw happiness
   const [highlight, setHighlight] = useState('') // 'group:<id>' or 'family:<id>'
   const [algorithm, setAlgorithm] = useState<AlgorithmId>('kernighanLin') // Best and fastest in tuning on the real guest list
@@ -276,6 +277,9 @@ export default function SeatingLab({ data }: { data: LabData }) {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') setSelectedGuest(null)
+      // V flips the clean view, unless typing somewhere
+      const typing = e.target instanceof HTMLElement && (e.target.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName))
+      if (e.key.toLowerCase() === 'v' && !typing && !e.metaKey && !e.ctrlKey && !e.altKey) setCleanView((v) => !v)
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
@@ -473,75 +477,89 @@ export default function SeatingLab({ data }: { data: LabData }) {
         <div className="space-y-4 min-w-0">
           <Card
             title="Tables"
-            help="Each circle is a guest, colored by happiness. Drag a guest onto another seat to swap them; someone who must sit next to a partner brings the partner along. The badge previews the change in objective. Click a guest to inspect them."
+            help="Each circle is a guest, colored by happiness. Drag a guest onto another seat to swap them; someone who must sit next to a partner brings the partner along. The badge previews the change in objective. Click a guest to inspect them. Clean view (or V) shows names only, for screenshots."
             actions={
               <div className="flex flex-wrap items-center justify-end gap-3">
-                <div className="hidden md:flex items-center gap-1.5 text-[10px] text-zinc-500 font-mono">
-                  {colorBy === 'raw'
-                    ? [-2, 0, 2, 5, 10].map((h) => (
-                        <span key={h} className="flex items-center gap-1">
-                          <span className="w-3 h-3 rounded-full" style={{ backgroundColor: happinessColor(h) }} />
-                          {h}
-                        </span>
-                      ))
-                    : [0, 0.25, 0.5, 0.75, 1].map((share) => (
-                        <span key={share} className="flex items-center gap-1">
-                          <span className="w-3 h-3 rounded-full" style={{ backgroundColor: shareColor(share) }} />
-                          {share * 100}%
-                        </span>
-                      ))}
-                  <span className="ml-2">♛ head · 🔒 locked · <span className="text-red-600">◯</span> broken rule</span>
-                </div>
-                <div className="w-44 whitespace-nowrap">
-                  <Segmented<'raw' | 'share'>
-                    value={colorBy}
-                    onChange={setColorBy}
-                    options={[
-                      { value: 'raw', label: 'Raw', title: 'Color and number show each guest’s happiness' },
-                      {
-                        value: 'share',
-                        label: '% of best',
-                        title:
-                          'Normalize for how many friends each guest has here: show happiness as a share of the best they could possibly get (their favorite people in the closest seats). Gray means nobody they rated positively is coming. Display only; scoring is unchanged',
-                      },
-                    ]}
-                  />
-                </div>
-                <Tip text="Ring the members of a group or party and fade everyone else, to see where they ended up" align="right">
-                  <select
-                    value={highlight}
-                    onChange={(e) => setHighlight(e.target.value)}
-                    className="border border-zinc-200 rounded-lg px-2 py-1 text-xs bg-white max-w-44"
-                    aria-label="Highlight a group or party"
-                  >
-                    <option value="">Highlight…</option>
-                    <optgroup label="Groups">
-                      {highlightOptions.groups.map((g) => (
-                        <option key={g.id} value={`group:${g.id}`}>
-                          {g.name}
-                        </option>
-                      ))}
-                    </optgroup>
-                    <optgroup label="Parties">
-                      {highlightOptions.parties.map(([id, name]) => (
-                        <option key={id} value={`family:${id}`}>
-                          {name}
-                        </option>
-                      ))}
-                    </optgroup>
-                  </select>
-                </Tip>
-                <div className="w-48">
-                  <Segmented<TieMode>
-                    value={tieMode}
-                    onChange={setTieMode}
-                    options={[
-                      { value: 'off', label: 'No ties', title: 'Hide the lines between guests' },
-                      { value: 'selected', label: 'Selected', title: 'Lines from the selected (or dragged) guest to everyone they have a rating with; green is positive, dashed red is negative' },
-                      { value: 'strong', label: 'All +2', title: 'With nobody selected, lines between every pair rated +2 or more who share a table' },
-                    ]}
-                  />
-                </div>
+                {!cleanView && (
+                  <>
+                  <div className="hidden md:flex items-center gap-1.5 text-[10px] text-zinc-500 font-mono">
+                    {colorBy === 'raw'
+                      ? [-2, 0, 2, 5, 10].map((h) => (
+                          <span key={h} className="flex items-center gap-1">
+                            <span className="w-3 h-3 rounded-full" style={{ backgroundColor: happinessColor(h) }} />
+                            {h}
+                          </span>
+                        ))
+                      : [0, 0.25, 0.5, 0.75, 1].map((share) => (
+                          <span key={share} className="flex items-center gap-1">
+                            <span className="w-3 h-3 rounded-full" style={{ backgroundColor: shareColor(share) }} />
+                            {share * 100}%
+                          </span>
+                        ))}
+                    <span className="ml-2">♛ head · 🔒 locked · <span className="text-red-600">◯</span> broken rule</span>
+                  </div>
+                  <div className="w-44 whitespace-nowrap">
+                    <Segmented<'raw' | 'share'>
+                      value={colorBy}
+                      onChange={setColorBy}
+                      options={[
+                        { value: 'raw', label: 'Raw', title: 'Color and number show each guest’s happiness' },
+                        {
+                          value: 'share',
+                          label: '% of best',
+                          title:
+                            'Normalize for how many friends each guest has here: show happiness as a share of the best they could possibly get (their favorite people in the closest seats). Gray means nobody they rated positively is coming. Display only; scoring is unchanged',
+                        },
+                      ]}
+                    />
+                  </div>
+                  <Tip text="Ring the members of a group or party and fade everyone else, to see where they ended up" align="right">
+                    <select
+                      value={highlight}
+                      onChange={(e) => setHighlight(e.target.value)}
+                      className="border border-zinc-200 rounded-lg px-2 py-1 text-xs bg-white max-w-44"
+                      aria-label="Highlight a group or party"
+                    >
+                      <option value="">Highlight…</option>
+                      <optgroup label="Groups">
+                        {highlightOptions.groups.map((g) => (
+                          <option key={g.id} value={`group:${g.id}`}>
+                            {g.name}
+                          </option>
+                        ))}
+                      </optgroup>
+                      <optgroup label="Parties">
+                        {highlightOptions.parties.map(([id, name]) => (
+                          <option key={id} value={`family:${id}`}>
+                            {name}
+                          </option>
+                        ))}
+                      </optgroup>
+                    </select>
+                  </Tip>
+                  <div className="w-48">
+                    <Segmented<TieMode>
+                      value={tieMode}
+                      onChange={setTieMode}
+                      options={[
+                        { value: 'off', label: 'No ties', title: 'Hide the lines between guests' },
+                        { value: 'selected', label: 'Selected', title: 'Lines from the selected (or dragged) guest to everyone they have a rating with; green is positive, dashed red is negative' },
+                        { value: 'strong', label: 'All +2', title: 'With nobody selected, lines between every pair rated +2 or more who share a table' },
+                      ]}
+                    />
+                  </div>
+                  </>
+                )}
+                <button
+                  type="button"
+                  onClick={() => setCleanView((v) => !v)}
+                  title="Names only, without scores, colors, ties or markers, for screenshots. Shortcut: V"
+                  className={`px-2.5 py-1 rounded-lg border text-xs cursor-pointer ${
+                    cleanView ? 'bg-black text-white border-black' : 'bg-white text-zinc-600 border-zinc-200 hover:border-black hover:text-black'
+                  }`}
+                >
+                  {cleanView ? '✓ Clean view' : 'Clean view'}
+                </button>
               </div>
             }
           >
@@ -556,6 +574,7 @@ export default function SeatingLab({ data }: { data: LabData }) {
               violatingGuests={violatingGuests}
               highlighted={highlighted}
               tieMode={tieMode}
+              clean={cleanView}
               animationMs={busy || status === 'done' ? ANIMATION_MS[speed - 1] : 380}
               canEdit={!busy}
               deltaFor={(a, b) => moveGuest(scorer, a, b, isLockedSeat).delta}

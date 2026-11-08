@@ -17,6 +17,7 @@ interface TableViewProps {
   violatingGuests: Set<number>
   highlighted: Set<number> | null // Dim everyone else
   tieMode: TieMode
+  clean: boolean // Names only, for screenshots: no scores, colors, ties or markers
   animationMs: number
   canEdit: boolean // Dragging is off while a solver runs
   deltaFor: (seatA: number, seatB: number) => number // Objective change for a swap, without making it
@@ -44,6 +45,7 @@ export default function TableView({
   violatingGuests,
   highlighted,
   tieMode,
+  clean,
   animationMs,
   canEdit,
   deltaFor,
@@ -70,7 +72,11 @@ export default function TableView({
     const best = potential?.[g] ?? 0
     return best > 0 ? happiness[g] / best : happiness[g] < 0 ? -1 : null
   }
-  const fillOf = (g: number) => (potential ? shareColor(shareOf(g)) : happinessColor(happiness[g]))
+  const fillOf = (g: number) => (clean ? '#ffffff' : potential ? shareColor(shareOf(g)) : happinessColor(happiness[g]))
+  const initials = (g: number) => {
+    const words = guestNames[g].trim().split(/\s+/)
+    return (words[0][0] + (words.length > 1 ? words[words.length - 1][0] : '')).toUpperCase()
+  }
 
   const toSvg = (clientX: number, clientY: number) => {
     const svg = svgRef.current
@@ -121,7 +127,7 @@ export default function TableView({
   // Lines between guests: the selected guest's ties, or strong ties within each table
   const focus = drag?.moved ? drag.guest : selectedGuest
   const ties: { key: string; x1: number; y1: number; x2: number; y2: number; affinity: number }[] = []
-  if (tieMode !== 'off') {
+  if (tieMode !== 'off' && !clean) {
     const add = (g: number, k: number) => {
       const a = pos(seatOf[g])
       const b = pos(seatOf[k])
@@ -153,7 +159,7 @@ export default function TableView({
   const previewFrom = drag?.moved ? drag.fromSeat : selectedGuest !== null ? seatOf[selectedGuest] : null
   const previewTo = drag?.moved ? target : canEdit && hoverSeat !== null && hoverSeat !== previewFrom && !lockedSeats.has(hoverSeat) ? hoverSeat : null
   const preview =
-    previewFrom !== null && previewTo !== null && !lockedSeats.has(previewFrom) && canEdit
+    !clean && previewFrom !== null && previewTo !== null && !lockedSeats.has(previewFrom) && canEdit
       ? { at: pos(previewTo), delta: deltaFor(previewFrom, previewTo) }
       : null
 
@@ -187,10 +193,12 @@ export default function TableView({
               Table {t + 1}
             </text>
             <text x={(left + right) / 2} y={(top + bottom) / 2 + 19} textAnchor="middle" className="fill-amber-900/40 text-[11px]">
-              {stats.guests} guests ·{' '}
-              {potential
-                ? `avg ${formatShare(stats.shared ? stats.share / stats.shared : null)} of best possible`
-                : `avg happiness ${formatScore(stats.guests ? stats.happiness / stats.guests : 0)}`}
+              {stats.guests} guests
+              {clean
+                ? ''
+                : potential
+                  ? ` · avg ${formatShare(stats.shared ? stats.share / stats.shared : null)} of best possible`
+                  : ` · avg happiness ${formatScore(stats.guests ? stats.happiness / stats.guests : 0)}`}
             </text>
           </g>
         )
@@ -243,37 +251,47 @@ export default function TableView({
         const seat = seats[s]
         const h = happiness[g]
         const share = shareOf(g)
-        const isSelected = g === selectedGuest
+        const isSelected = g === selectedGuest && !clean
+        const isHighlighted = !clean && !!highlighted?.has(g)
+        const isViolating = !clean && violatingGuests.has(g)
         return (
           <g
             key={problem.guestIds[g]}
             style={{
               transform: `translate(${x}px, ${y}px)`,
               transition,
-              opacity: isDragging ? 0.35 : highlighted && !highlighted.has(g) ? 0.22 : 1,
+              opacity: isDragging ? 0.35 : !clean && highlighted && !highlighted.has(g) ? 0.22 : 1,
             }}
             className={canEdit && !lockedSeats.has(s) ? 'cursor-grab active:cursor-grabbing' : 'cursor-pointer'}
             onPointerDown={(e) => onPointerDown(e, g)}
             onMouseEnter={() => setHoverSeat(s)}
             onMouseLeave={() => setHoverSeat(null)}
           >
-            <title>{`${guestNames[g]} · happiness ${formatScore(h)}${potential?.[g] ? ` of a possible ${formatScore(potential[g])}` : ''}`}</title>
+            <title>
+              {clean ? guestNames[g] : `${guestNames[g]} · happiness ${formatScore(h)}${potential?.[g] ? ` of a possible ${formatScore(potential[g])}` : ''}`}
+            </title>
             {isSelected && <circle r={R + 6} className="fill-none stroke-black" strokeWidth={2} />}
-            {highlighted?.has(g) && !isSelected && <circle r={R + 5} className="fill-none stroke-indigo-500" strokeWidth={2.5} />}
+            {isHighlighted && !isSelected && <circle r={R + 5} className="fill-none stroke-indigo-500" strokeWidth={2.5} />}
             <circle
               r={R}
               fill={fillOf(g)}
-              stroke={violatingGuests.has(g) ? '#dc2626' : '#ffffff'}
-              strokeWidth={violatingGuests.has(g) ? 3 : 2}
+              stroke={isViolating ? '#dc2626' : clean ? '#a1a1aa' : '#ffffff'}
+              strokeWidth={isViolating ? 3 : clean ? 1.5 : 2}
             />
-            <text
-              y={4}
-              textAnchor="middle"
-              fill={potential ? shareTextColor(share) : happinessTextColor(h)}
-              className={`${potential && share !== null && share >= 0.995 ? 'text-[11px]' : 'text-[12px]'} font-bold font-mono pointer-events-none`}
-            >
-              {potential ? formatShare(share) : formatScore(h)}
-            </text>
+            {clean ? (
+              <text y={4} textAnchor="middle" className="fill-zinc-600 text-[12px] font-semibold pointer-events-none">
+                {initials(g)}
+              </text>
+            ) : (
+              <text
+                y={4}
+                textAnchor="middle"
+                fill={potential ? shareTextColor(share) : happinessTextColor(h)}
+                className={`${potential && share !== null && share >= 0.995 ? 'text-[11px]' : 'text-[12px]'} font-bold font-mono pointer-events-none`}
+              >
+                {potential ? formatShare(share) : formatScore(h)}
+              </text>
+            )}
             <text
               y={seat.side === 'R' ? R + 14 : -R - 7}
               textAnchor="middle"
@@ -281,12 +299,12 @@ export default function TableView({
             >
               {labels[g]}
             </text>
-            {mustHead[g] === 1 && (
+            {mustHead[g] === 1 && !clean && (
               <text x={-R - 2} y={-R + 10} className="text-[13px] fill-amber-600 pointer-events-none">
                 ♛
               </text>
             )}
-            {lockedSeats.has(s) && (
+            {lockedSeats.has(s) && !clean && (
               <text x={R - 10} y={-R + 9} className="text-[11px] pointer-events-none">
                 🔒
               </text>
