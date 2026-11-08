@@ -58,6 +58,7 @@ export type Problem = {
   central: Float64Array // Per guest: sum of positive affinities, for the head bonus
   weight: Float64Array // Per guest: how much their utility counts in the total
   mustHead: Uint8Array // Per guest
+  headsPerTable?: Int32Array // Table-level view only: head requirements become at most this many head guests per table
   pairs: PairConstraint[]
   objective: ObjectiveConfig
 }
@@ -152,7 +153,8 @@ export function tableLevelProblem(problem: Problem): Problem {
   const pairs = problem.pairs.flatMap((c): PairConstraint[] =>
     c.kind === 'ADJACENT' || c.kind === 'NEAR' ? [{ ...c, kind: 'SAME_TABLE' }] : c.kind === 'NOT_ADJACENT' ? [] : [c]
   )
-  // Heads don't exist at this level, so the head bonus and head requirements wait for stage two
+  // Seats within a table don't matter at this level, so the head bonus waits for stage two and a
+  // head requirement only asks that the table has a head seat left for the guest.
   // Two guests who dislike each other can sit far apart at the same table, where they barely
   // count, so only positive ratings decide who shares a table
   const A = problem.A.map((v) => Math.max(0, v))
@@ -161,7 +163,9 @@ export function tableLevelProblem(problem: Problem): Problem {
     A,
     P,
     pairs,
-    mustHead: new Uint8Array(problem.n),
+    headsPerTable: Int32Array.from({ length: problem.layout.tables }, (_, t) =>
+      problem.seats.reduce((count, seat) => count + (seat.table === t && seat.isHead ? 1 : 0), 0)
+    ),
     objective: { ...problem.objective, headBonus: 0 },
   }
 }

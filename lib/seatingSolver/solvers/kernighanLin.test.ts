@@ -97,7 +97,7 @@ test('kernighanLin never puts more head guests on a table than it has head seats
   const p = makeProblem(36, { tables: 2, seatsPerSide: 8, heads: true }, [[12, 13, 'ADJACENT']], [12, 14, 15])
   const locked = new Uint8Array(p.S)
   const tp = tableLevelProblem(p)
-  const split = new TableSplit({ ...tp, mustHead: p.mustHead }, new Scorer(tp, identity(p)), identity(p), locked)
+  const split = new TableSplit(tp, new Scorer(tp, identity(p)), identity(p), locked)
   const rng = mulberry32(4)
   for (let k = 0; k < 20; k++) {
     split.load(split.random(rng))

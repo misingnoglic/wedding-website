@@ -197,8 +197,8 @@ export class Rebuilder {
 
   // Penalty for g's hard constraints with guests already seated, if g sat at s
   private brokenAt(g: number, s: number): number {
-    const { S, adjacent, near: nearby, tableOf, mustHead, isHead } = this.p
-    let broken = mustHead[g] && !isHead[s] ? 1 : 0
+    const { S, adjacent, near: nearby, tableOf, mustHead, isHead, headsPerTable } = this.p
+    let broken = mustHead[g] && !isHead[s] && !headsPerTable ? 1 : 0 // The table-level view caps heads per table instead
     for (const c of this.constraintsOf[g]) {
       const ps = this.pos[c.other]
       if (ps < 0) continue

@@ -3,6 +3,9 @@
 // For each guest g:  happiness h(g) = Σ_k affinity(g, k) × proximity(seat g, seat k)
 // utility(g) = weight(g) · (fairness(h) + head bonus − missing-acquaintance penalty)
 // objective  = Σ utility − constraintPenalty × broken hard constraints
+//
+// In the table-level view (headsPerTable set), a head requirement is broken once for each head
+// guest a table has beyond its head seats, wherever they sit within it.
 
 import { KNOWS_THRESHOLD, PairConstraint, Problem } from './problem'
 
@@ -24,6 +27,7 @@ export class Scorer {
   readonly known: Int32Array // Exact after load/recompute; kept current by swaps only when minKnownAtTable > 0
   total = 0
   private readonly constraintsOf: number[][]
+  private readonly headGuests: Int32Array | null // Table-level view: head guests per table
 
   constructor(problem: Problem, guestAt: Int32Array) {
     this.p = problem
@@ -36,6 +40,7 @@ export class Scorer {
       this.constraintsOf[c.x].push(i)
       this.constraintsOf[c.y].push(i)
     })
+    this.headGuests = problem.headsPerTable ? new Int32Array(problem.headsPerTable.length) : null
     this.load(guestAt)
   }
 
@@ -55,8 +60,19 @@ export class Scorer {
     }
     let violations = 0
     for (const c of pairs) if (this.violated(c)) violations++
-    for (let g = 0; g < n; g++) if (mustHead[g] && !this.p.isHead[this.seatOf[g]]) violations++
+    if (this.headGuests) {
+      this.headGuests.fill(0)
+      for (let g = 0; g < n; g++) if (mustHead[g]) this.headGuests[this.p.tableOf[this.seatOf[g]]]++
+      for (let t = 0; t < this.headGuests.length; t++) violations += this.headOverflow(t)
+    } else {
+      for (let g = 0; g < n; g++) if (mustHead[g] && !this.p.isHead[this.seatOf[g]]) violations++
+    }
     this.total = total - objective.constraintPenalty * violations
+  }
+
+  // Table-level view: head guests at table t beyond its head seats
+  private headOverflow(t: number): number {
+    return Math.max(0, this.headGuests![t] - this.p.headsPerTable![t])
   }
 
   happinessOf(g: number): number {
@@ -115,10 +131,11 @@ export class Scorer {
   // Broken constraints involving x or y (tokens), each counted once
   private violationsTouching(x: number, y: number): number {
     const { n, pairs, mustHead, isHead } = this.p
+    const perSeat = !this.headGuests // The table-level view counts heads per table, in applySwap
     let count = 0
     if (x < n) {
       for (const i of this.constraintsOf[x]) if (this.violated(pairs[i])) count++
-      if (mustHead[x] && !isHead[this.seatOf[x]]) count++
+      if (perSeat && mustHead[x] && !isHead[this.seatOf[x]]) count++
     }
     if (y < n) {
       for (const i of this.constraintsOf[y]) {
@@ -126,7 +143,7 @@ export class Scorer {
         if (c.x === x || c.y === x) continue
         if (this.violated(c)) count++
       }
-      if (mustHead[y] && !isHead[this.seatOf[y]]) count++
+      if (perSeat && mustHead[y] && !isHead[this.seatOf[y]]) count++
     }
     return count
   }
@@ -200,6 +217,18 @@ export class Scorer {
     }
 
     delta -= objective.constraintPenalty * (this.violationsTouching(x, y) - before)
+
+    // Table-level view: a head guest changing tables moves one head requirement between them
+    const headX = xReal && this.p.mustHead[x] === 1
+    const headY = yReal && this.p.mustHead[y] === 1
+    if (this.headGuests && ta !== tb && headX !== headY) {
+      const [from, to] = headX ? [ta, tb] : [tb, ta]
+      const overflow = this.headOverflow(from) + this.headOverflow(to)
+      this.headGuests[from]--
+      this.headGuests[to]++
+      delta -= objective.constraintPenalty * (this.headOverflow(from) + this.headOverflow(to) - overflow)
+    }
+
     this.total += delta
     return delta
   }
@@ -225,8 +254,20 @@ export class Scorer {
 
   violations(): Violation[] {
     const list: Violation[] = this.p.pairs.filter((c) => this.violated(c)).map((c) => ({ kind: c.kind, guests: [c.x, c.y] }))
-    for (let g = 0; g < this.p.n; g++) {
-      if (this.p.mustHead[g] && !this.p.isHead[this.seatOf[g]]) list.push({ kind: 'HEAD', guests: [g] })
+    const { n, mustHead, isHead, tableOf, headsPerTable } = this.p
+    if (headsPerTable) {
+      // Table-level view: the head guests each table has no head seat for
+      const room = Int32Array.from(headsPerTable)
+      for (let g = 0; g < n; g++) {
+        if (!mustHead[g]) continue
+        const t = tableOf[this.seatOf[g]]
+        if (room[t] > 0) room[t]--
+        else list.push({ kind: 'HEAD', guests: [g] })
+      }
+      return list
+    }
+    for (let g = 0; g < n; g++) {
+      if (mustHead[g] && !isHead[this.seatOf[g]]) list.push({ kind: 'HEAD', guests: [g] })
     }
     return list
   }

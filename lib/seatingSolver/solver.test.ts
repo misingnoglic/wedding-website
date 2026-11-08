@@ -176,6 +176,29 @@ test('the table-level view ignores negative ratings, which can sit far apart at 
   for (let i = 0; i < n * n; i++) assert.equal(tp.A[i], Math.max(0, p.A[i]))
 })
 
+test('the table-level view breaks a head requirement only past a table’s head seats', () => {
+  const p = makeProblem(20)
+  const heads = new Uint8Array(p.n)
+  for (const g of [1, 4, 9, 12, 15]) heads[g] = 1 // Five head guests, four head seats
+  const tp = tableLevelProblem({ ...p, mustHead: heads })
+  const scorer = new Scorer(tp, identity(p))
+  const rng = mulberry32(5)
+  for (let i = 0; i < 3000; i++) {
+    const before = scorer.total
+    const d = scorer.applySwap(Math.floor(rng() * p.S), Math.floor(rng() * p.S))
+    assert.ok(Math.abs(scorer.total - (before + d)) < 1e-9)
+  }
+  const incremental = scorer.total
+  scorer.recompute()
+  assert.ok(Math.abs(incremental - scorer.total) < 1e-6)
+  // Count by hand: head guests beyond each table's two head seats, wherever they sit
+  const perTable = [0, 0]
+  for (let g = 0; g < p.n; g++) if (heads[g]) perTable[p.tableOf[scorer.seatOf[g]]]++
+  const over = perTable.reduce((sum, c) => sum + Math.max(0, c - 2), 0)
+  assert.equal(scorer.violations().filter((v) => v.kind === 'HEAD').length, over)
+  assert.ok(over >= 1)
+})
+
 test('a near rule holds across and diagonal, and breaks further apart', () => {
   const p = makeProblem(20)
   const seat = (key: string) => p.seats.findIndex((s) => s.key === key)
@@ -210,6 +233,20 @@ test('greedy assignment is valid, keeps locks, and seats head guests at heads', 
 })
 
 for (const spec of ALGORITHMS) {
+  test(`${spec.name} seats three head guests at two tables with two heads each`, async () => {
+    await prepareAlgorithm(spec.id as AlgorithmId)
+    // One table has to take two of them, and the two-stage solvers must split them that way
+    const p = makeProblem(28, {}, 4)
+    const heads = new Uint8Array(p.n)
+    for (const g of [12, 14, 15]) heads[g] = 1
+    const q = { ...p, mustHead: heads }
+    const start = randomAssignment(q, identity(q), new Uint8Array(q.S), 2)
+    const solver = createSolver(spec.id as AlgorithmId, q, start, new Uint8Array(q.S), scaleToEvaluations(spec.id as AlgorithmId, defaultParams(spec.id as AlgorithmId), 200_000, q.n), 1)
+    while (!solver.progress().done) solver.step(20_000)
+    const scorer = new Scorer(q, solver.best())
+    assert.deepEqual(scorer.violations().filter((v) => v.kind === 'HEAD'), [])
+  })
+
   test(`${spec.name} improves on a random seating and never moves locked seats`, async () => {
     await prepareAlgorithm(spec.id as AlgorithmId)
     const p = makeProblem(24)
