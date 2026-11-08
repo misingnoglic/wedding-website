@@ -7,17 +7,19 @@ export type SeatingState = {
   relationships: GuestRelationshipItem[]
   excludedIds: Set<string>
   headIds: Set<string> // Guests who must take a head seat
+  weights: Map<string, number> // Guests' own seating weights; groups carry theirs
 }
 
 // Optimistic edits applied on top of server data until the action's revalidation lands
 export type SeatingPatch =
   | { type: 'relationship'; guestId1: string; guestId2: string; affinity?: number | null; constraint?: string | null }
   | { type: 'membership'; groupId: string; guestIds: string[]; isMember: boolean }
-  | { type: 'group'; groupId: string; name?: string; affinity?: number; color?: string | null }
+  | { type: 'group'; groupId: string; name?: string; affinity?: number; color?: string | null; seatingWeight?: number | null }
   | { type: 'deleteGroup'; groupId: string }
   | { type: 'link'; a: LinkEndpoint; b: LinkEndpoint; affinity: number | null }
   | { type: 'exclude'; guestId: string; excludeFromSeating: boolean }
   | { type: 'seatRequirement'; guestId: string; seatRequirement: string | null }
+  | { type: 'seatingWeight'; guestId: string; seatingWeight: number | null }
 
 export const GROUP_COLORS = ['#f43f5e', '#f59e0b', '#10b981', '#3b82f6', '#8b5cf6', '#ec4899', '#14b8a6', '#64748b']
 
@@ -57,6 +59,7 @@ export function applySeatingPatch(state: SeatingState, patch: SeatingPatch): Sea
                 name: patch.name ?? g.name,
                 affinity: patch.affinity ?? g.affinity,
                 color: patch.color === undefined ? g.color : patch.color,
+                seatingWeight: patch.seatingWeight === undefined ? g.seatingWeight : patch.seatingWeight,
               }
             : g
         ),
@@ -87,6 +90,12 @@ export function applySeatingPatch(state: SeatingState, patch: SeatingPatch): Sea
       if (patch.seatRequirement === 'HEAD') headIds.add(patch.guestId)
       else headIds.delete(patch.guestId)
       return { ...state, headIds }
+    }
+    case 'seatingWeight': {
+      const weights = new Map(state.weights)
+      if (patch.seatingWeight === null) weights.delete(patch.guestId)
+      else weights.set(patch.guestId, patch.seatingWeight)
+      return { ...state, weights }
     }
   }
 }

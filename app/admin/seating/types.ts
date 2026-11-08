@@ -11,6 +11,7 @@ export type LabGuest = {
   excludeFromSeating: boolean
   isAttendingWedding: boolean | null
   seatRequirement: string | null
+  seatingWeight: number | null
 }
 
 export type LabPlanAssignment = { seatKey: string; guestId: string; isLocked: boolean }
@@ -35,7 +36,7 @@ export type LabConfig = {
 
 export type LabData = {
   guests: LabGuest[]
-  groups: { id: string; name: string; affinity: number; memberIds: string[] }[]
+  groups: { id: string; name: string; affinity: number; seatingWeight: number | null; memberIds: string[] }[]
   links: { a: LinkEndpoint; b: LinkEndpoint; affinity: number }[]
   relationships: { guestAId: string; guestBId: string; affinity: number | null; constraint: string | null }[]
   plans: LabPlan[]

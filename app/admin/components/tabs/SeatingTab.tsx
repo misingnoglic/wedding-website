@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useMemo, useOptimistic, useState, useTransition } from 'react'
-import { buildAffinityMap, findSeatingWarnings, HEAD_SEATS, isInSeatingPool, partyPairConstraints } from '@/lib/seating'
+import { buildAffinityMap, effectiveWeights, findSeatingWarnings, HEAD_SEATS, isInSeatingPool, partyPairConstraints } from '@/lib/seating'
 import { FlatGuest, SeatingData } from '../../types'
 import { applySeatingPatch, RunSeatingAction, SeatingState } from '../seating/state'
 import GuestRatings from '../seating/GuestRatings'
@@ -27,6 +27,7 @@ export default function SeatingTab({ guests, seating }: SeatingTabProps) {
       relationships: seating.relationships,
       excludedIds: new Set(guests.filter((g) => g.excludeFromSeating).map((g) => g.id)),
       headIds: new Set(guests.filter((g) => g.seatRequirement === 'HEAD').map((g) => g.id)),
+      weights: new Map(guests.flatMap((g) => (g.seatingWeight !== null ? [[g.id, g.seatingWeight]] : []))),
     }),
     [seating, guests]
   )
@@ -58,6 +59,10 @@ export default function SeatingTab({ guests, seating }: SeatingTabProps) {
     () => buildAffinityMap(poolGuests, state.groups, state.relationships, state.links),
     [poolGuests, state.groups, state.relationships, state.links]
   )
+  const weights = useMemo(
+    () => effectiveWeights(poolGuests.map((g) => ({ id: g.id, seatingWeight: state.weights.get(g.id) ?? null })), state.groups),
+    [poolGuests, state.weights, state.groups]
+  )
   // Parties of two sit together by default (the Seating Lab can turn this off)
   const impliedConstraints = useMemo(() => partyPairConstraints(poolGuests, state.relationships), [poolGuests, state.relationships])
   const warnings = useMemo(
@@ -74,6 +79,7 @@ export default function SeatingTab({ guests, seating }: SeatingTabProps) {
     { label: 'Groups', value: state.groups.length },
     { label: 'Links', value: state.links.length },
     { label: 'Explicit ratings', value: poolRelationships.filter((r) => r.affinity !== null).length },
+    { label: 'Weighted guests', value: [...weights.values()].filter((w) => w.weight !== 1).length },
     { label: 'Hard constraints', value: poolRelationships.filter((r) => r.constraint !== null).length + impliedConstraints.length },
     { label: 'No strong tie', value: warnings.isolated.size, warn: warnings.isolated.size > 0 },
     { label: 'Over-constrained', value: warnings.overConstrained.size, warn: warnings.overConstrained.size > 0 },
@@ -140,6 +146,8 @@ export default function SeatingTab({ guests, seating }: SeatingTabProps) {
           poolGuests={poolGuests}
           excludedGuests={excludedGuests}
           headIds={state.headIds}
+          ownWeights={state.weights}
+          weights={weights}
           groups={state.groups}
           relationships={state.relationships}
           affinityMap={affinityMap}

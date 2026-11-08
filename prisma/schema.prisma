@@ -57,6 +57,7 @@ model Guest {
   // Seating chart
   excludeFromSeating Boolean              @default(false) // e.g. the couple at the sweetheart table
   seatRequirement    String? // 'HEAD' = must take a head seat
+  seatingWeight      Float? // How much their happiness counts (2 = double); null takes their groups' weight, else 1
   seatingGroups      SeatingGroupMember[]
   relationshipsAsA   GuestRelationship[]  @relation("RelationshipGuestA")
   relationshipsAsB   GuestRelationship[]  @relation("RelationshipGuestB")
@@ -160,15 +161,16 @@ model PushSubscription {
 
 // A named cluster of guests (e.g. "Arya college") whose pairs share a baseline affinity
 model SeatingGroup {
-  id        String               @id @default(cuid())
-  name      String
-  color     String?
-  affinity  Int                  @default(1) // -3..+3 baseline for every pair inside the group
-  members   SeatingGroupMember[]
-  linksAsA  SeatingLink[]        @relation("LinkAGroup")
-  linksAsB  SeatingLink[]        @relation("LinkBGroup")
-  createdAt DateTime             @default(now())
-  updatedAt DateTime             @updatedAt
+  id            String               @id @default(cuid())
+  name          String
+  color         String?
+  affinity      Int                  @default(1) // -3..+3 baseline for every pair inside the group
+  seatingWeight Float? // Weight for members without their own; the highest of a guest's groups wins
+  members       SeatingGroupMember[]
+  linksAsA      SeatingLink[]        @relation("LinkAGroup")
+  linksAsB      SeatingLink[]        @relation("LinkBGroup")
+  createdAt     DateTime             @default(now())
+  updatedAt     DateTime             @updatedAt
 }
 
 model SeatingGroupMember {

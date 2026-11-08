@@ -7,6 +7,7 @@ import { getAuthenticatedAdmin } from '@/lib/auth'
 import {
   isLinkEndpoint,
   isSeatingConstraint,
+  isSeatingWeight,
   isSeatRequirement,
   isValidAffinity,
   LinkEndpoint,
@@ -38,17 +39,18 @@ export async function createSeatingGroup(input: { name: string; affinity: number
 
 export async function updateSeatingGroup(
   groupId: string,
-  input: { name?: string; affinity?: number; color?: string | null }
+  input: { name?: string; affinity?: number; color?: string | null; seatingWeight?: number | null }
 ): Promise<ActionResult> {
   await getAuthenticatedAdmin()
   const name = input.name?.trim()
   if (input.name !== undefined && !name) return { error: 'Group name is required.' }
   if (input.affinity !== undefined && !isValidAffinity(input.affinity)) return { error: 'Affinity must be between -3 and +3.' }
+  if (input.seatingWeight != null && !isSeatingWeight(input.seatingWeight)) return { error: 'Unknown weight.' }
 
   try {
     await db.seatingGroup.update({
       where: { id: groupId },
-      data: { name, affinity: input.affinity, color: input.color },
+      data: { name, affinity: input.affinity, color: input.color, seatingWeight: input.seatingWeight },
     })
     revalidatePath('/admin')
     return { success: true }
@@ -201,6 +203,19 @@ export async function setSeatRequirement(guestId: string, seatRequirement: strin
     return { success: true }
   } catch (error) {
     console.error('Set seat requirement error:', error)
+    return { error: 'Failed to update guest.' }
+  }
+}
+
+export async function setSeatingWeight(guestId: string, seatingWeight: number | null): Promise<ActionResult> {
+  await getAuthenticatedAdmin()
+  if (seatingWeight !== null && !isSeatingWeight(seatingWeight)) return { error: 'Unknown weight.' }
+  try {
+    await db.guest.update({ where: { id: guestId }, data: { seatingWeight } })
+    revalidatePath('/admin')
+    return { success: true }
+  } catch (error) {
+    console.error('Set seating weight error:', error)
     return { error: 'Failed to update guest.' }
   }
 }

@@ -92,6 +92,18 @@ test('a squeezed-in seat makes one side longer without stretching the table', ()
   assert.equal(prox('T1-L-03', 'T1-R-03'), DEFAULT_PROXIMITY.diagonal)
 })
 
+test("a guest's weight multiplies their utility", () => {
+  const plain = makeProblem(20)
+  const guestAt = identity(plain)
+  const weighted = { ...plain, weight: Float64Array.from(plain.weight, (w, g) => (g === 3 ? 2 : w)) }
+  const a = new Scorer(plain, guestAt)
+  const b = new Scorer(weighted, guestAt)
+  const u = (s: Scorer, g: number) => s.utility(g, s.h[g], s.known[g], s.seatOf[g])
+  assert.equal(u(b, 3), 2 * u(a, 3))
+  assert.equal(u(b, 4), u(a, 4))
+  assert.ok(Math.abs(b.total - a.total - u(a, 3)) < 1e-9)
+})
+
 test('incremental swaps always match a full recompute', () => {
   for (const objective of [
     {},
@@ -100,6 +112,8 @@ test('incremental swaps always match a full recompute', () => {
     { minKnownAtTable: 3, headBonus: 0.1, proximity: { ...DEFAULT_PROXIMITY, headSecondRow: 0.4 } },
   ]) {
     const p = makeProblem(20, objective)
+    p.weight[0] = 2 // Weighted guests too
+    p.weight[9] = 0.5
     const scorer = new Scorer(p, identity(p))
     const rng = mulberry32(3)
     for (let i = 0; i < 3000; i++) {

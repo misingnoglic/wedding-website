@@ -2,6 +2,7 @@ import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import {
   buildAffinityMap,
+  effectiveWeights,
   endpointFromColumns,
   findSeatingWarnings,
   getAffinity,
@@ -199,4 +200,22 @@ test('partyPairConstraints seats two-person parties together unless already cons
     partyPairConstraints(pool, explicit).map((r) => [r.guestAId, r.guestBId]),
     [['c', 'e']]
   )
+})
+
+test("a guest's own weight wins, then their highest-weighted group, then 1", () => {
+  const groups = [
+    { name: 'Parents', seatingWeight: 2, memberIds: ['a', 'b', 'c'] },
+    { name: 'Hiking', seatingWeight: 1.5, memberIds: ['b', 'd'] },
+    { name: 'College', seatingWeight: null, memberIds: ['e'] },
+  ]
+  const weights = effectiveWeights(
+    ['a', 'b', 'c', 'd', 'e', 'f'].map((id) => ({ id, seatingWeight: id === 'c' ? 0.5 : null })),
+    groups
+  )
+  assert.deepEqual(weights.get('a'), { weight: 2, from: 'Parents' })
+  assert.deepEqual(weights.get('b'), { weight: 2, from: 'Parents' })
+  assert.deepEqual(weights.get('c'), { weight: 0.5, from: null })
+  assert.deepEqual(weights.get('d'), { weight: 1.5, from: 'Hiking' })
+  assert.deepEqual(weights.get('e'), { weight: 1, from: null })
+  assert.deepEqual(weights.get('f'), { weight: 1, from: null })
 })

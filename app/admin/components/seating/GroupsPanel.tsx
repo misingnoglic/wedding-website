@@ -13,6 +13,7 @@ import { FlatGuest, SeatingGroupItem, SeatingLinkItem } from '../../types'
 import AffinityPicker, { affinityClass, formatAffinity } from './AffinityPicker'
 import EndpointPicker, { EndpointBadge, EndpointOption } from './EndpointPicker'
 import { GROUP_COLORS, RunSeatingAction } from './state'
+import WeightPicker from './WeightPicker'
 
 interface GroupsPanelProps {
   groups: SeatingGroupItem[]
@@ -355,6 +356,21 @@ function GroupCard({ group, poolGuests, guestsById, groupNamesByGuest, run }: Gr
         <ColorSwatches
           value={group.color}
           onChange={(color) => run({ type: 'group', groupId: group.id, color }, () => updateSeatingGroup(group.id, { color }))}
+        />
+      </div>
+
+      <div
+        className="flex flex-wrap items-center gap-2"
+        title="How much members' happiness counts in the Seating Lab's score. A guest's own weight wins; in several weighted groups, the highest counts"
+      >
+        <span className="text-[11px] uppercase tracking-wider font-semibold text-zinc-500">Weight</span>
+        <WeightPicker
+          value={group.seatingWeight}
+          inherited={1}
+          inheritedLabel="by default"
+          onChange={(seatingWeight) =>
+            run({ type: 'group', groupId: group.id, seatingWeight }, () => updateSeatingGroup(group.id, { seatingWeight }))
+          }
         />
       </div>
 

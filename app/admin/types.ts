@@ -22,6 +22,7 @@ export type Guest = {
   songRequests: string | null
   excludeFromSeating: boolean
   seatRequirement: string | null
+  seatingWeight: number | null
   phoneProblem?: string | null // Why texts to this number fail (e.g. a landline); filled in by the admin page
   createdAt: Date | string
   updatedAt: Date | string
@@ -67,6 +68,7 @@ export type SeatingGroupItem = {
   name: string
   color: string | null
   affinity: number
+  seatingWeight: number | null
   memberIds: string[]
 }
 

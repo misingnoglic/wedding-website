@@ -270,7 +270,7 @@ export function solveTableSplit(h: Highs, problem: Problem, guestAt: Int32Array,
       for (let t = 0; t < T; t++) {
         const s = seatOf[g]
         const fixedOff = locked[s] && (tableOf[s] !== t || !isHead[s])
-        H[g * T + t] = m.addVar(0, fixedOff ? 0 : 1, o.headBonus > 0 ? o.headBonus * problem.central[g] : 0, true)
+        H[g * T + t] = m.addVar(0, fixedOff ? 0 : 1, o.headBonus > 0 ? o.headBonus * problem.central[g] * problem.weight[g] : 0, true)
         m.addRow(-Infinity, 0, [H[g * T + t], 1, x[g * T + t], -1])
       }
     }
@@ -372,18 +372,20 @@ export function solveTableSplit(h: Highs, problem: Problem, guestAt: Int32Array,
     }
   }
 
-  // Utility per guest: the fairness curve's upper envelope, plus too-few-acquaintances penalty
+  // Utility per guest, times their weight: the fairness curve's upper envelope, plus
+  // too-few-acquaintances penalty
   const lines = utilityLines(problem)
   for (let g = 0; g < n; g++) {
+    const weight = problem.weight[g]
     if (lines.length === 0) {
-      for (let i = 0; i < happy[g].length; i += 2) m.cost[happy[g][i]] += happy[g][i + 1]
+      for (let i = 0; i < happy[g].length; i += 2) m.cost[happy[g][i]] += happy[g][i + 1] * weight
     } else {
-      const u = m.addVar(-Infinity, Infinity, 1)
+      const u = m.addVar(-Infinity, Infinity, weight)
       // u − b·h ≤ a
       for (const [a, b] of lines) m.addRow(-Infinity, a, [u, 1, ...happy[g].map((c, i) => (i % 2 ? -b * c : c))])
     }
     if (o.minKnownAtTable > 0) {
-      const short = m.addVar(0, Infinity, -o.minKnownPenalty)
+      const short = m.addVar(0, Infinity, -o.minKnownPenalty * weight)
       m.addRow(o.minKnownAtTable, Infinity, [short, 1, ...known[g]])
     }
   }

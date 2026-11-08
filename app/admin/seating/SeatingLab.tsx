@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from 'react'
-import { buildAffinityMap, isInSeatingPool, partyPairConstraints } from '@/lib/seating'
+import { buildAffinityMap, effectiveWeights, isInSeatingPool, partyPairConstraints } from '@/lib/seating'
 import {
   ALGORITHMS,
   AlgorithmId,
@@ -70,6 +70,10 @@ export default function SeatingLab({ data }: { data: LabData }) {
   )
   const affinityMap = useMemo(() => buildAffinityMap(poolGuests, data.groups, data.relationships, data.links), [poolGuests, data.groups, data.relationships, data.links])
   const headIds = useMemo(() => new Set(poolGuests.filter((g) => g.seatRequirement === 'HEAD').map((g) => g.id)), [poolGuests])
+  const weights = useMemo(
+    () => new Map([...effectiveWeights(poolGuests, data.groups)].map(([id, w]) => [id, w.weight])),
+    [poolGuests, data.groups]
+  )
   const familyNames = useMemo(() => new Map(poolGuests.map((g) => [g.id, g.familyName])), [poolGuests])
 
   const [objective, setObjective] = useState<ObjectiveConfig>(() => mergeObjective(data.settings?.objective))
@@ -79,8 +83,8 @@ export default function SeatingLab({ data }: { data: LabData }) {
     [objective.partyPairsAdjacent, data.relationships, poolGuests]
   )
   const problem = useMemo(
-    () => buildProblem({ guests: poolGuests, affinityMap, relationships, headIds, layout, objective }),
-    [poolGuests, affinityMap, relationships, headIds, layout, objective]
+    () => buildProblem({ guests: poolGuests, affinityMap, relationships, headIds, weights, layout, objective }),
+    [poolGuests, affinityMap, relationships, headIds, weights, layout, objective]
   )
 
   // ---- Seating on screen ---------------------------------------------------------------------

@@ -34,6 +34,36 @@ export function isSeatRequirement(value: unknown): value is SeatRequirement {
   return SEAT_REQUIREMENTS.includes(value as SeatRequirement)
 }
 
+// How much a guest's happiness counts in the seating score (Guest/SeatingGroup.seatingWeight)
+export const SEATING_WEIGHTS = [0.5, 1, 1.5, 2, 3] as const
+
+export function isSeatingWeight(value: unknown): value is number {
+  return SEATING_WEIGHTS.includes(value as (typeof SEATING_WEIGHTS)[number])
+}
+
+export const formatWeight = (weight: number) => `${weight}×`
+
+/**
+ * Each guest's weight and where it comes from: their own if set, otherwise the highest weight of
+ * the groups they're in, otherwise 1.
+ */
+export function effectiveWeights(
+  guests: { id: string; seatingWeight: number | null }[],
+  groups: { name: string; seatingWeight: number | null; memberIds: string[] }[]
+): Map<string, { weight: number; from: string | null }> {
+  const fromGroups = new Map<string, { weight: number; from: string }>()
+  for (const group of groups) {
+    if (group.seatingWeight === null) continue
+    for (const id of group.memberIds) {
+      const current = fromGroups.get(id)
+      if (!current || group.seatingWeight > current.weight) fromGroups.set(id, { weight: group.seatingWeight, from: group.name })
+    }
+  }
+  return new Map(
+    guests.map((g) => [g.id, g.seatingWeight !== null ? { weight: g.seatingWeight, from: null } : fromGroups.get(g.id) ?? { weight: 1, from: null }])
+  )
+}
+
 export const SEATING_CONSTRAINTS = ['ADJACENT', 'SAME_TABLE', 'DIFFERENT_TABLE', 'NOT_ADJACENT'] as const
 export type SeatingConstraint = (typeof SEATING_CONSTRAINTS)[number]
 

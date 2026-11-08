@@ -37,9 +37,16 @@ export default async function SeatingLabPage() {
         excludeFromSeating: g.excludeFromSeating,
         isAttendingWedding: g.isAttendingWedding,
         seatRequirement: g.seatRequirement,
+        seatingWeight: g.seatingWeight,
       }))
     ),
-    groups: groups.map(({ members, ...g }) => ({ id: g.id, name: g.name, affinity: g.affinity, memberIds: members.map((m) => m.guestId) })),
+    groups: groups.map(({ members, ...g }) => ({
+      id: g.id,
+      name: g.name,
+      affinity: g.affinity,
+      seatingWeight: g.seatingWeight,
+      memberIds: members.map((m) => m.guestId),
+    })),
     links: linkRows.flatMap((l) => {
       const a = endpointFromColumns(l.aGroupId, l.aFamilyId, l.aGuestId)
       const b = endpointFromColumns(l.bGroupId, l.bFamilyId, l.bGuestId)

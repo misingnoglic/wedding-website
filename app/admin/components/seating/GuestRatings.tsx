@@ -4,16 +4,19 @@ import { useMemo, useState } from 'react'
 import {
   CONSTRAINT_LABELS,
   EffectiveAffinity,
+  effectiveWeights,
   findSeatingWarnings,
+  formatWeight,
   HEAD_SEATS,
   pairKey,
   SEATING_CONSTRAINTS,
   STRONG_AFFINITY,
 } from '@/lib/seating'
-import { setExcludeFromSeating, setGuestRelationship, setSeatRequirement } from '../../../actions/seating'
+import { setExcludeFromSeating, setGuestRelationship, setSeatingWeight, setSeatRequirement } from '../../../actions/seating'
 import { FlatGuest, GuestRelationshipItem, SeatingGroupItem } from '../../types'
 import AffinityPicker, { formatAffinity } from './AffinityPicker'
 import { RunSeatingAction } from './state'
+import WeightPicker from './WeightPicker'
 
 type SeatingWarnings = ReturnType<typeof findSeatingWarnings>
 
@@ -21,6 +24,8 @@ interface GuestRatingsProps {
   poolGuests: FlatGuest[]
   excludedGuests: FlatGuest[]
   headIds: Set<string>
+  ownWeights: Map<string, number> // Set on the guest
+  weights: Map<string, { weight: number; from: string | null }> // In effect, from effectiveWeights
   groups: SeatingGroupItem[]
   relationships: GuestRelationshipItem[]
   affinityMap: Map<string, EffectiveAffinity>
@@ -35,6 +40,8 @@ export default function GuestRatings({
   poolGuests,
   excludedGuests,
   headIds,
+  ownWeights,
+  weights,
   groups,
   relationships,
   affinityMap,
@@ -140,6 +147,16 @@ export default function GuestRatings({
                       Head
                     </span>
                   )}
+                  {(weights.get(g.id)?.weight ?? 1) !== 1 && (
+                    <span
+                      title="How much their happiness counts"
+                      className={`text-[9px] font-semibold font-mono px-1 rounded ${
+                        isActive ? 'bg-white/20 text-white' : 'bg-indigo-100 text-indigo-800'
+                      }`}
+                    >
+                      {formatWeight(weights.get(g.id)!.weight)}
+                    </span>
+                  )}
                   {blocked.has(g.id) && <span title="Has constraints that can't all be satisfied">⛔</span>}
                   {warnings.isolated.has(g.id) && <span title="No one rated +2 or higher">⚠️</span>}
                   <span
@@ -187,6 +204,7 @@ export default function GuestRatings({
             guest={selected}
             isExcluded={isSelectedExcluded}
             isHead={!!selected && headIds.has(selected.id)}
+            ownWeight={selected ? ownWeights.get(selected.id) ?? null : null}
             poolGuests={poolGuests}
             groups={groups}
             relationshipsByPair={relationshipsByPair}
@@ -208,6 +226,7 @@ interface GuestDetailProps {
   guest: FlatGuest
   isExcluded: boolean
   isHead: boolean
+  ownWeight: number | null
   poolGuests: FlatGuest[]
   groups: SeatingGroupItem[]
   relationshipsByPair: Map<string, GuestRelationshipItem>
@@ -224,6 +243,7 @@ function GuestDetail({
   guest,
   isExcluded,
   isHead,
+  ownWeight,
   poolGuests,
   groups,
   relationshipsByPair,
@@ -236,6 +256,8 @@ function GuestDetail({
   run,
 }: GuestDetailProps) {
   const guestGroups = groups.filter((g) => g.memberIds.includes(guest.id))
+  // What their weight would be without their own: their groups', else 1
+  const inherited = effectiveWeights([{ id: guest.id, seatingWeight: null }], guestGroups).get(guest.id)!
 
   // Same party first, then alphabetical by party; stays stable while ratings change
   const rows = poolGuests
@@ -310,6 +332,25 @@ function GuestDetail({
             </button>
           </div>
         </div>
+        {!isExcluded && (
+          <div className="flex flex-wrap items-center gap-2">
+            <span
+              className="text-[11px] uppercase tracking-wider font-semibold text-zinc-500"
+              title="How much this guest's happiness counts in the Seating Lab's score. 2× means the solver works twice as hard for them"
+            >
+              Weight
+            </span>
+            <WeightPicker
+              value={ownWeight}
+              inherited={inherited.weight}
+              inheritedLabel={inherited.from ? `from the ${inherited.from} group` : 'by default'}
+              onChange={(seatingWeight) =>
+                run({ type: 'seatingWeight', guestId: guest.id, seatingWeight }, () => setSeatingWeight(guest.id, seatingWeight))
+              }
+            />
+            {ownWeight === null && inherited.from && <span className="text-[11px] text-zinc-400">from {inherited.from}</span>}
+          </div>
+        )}
         {guestGroups.length > 0 && (
           <div className="flex flex-wrap gap-1.5">
             {guestGroups.map((g) => (

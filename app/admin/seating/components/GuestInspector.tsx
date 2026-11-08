@@ -66,6 +66,7 @@ export default function GuestInspector({
             <div className="text-[11px] text-zinc-500 truncate">
               {familyName} · {p.seats[seat].key}
               {p.mustHead[guest] ? ' · ♛ must sit at a head' : ''}
+              {p.weight[guest] !== 1 ? ` · counts ${p.weight[guest]}×` : ''}
             </div>
           </div>
         </div>

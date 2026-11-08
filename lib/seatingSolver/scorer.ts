@@ -1,7 +1,7 @@
 // Objective for a full seating, kept up to date incrementally as seats are swapped.
 //
 // For each guest g:  happiness h(g) = Σ_k affinity(g, k) × proximity(seat g, seat k)
-// utility(g) = fairness(h) + head bonus − missing-acquaintance penalty
+// utility(g) = weight(g) · (fairness(h) + head bonus − missing-acquaintance penalty)
 // objective  = Σ utility − constraintPenalty × broken hard constraints
 
 import { KNOWS_THRESHOLD, PairConstraint, Problem } from './problem'
@@ -91,7 +91,7 @@ export class Scorer {
     else u = h
     if (o.headBonus !== 0 && this.p.isHead[seat]) u += o.headBonus * this.p.central[g]
     if (o.minKnownAtTable > 0 && known < o.minKnownAtTable) u -= o.minKnownPenalty * (o.minKnownAtTable - known)
-    return u
+    return u * this.p.weight[g]
   }
 
   violated(c: PairConstraint): boolean {

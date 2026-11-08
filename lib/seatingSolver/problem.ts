@@ -54,6 +54,7 @@ export type Problem = {
   tableOf: Int32Array // Per seat
   isHead: Uint8Array // Per seat
   central: Float64Array // Per guest: sum of positive affinities, for the head bonus
+  weight: Float64Array // Per guest: how much their utility counts in the total
   mustHead: Uint8Array // Per guest
   pairs: PairConstraint[]
   objective: ObjectiveConfig
@@ -64,6 +65,7 @@ export type ProblemInput = {
   affinityMap: Map<string, EffectiveAffinity>
   relationships: { guestAId: string; guestBId: string; constraint: string | null }[]
   headIds: Set<string>
+  weights?: Map<string, number> // Guests not in it count once
   layout: LayoutConfig
   objective: ObjectiveConfig
 }
@@ -119,6 +121,7 @@ export function buildProblem(input: ProblemInput): Problem {
     tableOf: Int32Array.from(seats.map((s) => s.table)),
     isHead: Uint8Array.from(seats.map((s) => (s.isHead ? 1 : 0))),
     central,
+    weight: Float64Array.from(guests, (g) => input.weights?.get(g.id) ?? 1),
     mustHead: Uint8Array.from(guests.map((g) => (input.headIds.has(g.id) ? 1 : 0))),
     pairs,
     objective,
