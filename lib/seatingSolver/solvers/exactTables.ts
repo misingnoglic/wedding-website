@@ -303,13 +303,13 @@ export function solveTableSplit(h: Highs, problem: Problem, guestAt: Int32Array,
   const near: { g: number; k: number; kind: number; v: number }[] = []
   const nearOf: number[][][] = kinds.map(() => Array.from({ length: n }, () => []))
   if (nearby) {
-    const adjacentPair = new Set(pairs.filter((c) => c.kind === 'ADJACENT').map((c) => Math.min(c.x, c.y) * n + Math.max(c.x, c.y)))
+    const closePair = new Set(pairs.filter((c) => c.kind === 'ADJACENT' || c.kind === 'NEAR').map((c) => Math.min(c.x, c.y) * n + Math.max(c.x, c.y)))
     for (let g = 0; g < n; g++) {
       for (let k = g + 1; k < n; k++) {
-        if (!(A[g * n + k] > 0) && !adjacentPair.has(g * n + k)) continue
+        if (!(A[g * n + k] > 0) && !closePair.has(g * n + k)) continue
         let v = y.get(g * n + k)
         if (v === undefined) {
-          // A must-sit-next-to pair with no affinity still needs a same-table variable
+          // A must-sit-next-to (or near) pair with no affinity still needs a same-table variable
           v = m.addVar(0, 1)
           y.set(g * n + k, v)
           for (let t = 0; t < T; t++) {
@@ -362,9 +362,10 @@ export function solveTableSplit(h: Highs, problem: Problem, guestAt: Int32Array,
         m.addRow(-Infinity, 0, [x[k * T + t], 1, x[g * T + t], -1, v, -1])
       }
     }
-    if (c.kind === 'ADJACENT' && nearby) {
-      // Next to each other means a side or head-corner pair
-      const terms = (nearIndex.get(g * n + k) ?? []).flatMap((e, i) => (kinds[i].key === 'side' || kinds[i].key === 'headCorner' ? [e, 1] : []))
+    if ((c.kind === 'ADJACENT' || c.kind === 'NEAR') && nearby) {
+      // Next to each other means a side or head-corner pair; near also allows across and diagonal
+      const allowed = c.kind === 'ADJACENT' ? ['side', 'headCorner'] : ['side', 'headCorner', 'across', 'diagonal']
+      const terms = (nearIndex.get(g * n + k) ?? []).flatMap((e, i) => (allowed.includes(kinds[i].key) ? [e, 1] : []))
       if (terms.length) {
         const w = m.addVar(0, 1, -penalty)
         m.addRow(1, Infinity, [...terms, w, 1])

@@ -197,14 +197,14 @@ export class Rebuilder {
 
   // Penalty for g's hard constraints with guests already seated, if g sat at s
   private brokenAt(g: number, s: number): number {
-    const { S, adjacent, tableOf, mustHead, isHead } = this.p
+    const { S, adjacent, near: nearby, tableOf, mustHead, isHead } = this.p
     let broken = mustHead[g] && !isHead[s] ? 1 : 0
     for (const c of this.constraintsOf[g]) {
       const ps = this.pos[c.other]
       if (ps < 0) continue
       const near = adjacent[s * S + ps] === 1
       const same = tableOf[s] === tableOf[ps]
-      if ((c.kind === 'ADJACENT' && !near) || (c.kind === 'NOT_ADJACENT' && near) || (c.kind === 'SAME_TABLE' && !same) || (c.kind === 'DIFFERENT_TABLE' && same)) broken++
+      if ((c.kind === 'ADJACENT' && !near) || (c.kind === 'NEAR' && !nearby[s * S + ps]) || (c.kind === 'NOT_ADJACENT' && near) || (c.kind === 'SAME_TABLE' && !same) || (c.kind === 'DIFFERENT_TABLE' && same)) broken++
     }
     return broken
   }

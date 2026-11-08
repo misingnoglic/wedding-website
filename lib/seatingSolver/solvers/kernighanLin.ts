@@ -79,7 +79,7 @@ export class TableSplit {
     const pinOf = Int32Array.from(pin)
     const find = (x: number): number => (parent[x] === x ? x : (parent[x] = find(parent[x])))
     for (const c of pairs) {
-      if (c.kind !== 'SAME_TABLE' && c.kind !== 'ADJACENT') continue
+      if (c.kind !== 'SAME_TABLE' && c.kind !== 'ADJACENT' && c.kind !== 'NEAR') continue
       const a = find(c.x)
       const b = find(c.y)
       if (a === b || (pinOf[a] >= 0 && pinOf[b] >= 0 && pinOf[a] !== pinOf[b])) continue

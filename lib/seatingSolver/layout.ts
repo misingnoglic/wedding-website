@@ -136,3 +136,9 @@ export function seatsAdjacent(a: Seat, b: Seat): boolean {
   const relation = seatRelation(a, b)
   return relation === 'side' || relation === 'headCorner'
 }
+
+// For NEAR rules: next to (as above), directly across, or diagonal
+export function seatsNear(a: Seat, b: Seat): boolean {
+  const relation = seatRelation(a, b)
+  return relation === 'side' || relation === 'headCorner' || relation === 'across' || relation === 'diagonal'
+}

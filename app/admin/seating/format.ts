@@ -113,6 +113,7 @@ export function formatMetric(value: number | string): string {
 
 export const CONSTRAINT_TEXT: Record<string, string> = {
   ADJACENT: 'must sit next to',
+  NEAR: 'must sit next to, across from or diagonal from',
   NOT_ADJACENT: 'must not sit next to',
   SAME_TABLE: 'must share a table with',
   DIFFERENT_TABLE: 'must be at a different table from',

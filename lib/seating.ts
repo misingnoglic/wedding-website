@@ -64,11 +64,12 @@ export function effectiveWeights(
   )
 }
 
-export const SEATING_CONSTRAINTS = ['ADJACENT', 'SAME_TABLE', 'DIFFERENT_TABLE', 'NOT_ADJACENT'] as const
+export const SEATING_CONSTRAINTS = ['ADJACENT', 'NEAR', 'SAME_TABLE', 'DIFFERENT_TABLE', 'NOT_ADJACENT'] as const
 export type SeatingConstraint = (typeof SEATING_CONSTRAINTS)[number]
 
 export const CONSTRAINT_LABELS: Record<SeatingConstraint, string> = {
   ADJACENT: 'Must sit next to',
+  NEAR: 'Next to, across or diagonal',
   SAME_TABLE: 'Must share a table',
   DIFFERENT_TABLE: 'Different tables',
   NOT_ADJACENT: 'Not next to',

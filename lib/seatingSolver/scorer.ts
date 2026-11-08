@@ -95,12 +95,14 @@ export class Scorer {
   }
 
   violated(c: PairConstraint): boolean {
-    const { S, adjacent, tableOf } = this.p
+    const { S, adjacent, near, tableOf } = this.p
     const a = this.seatOf[c.x]
     const b = this.seatOf[c.y]
     switch (c.kind) {
       case 'ADJACENT':
         return !adjacent[a * S + b]
+      case 'NEAR':
+        return !near[a * S + b]
       case 'NOT_ADJACENT':
         return !!adjacent[a * S + b]
       case 'SAME_TABLE':

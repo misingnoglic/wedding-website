@@ -1033,6 +1033,7 @@ export function greedyAssignment(problem: Problem, guestAt: Int32Array, locked: 
           const near = adjacent[s * S + ps] === 1
           const sameTable = tableOf[s] === tableOf[ps]
           if (c.kind === 'ADJACENT' && near) score += penalty
+          else if (c.kind === 'NEAR' && problem.near[s * S + ps]) score += penalty
           else if (c.kind === 'NOT_ADJACENT' && near) score -= penalty
           else if (c.kind === 'SAME_TABLE') score += sameTable ? penalty / 2 : -penalty
           else if (c.kind === 'DIFFERENT_TABLE' && sameTable) score -= penalty

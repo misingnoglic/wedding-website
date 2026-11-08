@@ -2,7 +2,7 @@ import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { EffectiveAffinity, pairKey } from '../seating'
 import { ALGORITHMS, AlgorithmId, createSolver, defaultParams, greedyAssignment, prepareAlgorithm, randomAssignment, scaleToEvaluations } from './algorithms'
-import { autoLayout, buildSeats, DEFAULT_PROXIMITY, seatCount, seatProximity, seatsAdjacent } from './layout'
+import { autoLayout, buildSeats, DEFAULT_PROXIMITY, seatCount, seatProximity, seatsAdjacent, seatsNear } from './layout'
 import { assignmentFromSeatKeys, buildProblem, DEFAULT_OBJECTIVE, happinessPotential, ObjectiveConfig, Problem } from './problem'
 import { mulberry32 } from './random'
 import { Scorer } from './scorer'
@@ -23,6 +23,7 @@ function makeProblem(guestCount: number, objective: Partial<ObjectiveConfig> = {
     { guestAId: 'g02', guestBId: 'g03', constraint: 'NOT_ADJACENT' },
     { guestAId: 'g04', guestBId: 'g05', constraint: 'SAME_TABLE' },
     { guestAId: 'g06', guestBId: 'g07', constraint: 'DIFFERENT_TABLE' },
+    { guestAId: 'g10', guestBId: 'g11', constraint: 'NEAR' },
   ]
   return buildProblem({
     guests,
@@ -70,6 +71,15 @@ test('seat proximity and adjacency follow the table geometry', () => {
   assert.ok(seatsAdjacent(at('T1-HEAD-N'), at('T1-R-01')))
   assert.ok(!seatsAdjacent(at('T1-HEAD-N'), at('T1-HEAD-S')))
   assert.ok(!seatsAdjacent(at('T1-L-01'), at('T1-R-01')))
+  // Near: next to, across or diagonal, but not two seats along or the second row from a head
+  assert.ok(seatsNear(at('T1-L-02'), at('T1-L-03')))
+  assert.ok(seatsNear(at('T1-L-02'), at('T1-R-02')))
+  assert.ok(seatsNear(at('T1-L-02'), at('T1-R-03')))
+  assert.ok(seatsNear(at('T1-HEAD-N'), at('T1-R-01')))
+  assert.ok(!seatsNear(at('T1-L-02'), at('T1-L-04')))
+  assert.ok(!seatsNear(at('T1-L-02'), at('T1-R-04')))
+  assert.ok(!seatsNear(at('T1-HEAD-N'), at('T1-L-02')))
+  assert.ok(!seatsNear(at('T1-L-01'), at('T2-L-01')))
 })
 
 test('a squeezed-in seat makes one side longer without stretching the table', () => {
@@ -151,6 +161,27 @@ test('violations count broken constraints and head requirements', () => {
   const penalty = p.objective.constraintPenalty
   const withoutPenalty = scorer.guestScores().reduce((sum, g) => sum + g.utility, 0)
   assert.ok(Math.abs(scorer.total - (withoutPenalty - penalty * kinds.length)) < 1e-9)
+})
+
+test('a near rule holds across and diagonal, and breaks further apart', () => {
+  const p = makeProblem(20)
+  const seat = (key: string) => p.seats.findIndex((s) => s.key === key)
+  // Guest 10 at T1-L-03 and guest 11 at `key`
+  const brokenWith = (key: string) => {
+    const guestAt = identity(p)
+    for (const [g, k] of [[10, 'T1-L-03'], [11, key]] as const) {
+      const from = guestAt.indexOf(g)
+      const to = seat(k)
+      ;[guestAt[from], guestAt[to]] = [guestAt[to], guestAt[from]]
+    }
+    return new Scorer(p, guestAt).violations().some((v) => v.kind === 'NEAR')
+  }
+  assert.equal(brokenWith('T1-L-04'), false)
+  assert.equal(brokenWith('T1-R-03'), false)
+  assert.equal(brokenWith('T1-R-04'), false)
+  assert.equal(brokenWith('T1-L-05'), true)
+  assert.equal(brokenWith('T1-R-05'), true)
+  assert.equal(brokenWith('T2-L-03'), true)
 })
 
 test('greedy assignment is valid, keeps locks, and seats head guests at heads', () => {

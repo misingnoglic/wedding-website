@@ -10,6 +10,7 @@ import {
   Seat,
   seatProximity,
   seatsAdjacent,
+  seatsNear,
 } from './layout'
 
 export type Fairness = 'sum' | 'floor' | 'concave'
@@ -38,7 +39,7 @@ export const DEFAULT_OBJECTIVE: ObjectiveConfig = {
   partyPairsAdjacent: true,
 }
 
-export type PairConstraintKind = 'ADJACENT' | 'NOT_ADJACENT' | 'SAME_TABLE' | 'DIFFERENT_TABLE'
+export type PairConstraintKind = 'ADJACENT' | 'NEAR' | 'NOT_ADJACENT' | 'SAME_TABLE' | 'DIFFERENT_TABLE'
 export type PairConstraint = { x: number; y: number; kind: PairConstraintKind }
 
 export type Problem = {
@@ -51,6 +52,7 @@ export type Problem = {
   A: Float64Array // n×n affinity
   P: Float64Array // S×S proximity
   adjacent: Uint8Array // S×S geometric "next to"
+  near: Uint8Array // S×S next to, across or diagonal, for NEAR rules
   tableOf: Int32Array // Per seat
   isHead: Uint8Array // Per seat
   central: Float64Array // Per guest: sum of positive affinities, for the head bonus
@@ -98,6 +100,8 @@ export function buildProblem(input: ProblemInput): Problem {
   const adjacent = new Uint8Array(S * S)
   for (let a = 0; a < S; a++)
     for (let b = 0; b < S; b++) adjacent[a * S + b] = seatsAdjacent(seats[a], seats[b]) ? 1 : 0
+  const near = new Uint8Array(S * S)
+  for (let a = 0; a < S; a++) for (let b = 0; b < S; b++) near[a * S + b] = seatsNear(seats[a], seats[b]) ? 1 : 0
 
   const index = new Map(guests.map((g, i) => [g.id, i]))
   const pairs: PairConstraint[] = []
@@ -118,6 +122,7 @@ export function buildProblem(input: ProblemInput): Problem {
     A,
     P,
     adjacent,
+    near,
     tableOf: Int32Array.from(seats.map((s) => s.table)),
     isHead: Uint8Array.from(seats.map((s) => (s.isHead ? 1 : 0))),
     central,
@@ -145,7 +150,7 @@ export function tableLevelProblem(problem: Problem): Problem {
   const P = new Float64Array(S * S)
   for (let a = 0; a < S; a++) for (let b = 0; b < S; b++) P[a * S + b] = a !== b && tableOf[a] === tableOf[b] ? 1 : 0
   const pairs = problem.pairs.flatMap((c): PairConstraint[] =>
-    c.kind === 'ADJACENT' ? [{ ...c, kind: 'SAME_TABLE' }] : c.kind === 'NOT_ADJACENT' ? [] : [c]
+    c.kind === 'ADJACENT' || c.kind === 'NEAR' ? [{ ...c, kind: 'SAME_TABLE' }] : c.kind === 'NOT_ADJACENT' ? [] : [c]
   )
   // Heads don't exist at this level, so the head bonus and head requirements wait for stage two
   return {
