@@ -157,13 +157,14 @@ const SECTIONS = [
 function JumpLinks() {
   return (
     <nav className="sticky top-0 z-10 -mx-4 mb-8 border-y border-zinc-200 bg-zinc-50/95 backdrop-blur-sm">
-      {/* Right padding on phones keeps the last link clear of the floating site-menu button */}
-      <div className="flex gap-6 overflow-x-auto no-scrollbar px-4 py-3 pr-20 md:justify-center md:pr-4">
+      {/* On phones the row scrolls sideways: the edges fade so cut-off links read as "more this way", and the
+          right padding lets the last link scroll clear of the floating site-menu button */}
+      <div className="flex gap-5 overflow-x-auto no-scrollbar px-4 py-3 pr-20 [mask-image:linear-gradient(to_right,transparent,black_16px,black_calc(100%_-_56px),transparent)] md:justify-center md:gap-6 md:pr-4 md:[mask-image:none]">
         {SECTIONS.map((s) => (
           <a
             key={s.id}
             href={`#${s.id}`}
-            className="shrink-0 text-[11px] font-sans uppercase tracking-[0.2em] text-zinc-500 transition-colors hover:text-sage"
+            className="shrink-0 text-[11px] font-sans uppercase tracking-[0.15em] text-zinc-500 transition-colors hover:text-sage md:tracking-[0.2em]"
           >
             {s.label}
           </a>
