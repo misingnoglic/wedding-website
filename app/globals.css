@@ -20,3 +20,11 @@
     @apply antialiased;
   }
 }
+
+/* Scrollable without a visible scrollbar (e.g. the menu jump links on phones) */
+@utility no-scrollbar {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
