@@ -32,7 +32,7 @@ const MEXICAN: Drink[] = [
     name: 'Batanga',
     description: 'Tequila and Coca-Cola with lime and a salted rim',
   },
-  { name: 'Mezcal Piña', description: 'Mezcal, pineapple, lime' },
+  { name: 'Mezcal Mule', description: 'Mezcal, ginger beer, lime' },
 ]
 
 const CLASSICS: Drink[] = [
