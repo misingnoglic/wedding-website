@@ -10,10 +10,13 @@ import {
   isSeatingConstraint,
   isSeatRequirement,
   isValidAffinity,
+  linkHubs,
   linkKey,
   linkProblem,
+  linkReach,
   normalizePair,
   pairKey,
+  partyLabel,
   partyPairConstraints,
 } from './seating'
 
@@ -218,4 +221,36 @@ test("a guest's own weight wins, then their highest-weighted group, then 1", () 
   assert.deepEqual(weights.get('d'), { weight: 1.5, from: 'Hiking' })
   assert.deepEqual(weights.get('e'), { weight: 1, from: null })
   assert.deepEqual(weights.get('f'), { weight: 1, from: null })
+})
+
+test('parties are named by their people', () => {
+  assert.equal(partyLabel(['Partow Boudaie', 'Shahrokh Boudaie']), 'Partow & Shahrokh Boudaie')
+  assert.equal(partyLabel(['Melisa Bahmanyar', 'Peyman Bahmanyar', 'Jaden Bahmanyar']), 'Melisa, Peyman & Jaden Bahmanyar')
+  assert.equal(partyLabel(['Mary Clare Caggiano', 'Jim Caggiano']), 'Mary Clare & Jim Caggiano')
+  assert.equal(partyLabel(['Matthew Caggiano', 'Abi Smith']), 'Matthew Caggiano & Abi Smith')
+  assert.equal(partyLabel(['Parviz Bahmanyar']), 'Parviz Bahmanyar')
+  assert.equal(partyLabel(['Cher']), 'Cher')
+})
+
+test('a link reaches every pair across its sides, once', () => {
+  assert.equal(linkReach(['a', 'b'], ['c', 'd', 'e']), 6)
+  assert.equal(linkReach(['a', 'b'], ['b', 'c']), 3) // a–b, a–c, b–c
+  assert.equal(linkReach(['a'], []), 0)
+})
+
+test('links sort under the side with the most of them, and singles are left over', () => {
+  const links = [
+    { a: 'parents', b: 'arav' },
+    { a: 'mom', b: 'arav' },
+    { a: 'milken', b: 'arav' },
+    { a: 'parents', b: 'milken' },
+    { a: 'parents', b: 'niloo' },
+    { a: 'tony', b: 'christa' },
+  ]
+  const hubs = linkHubs(links, (k) => k)
+  // arav and parents both have 3; arav sorts first by name, then parents keeps its other 2
+  assert.deepEqual(
+    hubs.map((h) => [h.hub, h.links.length]),
+    [['arav', 3], ['parents', 2], [null, 1]]
+  )
 })

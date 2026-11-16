@@ -136,6 +136,54 @@ export function linkKey(a: LinkEndpoint, b: LinkEndpoint): string {
 }
 
 /**
+ * A party named by its people rather than its invitation: "Partow & Shahrokh Boudaie",
+ * "Matthew Caggiano & Abi Smith", "Melisa, Peyman & Jaden Bahmanyar".
+ */
+export function partyLabel(names: string[]): string {
+  const parts = names.map((name) => {
+    const words = name.trim().split(/\s+/)
+    return { first: words.slice(0, -1).join(' ') || words[0], last: words.length > 1 ? words[words.length - 1] : '' }
+  })
+  const list = (items: string[]) => (items.length <= 1 ? items.join('') : `${items.slice(0, -1).join(', ')} & ${items[items.length - 1]}`)
+  const last = parts[0]?.last
+  if (last && parts.every((p) => p.last === last)) return `${list(parts.map((p) => p.first))} ${last}`
+  return list(names.map((n) => n.trim()))
+}
+
+/**
+ * How many guest pairs a link sets a baseline for: everyone on one side with everyone on the other.
+ */
+export function linkReach(a: string[], b: string[]): number {
+  const pairs = new Set<string>()
+  for (const x of a) for (const y of b) if (x !== y) pairs.add(pairKey(x, y))
+  return pairs.size
+}
+
+/**
+ * Sorts links under "hubs": repeatedly, the side with the most links not yet placed takes them
+ * all, so a guest's or group's links read together. Sides with a single link are left over.
+ */
+export function linkHubs<L extends { a: string; b: string }>(links: L[], nameOf: (key: string) => string): { hub: string | null; links: L[] }[] {
+  const left = new Set(links)
+  const hubs: { hub: string | null; links: L[] }[] = []
+  for (;;) {
+    const counts = new Map<string, number>()
+    for (const l of left) for (const k of [l.a, l.b]) counts.set(k, (counts.get(k) ?? 0) + 1)
+    let hub: string | null = null
+    for (const [k, c] of counts) {
+      const best = hub === null ? 0 : counts.get(hub)!
+      if (c > best || (c === best && hub !== null && nameOf(k).localeCompare(nameOf(hub)) < 0)) hub = k
+    }
+    if (hub === null || counts.get(hub)! < 2) break
+    const mine = [...left].filter((l) => l.a === hub || l.b === hub)
+    mine.forEach((l) => left.delete(l))
+    hubs.push({ hub, links: mine })
+  }
+  if (left.size > 0) hubs.push({ hub: null, links: [...left] })
+  return hubs
+}
+
+/**
  * Why a link can't be saved, or null. Guest↔guest is a rating, and a side can't link to itself.
  */
 export function linkProblem(a: LinkEndpoint, b: LinkEndpoint): string | null {

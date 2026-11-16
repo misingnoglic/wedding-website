@@ -8,7 +8,7 @@ import {
   setSeatingGroupMembership,
   updateSeatingGroup,
 } from '../../../actions/seating'
-import { endpointKey, LinkEndpoint, linkKey, linkProblem } from '@/lib/seating'
+import { endpointKey, LinkEndpoint, linkHubs, linkKey, linkProblem, linkReach, partyLabel } from '@/lib/seating'
 import { FlatGuest, SeatingGroupItem, SeatingLinkItem } from '../../types'
 import AffinityPicker, { affinityClass, formatAffinity } from './AffinityPicker'
 import EndpointPicker, { EndpointBadge, EndpointOption } from './EndpointPicker'
@@ -120,41 +120,42 @@ function LinksSection({
   const [sideB, setSideB] = useState('')
   const [affinity, setAffinity] = useState(1)
 
-  // Everything a link side can be, keyed by endpointKey ("type:id")
-  const options = useMemo<EndpointOption[]>(() => {
-    const parties = new Map<string, { name: string; members: string[] }>()
+  const [search, setSearch] = useState('')
+
+  // Everything a link side can be, keyed by endpointKey ("type:id"), and the guests each one covers.
+  // Parties go by their people ("Partow & Shahrokh Boudaie"), with the invitation name as detail.
+  const { options, membersOf } = useMemo(() => {
+    const parties = new Map<string, { invitation: string; ids: string[]; names: string[] }>()
     for (const g of poolGuests) {
-      const party = parties.get(g.familyId) || { name: g.familyName, members: [] }
-      party.members.push(g.name)
+      const party = parties.get(g.familyId) || { invitation: g.familyName, ids: [], names: [] }
+      party.ids.push(g.id)
+      party.names.push(g.name)
       parties.set(g.familyId, party)
     }
     const poolIds = new Set(poolGuests.map((g) => g.id))
     const plural = (n: number) => `${n} guest${n === 1 ? '' : 's'}`
-    return [
-      ...groups.map((g) => ({
-        key: endpointKey({ type: 'group', id: g.id }),
-        type: 'group' as const,
-        name: g.name,
-        detail: plural(g.memberIds.filter((id) => poolIds.has(id)).length),
-        color: g.color,
-      })),
-      ...[...parties.entries()].map(([id, p]) => ({
-        key: endpointKey({ type: 'family', id }),
-        type: 'family' as const,
-        name: p.name,
-        detail: p.members.join(', '),
-        color: null,
-      })),
-      ...poolGuests.map((g) => ({
-        key: endpointKey({ type: 'guest', id: g.id }),
-        type: 'guest' as const,
-        name: g.name,
-        detail: g.familyName,
-        color: null,
-      })),
-    ]
+    const members = new Map<string, string[]>()
+    const list: EndpointOption[] = []
+    for (const g of groups) {
+      const key = endpointKey({ type: 'group', id: g.id })
+      const ids = g.memberIds.filter((id) => poolIds.has(id))
+      members.set(key, ids)
+      list.push({ key, type: 'group', name: g.name, detail: plural(ids.length), color: g.color })
+    }
+    for (const [id, p] of parties) {
+      const key = endpointKey({ type: 'family', id })
+      members.set(key, p.ids)
+      list.push({ key, type: 'family', name: partyLabel(p.names), detail: p.invitation, color: null })
+    }
+    for (const g of poolGuests) {
+      const key = endpointKey({ type: 'guest', id: g.id })
+      members.set(key, [g.id])
+      list.push({ key, type: 'guest', name: g.name, detail: partyLabel(parties.get(g.familyId)!.names), color: null })
+    }
+    return { options: list, membersOf: members }
   }, [groups, poolGuests])
   const optionsByKey = useMemo(() => new Map(options.map((o) => [o.key, o])), [options])
+  const guestNames = useMemo(() => new Map(poolGuests.map((g) => [g.id, g.name.toLowerCase()])), [poolGuests])
 
   const parseKey = (key: string): LinkEndpoint => {
     const i = key.indexOf(':')
@@ -176,11 +177,29 @@ function LinksSection({
     setAffinity(1)
   }
 
-  // Links whose sides no longer exist in the pool (e.g. a party that declined) are hidden
+  // Links whose sides no longer exist in the pool (e.g. a party that declined) are hidden. A search
+  // matches a side's name, or anyone it covers, so "Partow" finds her party's and groups' links too.
+  const query = search.toLowerCase().trim()
+  const matches = (key: string) => {
+    const option = optionsByKey.get(key)!
+    return option.name.toLowerCase().includes(query) || (membersOf.get(key) ?? []).some((id) => guestNames.get(id)?.includes(query))
+  }
   const rows = links
-    .map((l) => ({ ...l, sideA: optionsByKey.get(endpointKey(l.a)), sideB: optionsByKey.get(endpointKey(l.b)) }))
-    .filter((l) => l.sideA && l.sideB)
-    .sort((x, y) => x.sideA!.name.localeCompare(y.sideA!.name) || x.sideB!.name.localeCompare(y.sideB!.name))
+    .map((l) => ({ ...l, keyA: endpointKey(l.a), keyB: endpointKey(l.b) }))
+    .filter((l) => optionsByKey.has(l.keyA) && optionsByKey.has(l.keyB))
+    .filter((l) => !query || matches(l.keyA) || matches(l.keyB))
+    .map((l) => ({ ...l, reach: linkReach(membersOf.get(l.keyA)!, membersOf.get(l.keyB)!) }))
+  const nameOf = (key: string) => optionsByKey.get(key)!.name
+  const hubs = linkHubs(
+    rows.map((r) => ({ ...r, a: r.keyA, b: r.keyB, link: r })),
+    nameOf
+  )
+  // Leftover links read group, then party, then guest, so they face the same way as the hubs
+  const typeOrder = { group: 0, family: 1, guest: 2 }
+  const orient = (x: string, y: string): [string, string] => {
+    const [ox, oy] = [optionsByKey.get(x)!, optionsByKey.get(y)!]
+    return (typeOrder[ox.type] - typeOrder[oy.type] || ox.name.localeCompare(oy.name)) <= 0 ? [x, y] : [y, x]
+  }
 
   return (
     <div className="bg-white rounded-2xl border border-zinc-200/80 shadow-sm p-4 space-y-4">
@@ -211,28 +230,57 @@ function LinksSection({
         {draftProblem && <p className="text-xs text-amber-700">{draftProblem}</p>}
       </form>
 
-      {rows.length === 0 ? (
+      {links.length === 0 ? (
         <p className="text-xs text-zinc-400">No links yet.</p>
       ) : (
-        <div className="divide-y divide-zinc-100 border-t border-zinc-100">
-          {rows.map((l) => (
-            <div key={linkKey(l.a, l.b)} className="py-2.5 flex flex-col md:flex-row md:items-center gap-2 md:gap-4">
-              <div className="flex items-center gap-2 text-sm min-w-0 md:flex-1">
-                <EndpointName option={l.sideA!} />
-                <span className={`text-[10px] px-1.5 py-0.5 rounded font-mono shrink-0 ${affinityClass(l.affinity)}`}>
-                  {formatAffinity(l.affinity)}
-                </span>
-                <EndpointName option={l.sideB!} />
+        <div className="space-y-3">
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Find links by name, including through a party or group…"
+            className="w-full border border-zinc-200 rounded-lg px-3 py-1.5 text-sm"
+          />
+          {rows.length === 0 && <p className="text-xs text-zinc-400">No links match.</p>}
+          {hubs.map(({ hub, links: hubLinks }) => (
+            <div key={hub ?? 'other'} className="border-t border-zinc-100 pt-2">
+              <div className="flex items-center gap-2 text-sm">
+                {hub ? <EndpointName option={optionsByKey.get(hub)!} /> : <span className="font-medium text-zinc-500">Other links</span>}
+                <span className="text-[11px] text-zinc-400">{hubLinks.length}</span>
               </div>
-              <div className="flex items-center gap-3">
-                <AffinityPicker value={l.affinity} onChange={(value) => setLink(l.a, l.b, value)} />
-                <button
-                  type="button"
-                  onClick={() => setLink(l.a, l.b, null)}
-                  className="text-xs text-zinc-400 hover:text-red-600 cursor-pointer"
-                >
-                  Remove
-                </button>
+              <div className="divide-y divide-zinc-100">
+                {hubLinks
+                  .map(({ link }) => {
+                    const [left, right] = hub ? [null, link.keyA === hub ? link.keyB : link.keyA] : orient(link.keyA, link.keyB)
+                    return { link, left, right }
+                  })
+                  .sort((x, y) => (x.left ? nameOf(x.left) : '').localeCompare(y.left ? nameOf(y.left) : '') || nameOf(x.right).localeCompare(nameOf(y.right)))
+                  .map(({ link, left, right }) => (
+                    <div key={linkKey(link.a, link.b)} className={`py-2 flex flex-col md:flex-row md:items-center gap-2 md:gap-4 ${hub ? 'pl-5' : ''}`}>
+                      <div className="flex items-center gap-2 text-sm min-w-0 md:flex-1">
+                        {left && <EndpointName option={optionsByKey.get(left)!} />}
+                        <span className={`text-[10px] px-1.5 py-0.5 rounded font-mono shrink-0 ${affinityClass(link.affinity)}`}>
+                          {formatAffinity(link.affinity)}
+                        </span>
+                        <EndpointName option={optionsByKey.get(right)!} />
+                        <span
+                          className="text-[11px] text-zinc-400 font-mono shrink-0"
+                          title="Guest pairs this link sets a baseline for. A rating, or a stronger group or link, overrides it for a pair"
+                        >
+                          ×{link.reach}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <AffinityPicker value={link.affinity} onChange={(value) => setLink(link.a, link.b, value)} />
+                        <button
+                          type="button"
+                          onClick={() => setLink(link.a, link.b, null)}
+                          className="text-xs text-zinc-400 hover:text-red-600 cursor-pointer"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    </div>
+                  ))}
               </div>
             </div>
           ))}
