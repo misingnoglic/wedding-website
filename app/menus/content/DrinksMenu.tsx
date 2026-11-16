@@ -32,14 +32,14 @@ const MEXICAN: Drink[] = [
     name: 'Batanga',
     description: 'Tequila and Coca-Cola with lime and a salted rim',
   },
-  { name: 'Mezcal Mule', description: 'Mezcal, ginger beer, lime' },
 ]
 
 const CLASSICS: Drink[] = [
   { name: 'Aperol Spritz', description: 'Aperol, Prosecco, soda' },
+  { name: 'Hugo Spritz', description: 'St-Germain, Prosecco, soda, mint' },
   { name: 'Cosmo', description: 'Vodka, orange liqueur, cranberry, lime' },
   { name: 'Midori Sour', description: 'Midori, lime, Sprite' },
-  { name: 'Kentucky Mule', description: 'Bourbon, ginger beer, lime' },
+  { name: 'Moscow Mule', description: 'Vodka, ginger beer, lime', note: 'or swap the vodka for whiskey or mezcal' },
 ]
 
 const BEERS = ['Pacifico', 'Corona', 'Corona Light', 'Modelo', 'Dos Equis (XX)']
