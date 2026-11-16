@@ -1,11 +1,15 @@
 import { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { getMenu, MENUS } from '../menus'
+import DinnerMenu from '../content/DinnerMenu'
 import DrinksMenu from '../content/DrinksMenu'
+import SushiMenu from '../content/SushiMenu'
 
 // Menus without an entry here render as a blank page
 const CONTENT: Record<string, () => React.ReactNode> = {
+  dinner: DinnerMenu,
   drinks: DrinksMenu,
+  sushi: SushiMenu,
 }
 
 export const metadata: Metadata = {

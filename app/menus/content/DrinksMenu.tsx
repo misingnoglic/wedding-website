@@ -1,4 +1,4 @@
-import { ReactNode } from 'react'
+import MenuSection from './MenuSection'
 
 type Drink = { name: string; description: string; note?: string }
 
@@ -38,6 +38,7 @@ const CLASSICS: Drink[] = [
   { name: 'Aperol Spritz', description: 'Aperol, Prosecco, soda' },
   { name: 'Hugo Spritz', description: 'St-Germain, Prosecco, soda, mint' },
   { name: 'Cosmo', description: 'Vodka, orange liqueur, cranberry, lime' },
+  { name: 'Caipirinha', description: 'Charanda rum, lime, sugar' },
   { name: 'Midori Sour', description: 'Midori, lime, Sprite' },
   { name: 'Moscow Mule', description: 'Vodka, ginger beer, lime', note: 'or swap the vodka for whiskey or mezcal' },
 ]
@@ -174,19 +175,6 @@ function JumpLinks() {
   )
 }
 
-function Section({ id, title, children }: { id: string; title: string; children: ReactNode }) {
-  return (
-    <section id={id} className="scroll-mt-16">
-      <h2 className="flex items-center gap-3 text-[11px] font-sans font-semibold uppercase tracking-[0.3em] text-sage">
-        <span className="h-px flex-1 bg-zinc-300" />
-        {title}
-        <span className="h-px flex-1 bg-zinc-300" />
-      </h2>
-      <div className="mt-4">{children}</div>
-    </section>
-  )
-}
-
 function DrinkList({ drinks, large }: { drinks: Drink[]; large?: boolean }) {
   return (
     <ul className="space-y-3">
@@ -215,31 +203,31 @@ export default function DrinksMenu() {
     <div>
       <JumpLinks />
       <div className="mx-auto max-w-md space-y-8">
-        <Section id="signature" title="Signature Cocktails">
+        <MenuSection id="signature" title="Signature Cocktails">
           <DrinkList drinks={SIGNATURES} large />
-        </Section>
+        </MenuSection>
 
-        <Section id="mexican" title="Mexican Favorites">
+        <MenuSection id="mexican" title="Mexican Favorites">
           <DrinkList drinks={MEXICAN} />
-        </Section>
+        </MenuSection>
 
-        <Section id="classics" title="Classics">
+        <MenuSection id="classics" title="Classics">
           <DrinkList drinks={CLASSICS} />
           <p className="mt-3 text-center text-[13px] font-karla italic text-zinc-500">and all your favorite mixed drinks, from a gin &amp; tonic to a rum &amp; Coke</p>
-        </Section>
+        </MenuSection>
 
-        <Section id="beer" title="Cerveza">
+        <MenuSection id="beer" title="Cerveza">
           <DotList items={BEERS} />
           <div className="mt-3">
             <DrinkList drinks={BEER_STYLES} />
           </div>
-        </Section>
+        </MenuSection>
 
-        <Section id="wine" title="Wine">
+        <MenuSection id="wine" title="Wine">
           <DrinkList drinks={WINES} />
-        </Section>
+        </MenuSection>
 
-        <Section id="spirits" title="Spirits">
+        <MenuSection id="spirits" title="Spirits">
           <div className="space-y-3">
             {SPIRITS.map((s) => (
               <div key={s.category} className="text-center">
@@ -260,14 +248,14 @@ export default function DrinksMenu() {
               </div>
             ))}
           </div>
-        </Section>
+        </MenuSection>
 
-        <Section id="soft-drinks" title="Juices & Soft Drinks">
+        <MenuSection id="soft-drinks" title="Juices & Soft Drinks">
           <div className="space-y-1">
             <DotList label="Soft drinks" items={SOFT_DRINKS} />
             <DotList label="Juices" items={JUICES} />
           </div>
-        </Section>
+        </MenuSection>
       </div>
     </div>
   )
