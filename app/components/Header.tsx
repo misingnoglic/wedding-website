@@ -12,7 +12,6 @@ const links = [
     { href: "/itinerary", label: "Itinerary" },
     { href: "/faq", label: "FAQ" },
     { href: "/gallery", label: "Gallery" },
-    { href: "/registry", label: "Registry" },
     { href: "/contact", label: "Contact" },
     { href: "/account", label: "Account" },
 ];
